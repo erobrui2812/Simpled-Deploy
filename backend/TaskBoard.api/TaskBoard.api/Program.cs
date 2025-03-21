@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using TaskBoard.api.Middleware;
+using TaskBoard.api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -79,6 +80,7 @@ builder.Services.Configure<IdentityOptions>(options =>
     options.Password.RequireUppercase = false;
 });
 
+builder.Services.AddScoped<ActivityLogger>();
 builder.Services.AddSignalR();
 builder.Services.AddAutoMapper(typeof(Program).Assembly);
 

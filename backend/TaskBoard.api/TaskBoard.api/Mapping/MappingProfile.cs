@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using TaskBoard.api.Models.Dtos.BoardDtos;
+using TaskBoard.api.Models;
 
 namespace TaskBoard.api.Mapping
 {

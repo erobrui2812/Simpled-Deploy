@@ -1,10 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
-using Microsoft.EntityFrameworkCore;
-using TaskBoard.api.Data;
+using Microsoft.AspNetCore.SignalR;
+using TaskBoard.api.Services;
+using TaskBoard.api.Hubs;
 using TaskBoard.api.Models.Dtos.BoardDtos;
-using AutoMapper;
+using TaskBoard.api.Models.Dtos.Board;
 
 namespace TaskBoard.api.Controllers
 {
@@ -13,39 +14,34 @@ namespace TaskBoard.api.Controllers
     [Authorize]
     public class BoardController : ControllerBase
     {
-        private readonly AppDbContext _context;
-        private readonly IMapper _mapper;
+        private readonly BoardService _boardService;
+        private readonly IHubContext<BoardHub> _boardHub;
 
-        public BoardController(AppDbContext context, IMapper mapper)
+        public BoardController(
+            BoardService boardService,
+            IHubContext<BoardHub> boardHub)
         {
-            _context = context;
-            _mapper = mapper;
+            _boardService = boardService;
+            _boardHub = boardHub;
         }
 
         [HttpPost]
         public async Task<IActionResult> CreateBoard([FromBody] BoardCreateDto dto)
         {
-            var board = _mapper.Map<Board>(dto);
-            board.OwnerId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var board = await _boardService.CreateBoardAsync(dto, userId);
 
-            await _context.Boards.AddAsync(board);
-            await _context.SaveChangesAsync();
+            await _boardHub.Clients.User(userId.ToString())
+                .SendAsync("NewBoardCreated", board);
 
-            var responseDto = _mapper.Map<BoardResponseDto>(board);
-            return CreatedAtAction(nameof(GetBoard), new { id = board.Id }, responseDto);
+            return CreatedAtAction(nameof(GetBoard), new { id = board.Id }, board);
         }
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult<BoardResponseDto>> GetBoard(Guid id)
+        [HttpGet("{boardId}")]
+        public async Task<ActionResult<BoardDetailDto>> GetBoard(Guid boardId)
         {
-            var board = await _context.Boards
-                .Include(b => b.Columns)
-                .ThenInclude(c => c.Items)
-                .FirstOrDefaultAsync(b => b.Id == id);
-
-            if (board == null) return NotFound();
-
-            return _mapper.Map<BoardResponseDto>(board);
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            return await _boardService.GetBoardWithPermissionsAsync(boardId, userId);
         }
     }
 }
