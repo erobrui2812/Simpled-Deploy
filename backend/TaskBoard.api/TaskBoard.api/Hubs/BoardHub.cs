@@ -1,27 +1,53 @@
 ﻿using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
+using TaskBoard.api.Data;
+using TaskBoard.api.Models.Dtos.BoardDtos;
 
 namespace TaskBoard.api.Hubs
 {
     public class BoardHub : Hub
     {
-        public async Task JoinBoardGroup(string boardId)
+        private readonly AppDbContext _context;
+
+        public BoardHub(AppDbContext context)
         {
-            await Groups.AddToGroupAsync(Context.ConnectionId, boardId);
+            _context = context;
         }
 
-        public async Task NotifyCardMoved(string boardId, CardMovedEventData data)
+        public async Task JoinBoard(Guid boardId)
         {
-            await Clients.GroupExcept(boardId, Context.ConnectionId)
-                .SendAsync("CardMoved", data);
+            var userId = Guid.Parse(Context.UserIdentifier);
+            var hasAccess = await _context.Boards
+                .AnyAsync(b => b.Id == boardId &&
+                    (b.OwnerId == userId || b.Members.Any(m => m.UserId == userId)));
+
+            if (hasAccess)
+            {
+                await Groups.AddToGroupAsync(Context.ConnectionId, boardId.ToString());
+                await Clients.Caller.SendAsync("BoardJoined", $"Conectado al tablero {boardId}");
+            }
+            else
+            {
+                await Clients.Caller.SendAsync("Error", "Acceso denegado");
+            }
+        }
+
+        public async Task MoveItem(Guid boardId, ItemMovedEventDto eventData)
+        {
+            // Validar permiso de edición
+            await Clients.GroupExcept(boardId.ToString(), Context.ConnectionId)
+                .SendAsync("ItemMoved", eventData);
         }
     }
 
-    public class CardMovedEventData
+    public class ItemMovedEventDto
     {
-        public string CardId { get; set; }
-        public string FromColumn { get; set; }
-        public string ToColumn { get; set; }
+        public Guid ItemId { get; set; }
+        public Guid FromColumnId { get; set; }
+        public Guid ToColumnId { get; set; }
         public int Position { get; set; }
     }
 }
+
+
 

@@ -11,6 +11,12 @@ namespace TaskBoard.api.Mapping
             CreateMap<Board, BoardResponseDto>();
             CreateMap<Column, ColumnDto>();
             CreateMap<Item, ItemDto>();
+
+            // Mapeo de permisos
+            CreateMap<Board, BoardPermissionsDto>()
+                .ForMember(dest => dest.CanEdit, opt => opt.Ignore())
+                .ForMember(dest => dest.CanDelete, opt => opt.Ignore())
+                .ForMember(dest => dest.CanInvite, opt => opt.Ignore());
         }
     }
 }
