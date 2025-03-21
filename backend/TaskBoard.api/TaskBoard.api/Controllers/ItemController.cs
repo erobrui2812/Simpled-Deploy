@@ -1,13 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
-using Microsoft.EntityFrameworkCore;
 using TaskBoard.api.Data;
-using TaskBoard.api.Models; // Añadir este using
-using TaskBoard.api.Models.Dtos.BoardDtos;
 using TaskBoard.api.Services;
-using System.Text.Json;
 using TaskBoard.api.Models.Dtos;
+using TaskBoard.api.Hubs;
+using Microsoft.AspNetCore.SignalR;
 
 namespace TaskBoard.api.Controllers
 {
@@ -18,11 +16,22 @@ namespace TaskBoard.api.Controllers
     {
         private readonly AppDbContext _context;
         private readonly ActivityLogger _activityLogger;
+        private readonly IHubContext<BoardHub> _boardHub;
+        private readonly ItemService _itemService;
+        private readonly BoardService _boardService;
 
-        public ItemController(AppDbContext context, ActivityLogger activityLogger)
+        public ItemController(
+         AppDbContext context,
+         ActivityLogger activityLogger,
+         IHubContext<BoardHub> boardHub,
+         ItemService itemService,
+         BoardService boardService)
         {
             _context = context;
             _activityLogger = activityLogger;
+            _boardHub = boardHub;
+            _itemService = itemService;
+            _boardService = boardService;
         }
 
         [HttpPost("move")]
@@ -30,35 +39,30 @@ namespace TaskBoard.api.Controllers
         {
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 
-            // 1. Validar permisos
-            var hasAccess = await _context.BoardMembers
-                .AnyAsync(m => m.BoardId == dto.BoardId && m.UserId == userId);
 
-            if (!hasAccess) return Forbid();
+            if (!await _boardService.UserCanEditAsync(dto.BoardId, userId))
+                return Forbid();
 
-            // 2. Actualizar posición
-            var item = await _context.Items
-                .FirstOrDefaultAsync(i => i.Id == dto.ItemId);
+            var item = await _itemService.MoveItemAsync(dto.ItemId, dto.ToColumnId);
 
-            if (item == null) return NotFound("Item no encontrado");
 
-            item.ColumnId = dto.ToColumnId;
-            await _context.SaveChangesAsync();
+            await _activityLogger.LogItemMoved(dto.BoardId, userId, item);
 
-            // 3. Registrar actividad
-            await _activityLogger.LogActivity(
-                dto.BoardId,
-                userId,
-                "ItemMoved",
-                "Item",
-                new
-                {
-                    FromColumn = dto.FromColumnId,
-                    ToColumn = dto.ToColumnId,
-                    ItemId = dto.ItemId
-                });
+
+            var eventData = new ItemMovedEventDto
+            {
+                ItemId = item.Id,
+                FromColumnId = dto.FromColumnId,
+                ToColumnId = item.ColumnId,
+                Position = item.Order
+            };
+
+            await _boardHub.Clients.Group(dto.BoardId.ToString())
+                .SendAsync("ItemMoved", eventData);
 
             return Ok(item);
         }
     }
 }
+
+

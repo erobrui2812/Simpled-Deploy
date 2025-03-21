@@ -1,43 +1,38 @@
 ﻿using System.Text.Json;
-using Microsoft.AspNetCore.Http;
 
-namespace TaskBoard.api.Middleware
+public class ErrorHandlerMiddleware
 {
-    public class ErrorHandlerMiddleware
+    private readonly RequestDelegate _next;
+
+    public ErrorHandlerMiddleware(RequestDelegate next)
     {
-        private readonly RequestDelegate _next;
+        _next = next;
+    }
 
-        public ErrorHandlerMiddleware(RequestDelegate next)
+    public async Task Invoke(HttpContext context)
+    {
+        try
         {
-            _next = next;
+            await _next(context);
         }
-
-        public async Task Invoke(HttpContext context)
+        catch (Exception error)
         {
-            try
+            context.Response.ContentType = "application/json";
+            context.Response.StatusCode = error switch
             {
-                await _next(context);
-            }
-            catch (Exception error)
+                KeyNotFoundException => 404,
+                UnauthorizedAccessException => 403,
+                _ => 500
+            };
+
+            await context.Response.WriteAsync(JsonSerializer.Serialize(new
             {
-                var response = context.Response;
-                response.ContentType = "application/json";
-
-                response.StatusCode = error switch
-                {
-                    KeyNotFoundException _ => StatusCodes.Status404NotFound,
-                    UnauthorizedAccessException _ => StatusCodes.Status401Unauthorized,
-                    _ => StatusCodes.Status500InternalServerError
-                };
-
-                await response.WriteAsync(JsonSerializer.Serialize(new
-                {
-                    Message = error.Message,
-                    StackTrace = context.RequestServices.GetRequiredService<IHostEnvironment>().IsDevelopment()
-                        ? error.StackTrace
-                        : null
-                }));
-            }
+                Message = error.Message,
+                StackTrace = context.RequestServices.GetRequiredService<IHostEnvironment>().IsDevelopment()
+                    ? error.StackTrace : null
+            }));
         }
     }
 }
+
+

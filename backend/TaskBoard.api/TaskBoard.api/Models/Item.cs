@@ -12,6 +12,8 @@ namespace TaskBoard.api.Models
         public DateTime DueDate { get; set; }
 
         public Column Column { get; set; }
+
+        public int Order { get; set; }
         public List<Content> Contents { get; set; } = new List<Content>();
     }
 }

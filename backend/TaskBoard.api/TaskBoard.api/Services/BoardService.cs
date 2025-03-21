@@ -6,7 +6,6 @@ using TaskBoard.api.Models;
 using TaskBoard.api.Models.Dtos.Board;
 using TaskBoard.api.Models.Dtos.BoardDtos;
 
-
 namespace TaskBoard.api.Services
 {
     public class BoardService
@@ -61,6 +60,16 @@ namespace TaskBoard.api.Services
 
             return permissions;
         }
+
+        public async Task<bool> UserCanEditAsync(Guid boardId, Guid userId)
+        {
+            return await _context.BoardMembers
+                .AnyAsync(m => m.BoardId == boardId &&
+                              m.UserId == userId &&
+                              (m.Role == "Admin" || m.Role == "Editor"));
+        }
     }
 }
+
+
 

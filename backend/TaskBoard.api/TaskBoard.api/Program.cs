@@ -8,8 +8,10 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using TaskBoard.api.Middleware;
+
 using TaskBoard.api.Services;
+using AutoMapper;
+using TaskBoard.api.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,6 +43,7 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -48,6 +51,12 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
+
+builder.Services.PostConfigure<MapperConfiguration>(config =>
+{
+    config.AssertConfigurationIsValid();
+});
+
 
 builder.Services.AddAuthentication(options =>
 {
@@ -73,6 +82,11 @@ builder.Services.AddIdentity<User, IdentityRole<Guid>>()
     .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
 
+
+builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt"))
+    .AddOptions<JwtSettings>()
+    .ValidateDataAnnotations();
+
 builder.Services.Configure<IdentityOptions>(options =>
 {
     options.Password.RequireDigit = false;
@@ -80,16 +94,23 @@ builder.Services.Configure<IdentityOptions>(options =>
     options.Password.RequireUppercase = false;
 });
 
+builder.Services.AddScoped<ItemService>();
+builder.Services.AddScoped<BoardService>();
 builder.Services.AddScoped<ActivityLogger>();
 builder.Services.AddSignalR();
+
 builder.Services.AddAutoMapper(typeof(Program).Assembly);
 
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
-    options.UseSqlite("Data Source=TaskBoard.db");
+    var path = Path.Combine(Directory.GetCurrentDirectory(), "bin/Debug/net8.0");
+    var fullPath = Path.Combine(path, "TaskBoard.db");
+
+    options.UseSqlite($"Data Source={fullPath}");
     options.EnableDetailedErrors();
     options.EnableSensitiveDataLogging();
 });
+
 
 var app = builder.Build();
 
@@ -97,6 +118,17 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.EnsureCreated();
+
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
+    var roles = new[] { "User", "Admin" };
+
+    foreach (var role in roles)
+    {
+        if (!await roleManager.RoleExistsAsync(role))
+        {
+            await roleManager.CreateAsync(new IdentityRole<Guid>(role));
+        }
+    }
 
     Console.WriteLine($"Database created at: {Path.Combine(Directory.GetCurrentDirectory(), "bin/Debug/net8.0/TaskBoard.db")}");
 }
@@ -109,10 +141,18 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+// Middlewares
 app.UseMiddleware<ErrorHandlerMiddleware>();
+app.UseMiddleware<BoardAuthorizationMiddleware>();
 
+// Autenticación y Autorización
 app.UseAuthentication();
 app.UseAuthorization();
+
+// SignalR
+app.MapHub<BoardHub>("/hubs/boards");
+
+app.MapControllers();
 
 app.Run();
 

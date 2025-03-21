@@ -17,35 +17,38 @@ namespace TaskBoard.api.Controllers
     {
         private readonly UserManager<User> _userManager;
         private readonly JwtSettings _jwtSettings;
+        private readonly RoleManager<IdentityRole<Guid>> _roleManager;
         private readonly IMapper _mapper;
 
         public AuthController(
             UserManager<User> userManager,
             IOptions<JwtSettings> jwtSettings,
+            RoleManager<IdentityRole<Guid>> roleManager,
             IMapper mapper)
         {
             _userManager = userManager;
             _jwtSettings = jwtSettings.Value;
+            _roleManager = roleManager;
             _mapper = mapper;
         }
-
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterDto dto)
         {
-            var user = new User
-            {
-                UserName = dto.Email,
-                Email = dto.Email
-            };
-
+            var user = new User { UserName = dto.Email, Email = dto.Email };
             var result = await _userManager.CreateAsync(user, dto.Password);
 
             if (!result.Succeeded)
                 return BadRequest(result.Errors);
 
+            // Verificar existencia del rol "User"
+            if (!await _roleManager.RoleExistsAsync("User"))
+                await _roleManager.CreateAsync(new IdentityRole<Guid>("User"));
+
             await _userManager.AddToRoleAsync(user, "User");
             return Ok(new { Message = "Registro exitoso" });
         }
+
+
 
         [HttpPost("login")]
         public async Task<ActionResult<AuthResponseDto>> Login([FromBody] LoginDto dto)
@@ -57,12 +60,20 @@ namespace TaskBoard.api.Controllers
             var roles = await _userManager.GetRolesAsync(user);
             var token = GenerateJwtToken(user, roles);
 
-            return new AuthResponseDto
+            // Configurar cookie HTTP-only
+            Response.Cookies.Append("jwt", token, new CookieOptions
             {
-                Token = token,
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
+                Expires = DateTime.UtcNow.AddHours(2)
+            });
+
+            return Ok(new AuthResponseDto
+            {
                 Expiration = DateTime.UtcNow.AddHours(2),
                 User = _mapper.Map<UserProfileDto>(user)
-            };
+            });
         }
 
         private string GenerateJwtToken(User user, IList<string> roles)

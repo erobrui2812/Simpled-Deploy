@@ -1,45 +1,43 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using TaskBoard.api.Data;
 using TaskBoard.api.Models;
 
-namespace TaskBoard.api.Middleware
+public class BoardAuthorizationMiddleware
 {
-    public class BoardAuthorizationMiddleware
+    private readonly RequestDelegate _next;
+
+    public BoardAuthorizationMiddleware(RequestDelegate next)
     {
-        private readonly RequestDelegate _next;
+        _next = next;
+    }
 
-        public BoardAuthorizationMiddleware(RequestDelegate next)
+    public async Task InvokeAsync(HttpContext context, AppDbContext dbContext, UserManager<User> userManager)
+    {
+        var userId = context.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!Guid.TryParse(userId, out var userGuid))
         {
-            _next = next;
+            context.Response.StatusCode = 401;
+            await context.Response.WriteAsync("Usuario no autenticado");
+            return;
         }
 
-        public async Task InvokeAsync(
-            HttpContext context,
-            AppDbContext dbContext,
-            UserManager<User> userManager)
+        var boardId = context.GetRouteValue("boardId")?.ToString();
+        if (Guid.TryParse(boardId, out var boardGuid))
         {
-            var userId = Guid.Parse(context.User.FindFirstValue(ClaimTypes.NameIdentifier));
-            var boardId = context.GetRouteValue("boardId")?.ToString();
+            var hasAccess = await dbContext.BoardMembers
+                .AnyAsync(m => m.BoardId == boardGuid && m.UserId == userGuid);
 
-            if (!string.IsNullOrEmpty(boardId) && Guid.TryParse(boardId, out var guidBoardId))
+            if (!hasAccess)
             {
-                var hasAccess = await dbContext.Boards
-                    .AnyAsync(b => b.Id == guidBoardId &&
-                        (b.OwnerId == userId || b.Members.Any(m => m.UserId == userId)));
-
-                if (!hasAccess)
-                {
-                    context.Response.StatusCode = 403;
-                    await context.Response.WriteAsync("Acceso denegado al tablero");
-                    return;
-                }
+                context.Response.StatusCode = 403;
+                await context.Response.WriteAsync("Acceso denegado al tablero");
+                return;
             }
-
-            await _next(context);
         }
+
+        await _next(context);
     }
 }
 

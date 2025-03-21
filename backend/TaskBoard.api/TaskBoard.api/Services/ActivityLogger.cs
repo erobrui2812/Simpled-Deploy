@@ -33,6 +33,29 @@ namespace TaskBoard.api.Services
             await _context.Activities.AddAsync(log);
             await _context.SaveChangesAsync();
         }
+
+        public async Task LogItemMoved(Guid boardId, Guid userId, Item item)
+        {
+            var log = new Activity
+            {
+                BoardId = boardId,
+                UserId = userId,
+                Action = "ItemMoved",
+                EntityType = "Item",
+                Details = JsonSerializer.Serialize(new
+                {
+                    FromColumn = item.ColumnId,
+                    ToColumn = item.ColumnId,
+                    ItemId = item.Id
+                }),
+                Timestamp = DateTime.UtcNow
+            };
+
+            await _context.Activities.AddAsync(log);
+            await _context.SaveChangesAsync();
+        }
     }
 }
+
+
 
