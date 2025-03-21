@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using TaskBoard.api.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -79,6 +80,7 @@ builder.Services.Configure<IdentityOptions>(options =>
 });
 
 builder.Services.AddSignalR();
+builder.Services.AddAutoMapper(typeof(Program).Assembly);
 
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
@@ -92,7 +94,9 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.EnsureCreated(); // Crea tablas sin migraciones
+    db.Database.EnsureCreated();
+
+    Console.WriteLine($"Database created at: {Path.Combine(Directory.GetCurrentDirectory(), "bin/Debug/net8.0/TaskBoard.db")}");
 }
 
 if (app.Environment.IsDevelopment())
@@ -103,10 +107,14 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseMiddleware<ErrorHandlerMiddleware>();
+
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.Run();
+
+
 
 
 

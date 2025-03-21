@@ -6,8 +6,8 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using TaskBoard.api.Models;
-
-
+using TaskBoard.api.Models.Dtos.AuthDtos;
+using AutoMapper;
 
 namespace TaskBoard.api.Controllers
 {
@@ -17,31 +17,60 @@ namespace TaskBoard.api.Controllers
     {
         private readonly UserManager<User> _userManager;
         private readonly JwtSettings _jwtSettings;
+        private readonly IMapper _mapper;
 
-        public AuthController(UserManager<User> userManager, IOptions<JwtSettings> jwtSettings)
+        public AuthController(
+            UserManager<User> userManager,
+            IOptions<JwtSettings> jwtSettings,
+            IMapper mapper)
         {
             _userManager = userManager;
             _jwtSettings = jwtSettings.Value;
+            _mapper = mapper;
+        }
+
+        [HttpPost("register")]
+        public async Task<IActionResult> Register([FromBody] RegisterDto dto)
+        {
+            var user = new User
+            {
+                UserName = dto.Email,
+                Email = dto.Email
+            };
+
+            var result = await _userManager.CreateAsync(user, dto.Password);
+
+            if (!result.Succeeded)
+                return BadRequest(result.Errors);
+
+            await _userManager.AddToRoleAsync(user, "User");
+            return Ok(new { Message = "Registro exitoso" });
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] Models.LoginRequest request)
+        public async Task<ActionResult<AuthResponseDto>> Login([FromBody] LoginDto dto)
         {
-            var user = await _userManager.FindByEmailAsync(request.Email);
-            if (user == null || !await _userManager.CheckPasswordAsync(user, request.Password))
-                return Unauthorized();
+            var user = await _userManager.FindByEmailAsync(dto.Email);
+            if (user == null || !await _userManager.CheckPasswordAsync(user, dto.Password))
+                return Unauthorized("Credenciales inválidas");
 
             var roles = await _userManager.GetRolesAsync(user);
             var token = GenerateJwtToken(user, roles);
 
-            return Ok(new { Token = token });
+            return new AuthResponseDto
+            {
+                Token = token,
+                Expiration = DateTime.UtcNow.AddHours(2),
+                User = _mapper.Map<UserProfileDto>(user)
+            };
         }
 
         private string GenerateJwtToken(User user, IList<string> roles)
         {
             var claims = new List<Claim> {
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-                new Claim(JwtRegisteredClaimNames.Email, user.Email)
+                new Claim(JwtRegisteredClaimNames.Email, user.Email),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 
             foreach (var role in roles)
@@ -62,3 +91,5 @@ namespace TaskBoard.api.Controllers
         }
     }
 }
+
+
