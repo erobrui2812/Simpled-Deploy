@@ -8,7 +8,7 @@ using TaskBoard.api.Models.Dtos.BoardDtos;
 
 namespace TaskBoard.api.Services
 {
-    public class BoardService
+    public class BoardService : IBoardService
     {
         private readonly AppDbContext _context;
         private readonly IMapper _mapper;
@@ -32,21 +32,14 @@ namespace TaskBoard.api.Services
 
         public async Task<BoardDetailDto> GetBoardWithPermissionsAsync(Guid boardId, Guid userId)
         {
-            return await _context.Boards
+            var board = await _context.Boards
                 .Include(b => b.Members)
-                .Include(b => b.Columns)
-                .ThenInclude(c => c.Items)
-                .Where(b => b.Id == boardId &&
-                    (b.OwnerId == userId || b.Members.Any(m => m.UserId == userId)))
-                .Select(b => new BoardDetailDto
-                {
-                    Id = b.Id,
-                    Name = b.Name,
-                    IsPublic = b.IsPublic,
-                    Columns = _mapper.Map<List<ColumnDto>>(b.Columns),
-                    Permissions = GetUserPermissions(b, userId)
-                })
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(b => b.Id == boardId);
+
+            if (board == null || !board.Members.Any(m => m.UserId == userId))
+                throw new UnauthorizedAccessException("No access to board");
+
+            return _mapper.Map<BoardDetailDto>(board);
         }
 
         private BoardPermissionsDto GetUserPermissions(Board board, Guid userId)
@@ -70,6 +63,4 @@ namespace TaskBoard.api.Services
         }
     }
 }
-
-
 

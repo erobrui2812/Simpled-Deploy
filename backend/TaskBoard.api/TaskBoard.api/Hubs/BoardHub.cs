@@ -6,12 +6,14 @@ using TaskBoard.api.Models.Dtos.BoardDtos;
 
 namespace TaskBoard.api.Hubs
 {
+    [Authorize]
     public class BoardHub : Hub
     {
         private readonly AppDbContext _context;
 
         public BoardHub(AppDbContext context) => _context = context;
 
+        [Authorize(Policy = "BoardAccess")]
         public async Task JoinBoard(Guid boardId)
         {
             Console.WriteLine($"Intento de unirse al tablero: {boardId}");
@@ -56,6 +58,4 @@ namespace TaskBoard.api.Hubs
         public int Position { get; set; }
     }
 }
-
-
 

@@ -1,24 +1,25 @@
-﻿
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
-using System.Security.Claims;
 using TaskBoard.api.Hubs;
 using TaskBoard.api.Models.Dtos.Board;
 using TaskBoard.api.Models.Dtos.BoardDtos;
-using TaskBoard.api.Models;
+
 using TaskBoard.api.Services;
+using TaskBoard.api.Filters;
+using TaskBoard.api.Utils;
+
 
 [ApiController]
 [Route("api/boards")]
 [Authorize]
 public class BoardController : ControllerBase
 {
-    private readonly BoardService _boardService;
+    private readonly IBoardService _boardService;
     private readonly IHubContext<BoardHub> _boardHub;
 
     public BoardController(
-        BoardService boardService,
+        IBoardService boardService, // Usar interfaz
         IHubContext<BoardHub> boardHub)
     {
         _boardService = boardService;
@@ -26,32 +27,26 @@ public class BoardController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin,Editor")] // Política específica
     public async Task<IActionResult> CreateBoard([FromBody] BoardCreateDto dto)
     {
-        Console.WriteLine("📌 Intentando crear un board...");
+        var userId = User.GetUserId(); // Método de extensión
+        var board = await _boardService.CreateBoardAsync(dto, userId);
 
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (userId == null)
-        {
-            Console.WriteLine("❌ Usuario no autenticado");
-            return Unauthorized();
-        }
-
-        var board = await _boardService.CreateBoardAsync(dto, Guid.Parse(userId));
         await _boardHub.Clients.Group(board.Id.ToString())
             .SendAsync("BoardCreated", board);
 
-        return CreatedAtAction(
-            actionName: nameof(GetBoard),
-            routeValues: new { boardId = board.Id },
-            value: board
-        );
+        return CreatedAtAction(nameof(GetBoard), new { boardId = board.Id }, board);
     }
 
     [HttpGet("{boardId}")]
+    [ServiceFilter(typeof(BoardAccessFilter))] // Filtro personalizado
     public async Task<ActionResult<BoardDetailDto>> GetBoard(Guid boardId)
     {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-        return await _boardService.GetBoardWithPermissionsAsync(boardId, userId);
+        var board = await _boardService.GetBoardWithPermissionsAsync(
+            boardId,
+            User.GetUserId()
+        );
+        return Ok(board);
     }
 }

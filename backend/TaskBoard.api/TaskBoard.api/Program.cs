@@ -13,6 +13,8 @@ using TaskBoard.api.Services;
 using AutoMapper;
 using TaskBoard.api.Hubs;
 using TaskBoard.api.Mapping;
+using TaskBoard.api.Utils;
+using TaskBoard.api.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -52,25 +54,35 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
 
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
-{
-    options.TokenValidationParameters = new TokenValidationParameters
+// Configuración JWT actualizada
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
     {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ValidIssuer = builder.Configuration["Jwt:Issuer"],
-        ValidAudience = builder.Configuration["Jwt:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
-    };
-});
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                // Para SignalR WebSockets
+                var accessToken = context.Request.Query["access_token"];
+                if (!string.IsNullOrEmpty(accessToken))
+                {
+                    context.Token = accessToken;
+                }
+                return Task.CompletedTask;
+            }
+        };
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+        };
+    });
 
 builder.Services.AddIdentity<User, IdentityRole<Guid>>()
     .AddEntityFrameworkStores<AppDbContext>()
@@ -90,9 +102,19 @@ builder.Services.Configure<IdentityOptions>(options =>
 builder.Services.AddScoped<UserRolesResolver>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ItemService>();
-builder.Services.AddScoped<BoardService>();
+builder.Services.AddScoped<IBoardService, BoardService>();
 builder.Services.AddScoped<ActivityLogger>();
 builder.Services.AddSignalR();
+builder.Services.AddScoped<BoardAccessFilter>();
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("BoardAccess", policy =>
+        policy.RequireAuthenticatedUser());
+
+    options.AddPolicy("BoardAdmin", policy =>
+        policy.RequireRole("Admin"));
+});
 
 // Registrar el perfil de mapeo y resolver dependencias correctamente
 builder.Services.AddAutoMapper((provider, cfg) =>
@@ -111,17 +133,18 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.EnableSensitiveDataLogging();
 });
 
-// Habilitar CORS
+// Configuración CORS para SignalR
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowLocalhost", policy =>
+    options.AddPolicy("SignalRPolicy", builder =>
     {
-        policy.WithOrigins("https://localhost:3000") // Puerto de tu frontend (React, etc.)
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials();
+        builder.WithOrigins("https://example.com", "https://another-example.com")
+               .AllowAnyMethod()
+               .AllowAnyHeader()
+               .AllowCredentials();
     });
 });
+
 
 var app = builder.Build();
 
@@ -151,24 +174,19 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseRouting(); // Primero routing
 
-// Middlewares
+// Habilitar CORS después de routing
+app.UseCors("SignalRPolicy");
+
+// Middlewares de errores y autenticación
 app.UseMiddleware<ErrorHandlerMiddleware>();
-
-// Habilitar CORS
-app.UseCors("AllowLocalhost");
-
-// Autenticación y Autorización
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseMiddleware<BoardAuthorizationMiddleware>();
 
-// SignalR
+// SignalR y controladores
 app.MapHub<BoardHub>("/hubs/boards");
-
 app.MapControllers();
 
 app.Run();
-
-
 
