@@ -15,16 +15,37 @@ public class BoardAuthorizationMiddleware
 
     public async Task InvokeAsync(HttpContext context, AppDbContext dbContext, UserManager<User> userManager)
     {
-        var userId = context.User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (!Guid.TryParse(userId, out var userGuid))
+        // Ignorar rutas que no requieren autorización
+        if (context.Request.Path.StartsWithSegments("/api/boards") && context.Request.Method == "POST")
         {
-            context.Response.StatusCode = 401;
-            await context.Response.WriteAsync("Usuario no autenticado");
+            await _next(context);
             return;
         }
 
-        var boardId = context.GetRouteValue("boardId")?.ToString();
-        if (Guid.TryParse(boardId, out var boardGuid))
+        var path = context.Request.Path;
+
+        // Ignorar middleware en rutas públicas (Auth)
+        if (path.StartsWithSegments("/api/Auth"))
+        {
+            await _next(context);
+            return;
+        }
+
+        var userId = context.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!Guid.TryParse(userId, out var userGuid))
+        {
+            // Solo requerir autenticación si la ruta tiene boardId
+            var boardId = context.GetRouteValue("boardId")?.ToString();
+            if (!string.IsNullOrEmpty(boardId))
+            {
+                context.Response.StatusCode = 401;
+                await context.Response.WriteAsync("Usuario no autenticado");
+                return;
+            }
+        }
+
+        var boardIdValue = context.GetRouteValue("boardId")?.ToString();
+        if (Guid.TryParse(boardIdValue, out var boardGuid))
         {
             var hasAccess = await dbContext.BoardMembers
                 .AnyAsync(m => m.BoardId == boardGuid && m.UserId == userGuid);
@@ -40,5 +61,7 @@ public class BoardAuthorizationMiddleware
         await _next(context);
     }
 }
+
+
 
 

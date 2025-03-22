@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using System.Security.Claims;
@@ -27,13 +28,24 @@ public class BoardController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreateBoard([FromBody] BoardCreateDto dto)
     {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-        var board = await _boardService.CreateBoardAsync(dto, userId);
+        Console.WriteLine("📌 Intentando crear un board...");
 
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == null)
+        {
+            Console.WriteLine("❌ Usuario no autenticado");
+            return Unauthorized();
+        }
+
+        var board = await _boardService.CreateBoardAsync(dto, Guid.Parse(userId));
         await _boardHub.Clients.Group(board.Id.ToString())
             .SendAsync("BoardCreated", board);
 
-        return CreatedAtAction(nameof(GetBoard), new { id = board.Id }, board);
+        return CreatedAtAction(
+            actionName: nameof(GetBoard),
+            routeValues: new { boardId = board.Id },
+            value: board
+        );
     }
 
     [HttpGet("{boardId}")]
@@ -43,5 +55,3 @@ public class BoardController : ControllerBase
         return await _boardService.GetBoardWithPermissionsAsync(boardId, userId);
     }
 }
-
-

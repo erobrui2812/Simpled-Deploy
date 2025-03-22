@@ -37,32 +37,28 @@ namespace TaskBoard.api.Controllers
         [HttpPost("move")]
         public async Task<IActionResult> MoveItem([FromBody] ItemMoveDto dto)
         {
-            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-
+            // Validación de permisos
             if (!await _boardService.UserCanEditAsync(dto.BoardId, userId))
                 return Forbid();
 
             var item = await _itemService.MoveItemAsync(dto.ItemId, dto.ToColumnId);
 
-
-            await _activityLogger.LogItemMoved(dto.BoardId, userId, item);
-
-
-            var eventData = new ItemMovedEventDto
-            {
-                ItemId = item.Id,
-                FromColumnId = dto.FromColumnId,
-                ToColumnId = item.ColumnId,
-                Position = item.Order
-            };
-
+            // Notificar a TODOS los clientes (incluyendo al que movió)
             await _boardHub.Clients.Group(dto.BoardId.ToString())
-                .SendAsync("ItemMoved", eventData);
+                .SendAsync("ItemMoved", new ItemMovedEventDto
+                {
+                    ItemId = item.Id,
+                    FromColumnId = dto.FromColumnId,
+                    ToColumnId = item.ColumnId,
+                    Position = item.Order
+                });
 
             return Ok(item);
         }
     }
 }
+
 
 

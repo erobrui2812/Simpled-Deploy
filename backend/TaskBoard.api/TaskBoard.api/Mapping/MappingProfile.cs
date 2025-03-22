@@ -8,12 +8,8 @@ namespace TaskBoard.api.Mapping
 {
     public class MappingProfile : Profile
     {
-        private readonly UserManager<User> _userManager;
-
-        public MappingProfile(UserManager<User> userManager)
+        public MappingProfile()
         {
-            _userManager = userManager;
-
             CreateMap<BoardCreateDto, Board>();
             CreateMap<Board, BoardResponseDto>();
             CreateMap<Column, ColumnDto>();
@@ -25,11 +21,31 @@ namespace TaskBoard.api.Mapping
                 .ForMember(dest => dest.CanInvite, opt => opt.Ignore());
 
             CreateMap<User, UserProfileDto>()
-                .ForMember(dest => dest.Roles, opt => opt.MapFrom(
-                    src => _userManager.GetRolesAsync(src).Result
-                ));
+                .ForMember(dest => dest.Roles, opt => opt.MapFrom<UserRolesResolver>());
         }
     }
+
+    public class UserRolesResolver : IValueResolver<User, UserProfileDto, List<string>>
+    {
+        private readonly UserManager<User> _userManager;
+
+        public UserRolesResolver(UserManager<User> userManager)
+        {
+            _userManager = userManager;
+        }
+
+        public List<string> Resolve(
+            User source,
+            UserProfileDto destination,
+            List<string> destMember,
+            ResolutionContext context)
+        {
+            var roles = _userManager.GetRolesAsync(source).GetAwaiter().GetResult();
+            return roles.ToList();
+        }
+    }
+
 }
+
 
 

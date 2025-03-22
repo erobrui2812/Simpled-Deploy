@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using TaskBoard.api.Services;
 using AutoMapper;
 using TaskBoard.api.Hubs;
+using TaskBoard.api.Mapping;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -43,7 +44,6 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -51,12 +51,6 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
-
-builder.Services.PostConfigure<MapperConfiguration>(config =>
-{
-    config.AssertConfigurationIsValid();
-});
-
 
 builder.Services.AddAuthentication(options =>
 {
@@ -82,7 +76,6 @@ builder.Services.AddIdentity<User, IdentityRole<Guid>>()
     .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
 
-
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt"))
     .AddOptions<JwtSettings>()
     .ValidateDataAnnotations();
@@ -94,12 +87,19 @@ builder.Services.Configure<IdentityOptions>(options =>
     options.Password.RequireUppercase = false;
 });
 
+builder.Services.AddScoped<UserRolesResolver>();
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ItemService>();
 builder.Services.AddScoped<BoardService>();
 builder.Services.AddScoped<ActivityLogger>();
 builder.Services.AddSignalR();
 
-builder.Services.AddAutoMapper(typeof(Program).Assembly);
+// Registrar el perfil de mapeo y resolver dependencias correctamente
+builder.Services.AddAutoMapper((provider, cfg) =>
+{
+    cfg.ConstructServicesUsing(type => provider.GetRequiredService(type));
+    cfg.AddProfile(new MappingProfile());
+}, typeof(Program).Assembly);
 
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
@@ -111,6 +111,17 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.EnableSensitiveDataLogging();
 });
 
+// Habilitar CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowLocalhost", policy =>
+    {
+        policy.WithOrigins("https://localhost:3000") // Puerto de tu frontend (React, etc.)
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
+});
 
 var app = builder.Build();
 
@@ -143,11 +154,14 @@ app.UseHttpsRedirection();
 
 // Middlewares
 app.UseMiddleware<ErrorHandlerMiddleware>();
-app.UseMiddleware<BoardAuthorizationMiddleware>();
+
+// Habilitar CORS
+app.UseCors("AllowLocalhost");
 
 // Autenticación y Autorización
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseMiddleware<BoardAuthorizationMiddleware>();
 
 // SignalR
 app.MapHub<BoardHub>("/hubs/boards");
@@ -155,11 +169,6 @@ app.MapHub<BoardHub>("/hubs/boards");
 app.MapControllers();
 
 app.Run();
-
-
-
-
-
 
 
 

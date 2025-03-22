@@ -8,6 +8,7 @@ using System.Text;
 using TaskBoard.api.Models;
 using TaskBoard.api.Models.Dtos.AuthDtos;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 
 namespace TaskBoard.api.Controllers
 {
@@ -31,7 +32,9 @@ namespace TaskBoard.api.Controllers
             _roleManager = roleManager;
             _mapper = mapper;
         }
+
         [HttpPost("register")]
+        [AllowAnonymous]
         public async Task<IActionResult> Register([FromBody] RegisterDto dto)
         {
             var user = new User { UserName = dto.Email, Email = dto.Email };
@@ -40,17 +43,17 @@ namespace TaskBoard.api.Controllers
             if (!result.Succeeded)
                 return BadRequest(result.Errors);
 
-            // Verificar existencia del rol "User"
+
             if (!await _roleManager.RoleExistsAsync("User"))
                 await _roleManager.CreateAsync(new IdentityRole<Guid>("User"));
+
 
             await _userManager.AddToRoleAsync(user, "User");
             return Ok(new { Message = "Registro exitoso" });
         }
 
-
-
         [HttpPost("login")]
+        [AllowAnonymous]
         public async Task<ActionResult<AuthResponseDto>> Login([FromBody] LoginDto dto)
         {
             var user = await _userManager.FindByEmailAsync(dto.Email);
@@ -60,7 +63,7 @@ namespace TaskBoard.api.Controllers
             var roles = await _userManager.GetRolesAsync(user);
             var token = GenerateJwtToken(user, roles);
 
-            // Configurar cookie HTTP-only
+        
             Response.Cookies.Append("jwt", token, new CookieOptions
             {
                 HttpOnly = true,
@@ -71,6 +74,7 @@ namespace TaskBoard.api.Controllers
 
             return Ok(new AuthResponseDto
             {
+                Token = token, 
                 Expiration = DateTime.UtcNow.AddHours(2),
                 User = _mapper.Map<UserProfileDto>(user)
             });
@@ -102,5 +106,6 @@ namespace TaskBoard.api.Controllers
         }
     }
 }
+
 
 
