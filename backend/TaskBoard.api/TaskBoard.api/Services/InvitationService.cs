@@ -16,7 +16,7 @@ namespace TaskBoard.api.Services
         public InvitationService(
             AppDbContext context,
             LinkGenerator linkGenerator,
-            IHttpContextAccessor httpContextAccessor) // Añade esta línea
+            IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
             _linkGenerator = linkGenerator;

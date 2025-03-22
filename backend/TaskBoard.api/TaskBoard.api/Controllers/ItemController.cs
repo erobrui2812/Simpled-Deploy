@@ -39,13 +39,13 @@ namespace TaskBoard.api.Controllers
         {
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-            // Validación de permisos
+
             if (!await _boardService.UserCanEditAsync(dto.BoardId, userId))
                 return Forbid();
 
             var item = await _itemService.MoveItemAsync(dto.ItemId, dto.ToColumnId);
 
-            // Notificar a TODOS los clientes (incluyendo al que movió)
+
             await _boardHub.Clients.Group(dto.BoardId.ToString())
                 .SendAsync("ItemMoved", new ItemMovedEventDto
                 {

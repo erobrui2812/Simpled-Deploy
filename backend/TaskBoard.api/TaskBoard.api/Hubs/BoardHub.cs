@@ -38,7 +38,7 @@ namespace TaskBoard.api.Hubs
         [Authorize(Roles = "Editor,Admin")] // Solo editores y admins pueden mover ítems
         public async Task MoveItem(Guid boardId, ItemMovedEventDto eventData)
         {
-            // Validar que el ítem pertenece al tablero
+
             var isValid = await _context.Items
                 .AnyAsync(i => i.Id == eventData.ItemId && i.Column!.BoardId == boardId);
 

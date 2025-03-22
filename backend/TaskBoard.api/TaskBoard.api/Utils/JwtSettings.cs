@@ -1,17 +1,10 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace TaskBoard.api.Models
+﻿namespace TaskBoard.api.Utils
 {
     public class JwtSettings
     {
-        [Required]
         public string Key { get; set; }
-
-        [Required]
         public string Issuer { get; set; }
-
-        [Required]
         public string Audience { get; set; }
+        public int ExpiresInHours { get; set; }
     }
 }
-

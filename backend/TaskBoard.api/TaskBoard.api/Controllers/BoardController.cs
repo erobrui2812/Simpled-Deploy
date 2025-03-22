@@ -4,11 +4,9 @@ using Microsoft.AspNetCore.SignalR;
 using TaskBoard.api.Hubs;
 using TaskBoard.api.Models.Dtos.Board;
 using TaskBoard.api.Models.Dtos.BoardDtos;
-
 using TaskBoard.api.Services;
 using TaskBoard.api.Filters;
 using TaskBoard.api.Utils;
-
 
 [ApiController]
 [Route("api/boards")]
@@ -19,7 +17,7 @@ public class BoardController : ControllerBase
     private readonly IHubContext<BoardHub> _boardHub;
 
     public BoardController(
-        IBoardService boardService, // Usar interfaz
+        IBoardService boardService,
         IHubContext<BoardHub> boardHub)
     {
         _boardService = boardService;
@@ -27,10 +25,10 @@ public class BoardController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = "Admin,Editor")] // Política específica
+    [Authorize(Roles = "Admin,Editor")]
     public async Task<IActionResult> CreateBoard([FromBody] BoardCreateDto dto)
     {
-        var userId = User.GetUserId(); // Método de extensión
+        var userId = User.GetUserId();
         var board = await _boardService.CreateBoardAsync(dto, userId);
 
         await _boardHub.Clients.Group(board.Id.ToString())
@@ -39,8 +37,8 @@ public class BoardController : ControllerBase
         return CreatedAtAction(nameof(GetBoard), new { boardId = board.Id }, board);
     }
 
-    [HttpGet("{boardId}")]
-    [ServiceFilter(typeof(BoardAccessFilter))] // Filtro personalizado
+    [HttpGet("{boardId:guid}")]
+    [ServiceFilter(typeof(BoardAccessFilter))]
     public async Task<ActionResult<BoardDetailDto>> GetBoard(Guid boardId)
     {
         var board = await _boardService.GetBoardWithPermissionsAsync(
@@ -49,4 +47,14 @@ public class BoardController : ControllerBase
         );
         return Ok(board);
     }
+
+    [HttpGet]
+    public async Task<IActionResult> GetBoards()
+    {
+        var userId = User.GetUserId();
+        var boards = await _boardService.GetBoardsByUserAsync(userId);
+        return Ok(boards);
+    }
+
+
 }

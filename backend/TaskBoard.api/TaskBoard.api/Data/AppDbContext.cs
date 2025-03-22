@@ -19,13 +19,13 @@ namespace TaskBoard.api.Data
         public DbSet<BoardMember> BoardMembers { get; set; }
         public DbSet<Content> Contents { get; set; }
         public DbSet<Invitation> Invitations { get; set; }
-        public DbSet<Activity> Activities { get; set; } // Añadir este DbSet
+        public DbSet<Activity> Activities { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
 
-            // Configuración para SQLite
+
             builder.Entity<Item>()
                 .Property(i => i.DueDate)
                 .HasConversion(
@@ -35,14 +35,14 @@ namespace TaskBoard.api.Data
             builder.Entity<BoardMember>()
                 .HasKey(bm => new { bm.BoardId, bm.UserId });
 
-            // Configurar relación con Board
+
             builder.Entity<Invitation>()
                 .HasOne(i => i.Board)
                 .WithMany()
                 .HasForeignKey(i => i.BoardId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // Configuración adicional para Activity
+
             builder.Entity<Activity>(entity =>
             {
                 entity.HasIndex(a => a.BoardId);

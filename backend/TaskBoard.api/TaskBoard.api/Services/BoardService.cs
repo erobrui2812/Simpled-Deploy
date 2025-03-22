@@ -61,6 +61,15 @@ namespace TaskBoard.api.Services
                               m.UserId == userId &&
                               (m.Role == "Admin" || m.Role == "Editor"));
         }
+
+        public async Task<List<BoardResponseDto>> GetBoardsByUserAsync(Guid userId)
+        {
+            var boards = await _context.Boards
+                .Where(b => b.OwnerId == userId || b.Members.Any(m => m.UserId == userId))
+                .ToListAsync();
+            return _mapper.Map<List<BoardResponseDto>>(boards);
+        }
+
     }
 }
 
