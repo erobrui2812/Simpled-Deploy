@@ -38,7 +38,7 @@ dotnet restore
 dotnet run
 ```
 
-> ⚠ Asegúrate de tener instalado el **.NET 8 SDK**.
+> ⚠ Es obligatorio tener instalado el **.NET 8 SDK**.
 
 ### ▶ Frontend (React / Next.js)
 
@@ -48,7 +48,7 @@ npm install
 npm run dev
 ```
 
-> ⚠ Asegúrate de tener instalado **Node.js (LTS)**.
+> ⚠ Es obligatorio tener instalado **Node.js (LTS)**.
 
 ---
 
@@ -92,7 +92,7 @@ Simpled/
 │   └── (React/Next app)       # Interfaz de usuario
 ├── docs/
 │   ├── presentacion.pdf       # Presentación para exposición
-│   └── TaskBoard_ER.png       # Diagrama E/R
+│   └── Simpled_ER.png         # Diagrama E/R
 ├── bitacora.md                # Registro diario de tareas
 └── README.md                  # Este archivo
 ```
@@ -125,7 +125,7 @@ Simpled/
 
 ## 🗃️ Base de datos y E/R
 
-![Esquema E/R](docs/TaskBoard_ER.png)
+![Esquema E/R](docs/Simpled_ER.png)
 
 - Relaciones 1-N: `Board → Columns → Items → Contents`
 - Relaciones N-M: `Users ↔ Boards (via BoardMembers)`
