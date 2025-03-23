@@ -146,7 +146,7 @@ Simpled/
 - [React docs](https://react.dev/)
 - EF Core, FluentValidation, SignalR, etc.
 
-📒 **Bitácora** → [bitacora.md](bitacora.md)
+📒 **Bitácora** → [bitacora.md](docs/bitacora.md)
 
 ---
 
