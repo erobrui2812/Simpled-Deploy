@@ -1,16 +1,9 @@
-import Image from "next/image";
+import { RegistroForm } from "@/components/registro-form";
 
-export default function Home() {
+export default function Login() {
   return (
-    <div>
-      <p>Bienvenido a Simpled</p>
-
-      {/*
-        Fotos de la APP en el apartado de tablero junto con texto explicativo de funcionalidad
-      
-        Explicacion de uso de la APP y poco mas
-
-      */}
+    <div className="flex items-center justify-center w-full h-screen">
+        <RegistroForm className="w-full max-w-md p-4" />
     </div>
   );
 }
