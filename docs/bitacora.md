@@ -16,7 +16,7 @@ Registro de tareas realizadas durante el desarrollo del proyecto **Simpled**.
 | 2025-03-24  | Ambos                   | CRUD de Boards y validación de OwnerId                                          |
 | 2025-03-24  | Adrián Jiménez          | Configuración de Swagger con autenticación Bearer                               |
 | 2025-03-25  | Elías Robles            | Reestructuración en DTOs + protección de endpoints con [Authorize]              |
-| 2025-03-25  | Ambos                   | Preparación de anteproyecto en Notion y redacción inicial del README.md         |
+| 2025-03-25  | Ambos                   | Preparación de anteproyecto en Notion y redacción del Readme.md                 |
 
 ---
 
