@@ -93,7 +93,7 @@ Simpled/
 ├── docs/
 │   ├── presentacion.pdf       # Presentación para exposición
 │   └── Simpled_ER.png         # Diagrama E/R
-├── bitacora.md                # Registro diario de tareas
+│   └── Bitacora.md            # Registro diario de tareas
 └── README.md                  # Este archivo
 ```
 
