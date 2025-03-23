@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace Simpled.Controllers
 {
-
     [Authorize]
     [ApiController]
     [Route("api/[controller]")]
@@ -21,7 +20,9 @@ namespace Simpled.Controllers
             _context = context;
         }
 
-        // GET: api/items
+        /// <summary>
+        /// Devuelve todos los items de la base de datos.
+        /// </summary>
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ItemReadDto>>> GetAllItems()
         {
@@ -38,7 +39,9 @@ namespace Simpled.Controllers
             return Ok(itemDtos);
         }
 
-        // GET: api/items/{id}
+        /// <summary>
+        /// Obtiene un item por ID.
+        /// </summary>
         [HttpGet("{id}")]
         public async Task<ActionResult<ItemReadDto>> GetItem(Guid id)
         {
@@ -60,7 +63,9 @@ namespace Simpled.Controllers
             return Ok(dto);
         }
 
-        // POST: api/items
+        /// <summary>
+        /// Crea un nuevo item.
+        /// </summary>
         [HttpPost]
         public async Task<ActionResult<ItemReadDto>> CreateItem([FromBody] ItemCreateDto createDto)
         {
@@ -88,7 +93,9 @@ namespace Simpled.Controllers
             return CreatedAtAction(nameof(GetItem), new { id = newItem.Id }, readDto);
         }
 
-        // PUT: api/items/{id}
+        /// <summary>
+        /// Actualiza un item existente.
+        /// </summary>
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateItem(Guid id, [FromBody] ItemUpdateDto updateDto)
         {
@@ -108,8 +115,9 @@ namespace Simpled.Controllers
             return NoContent();
         }
 
-        // DELETE: api/items/{id}
-        // Solo admin puede borrar items
+        /// <summary>
+        /// Elimina un item.
+        /// </summary>
         [Authorize(Roles = "admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteItem(Guid id)
@@ -123,7 +131,9 @@ namespace Simpled.Controllers
             return NoContent();
         }
 
-        // POST: api/items/{id}/upload
+        /// <summary>
+        /// Adjunta un archivo a un item.
+        /// </summary>
         [HttpPost("{id}/upload")]
         public async Task<IActionResult> UploadFile(Guid id, IFormFile file)
         {
@@ -161,3 +171,5 @@ namespace Simpled.Controllers
         }
     }
 }
+
+

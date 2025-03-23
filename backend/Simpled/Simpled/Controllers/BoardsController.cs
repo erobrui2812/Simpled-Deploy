@@ -8,7 +8,7 @@ using Simpled.Models;
 
 namespace Simpled.Controllers
 {
-    [Authorize] // [Authorize(Roles="admin")] 
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class BoardsController : ControllerBase
@@ -20,12 +20,13 @@ namespace Simpled.Controllers
             _context = context;
         }
 
-        // GET /api/boards
+        /// <summary>
+        /// Devuelve todos los tableros existentes.
+        /// </summary>
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<BoardReadDto>>> GetAllBoards()
+        public async Task<ActionResult<IEnumerable<BoardReadDto>>> GetBoards()
         {
             var boards = await _context.Boards.ToListAsync();
-
 
             var boardDtos = boards.Select(b => new BoardReadDto
             {
@@ -38,7 +39,9 @@ namespace Simpled.Controllers
             return Ok(boardDtos);
         }
 
-        // GET /api/boards/{id}
+        /// <summary>
+        /// Devuelve los detalles de un tablero por ID.
+        /// </summary>
         [HttpGet("{id}")]
         public async Task<ActionResult<BoardReadDto>> GetBoard(Guid id)
         {
@@ -57,11 +60,12 @@ namespace Simpled.Controllers
             return Ok(boardDto);
         }
 
-        // POST /api/boards
+        /// <summary>
+        /// Crea un nuevo tablero.
+        /// </summary>
         [HttpPost]
         public async Task<ActionResult<BoardReadDto>> CreateBoard([FromBody] BoardCreateDto createDto)
         {
-
             var newBoard = new Board
             {
                 Id = Guid.NewGuid(),
@@ -84,7 +88,9 @@ namespace Simpled.Controllers
             return CreatedAtAction(nameof(GetBoard), new { id = newBoard.Id }, readDto);
         }
 
-        // PUT /api/boards/{id}
+        /// <summary>
+        /// Actualiza los detalles de un tablero.
+        /// </summary>
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateBoard(Guid id, [FromBody] BoardUpdateDto updateDto)
         {
@@ -103,9 +109,11 @@ namespace Simpled.Controllers
             return NoContent();
         }
 
-        // DELETE /api/boards/{id}
+        /// <summary>
+        /// Elimina un tablero existente.
+        /// </summary>
         [HttpDelete("{id}")]
-        // [Authorize(Roles="admin")] 
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> DeleteBoard(Guid id)
         {
             var board = await _context.Boards.FindAsync(id);
@@ -118,3 +126,6 @@ namespace Simpled.Controllers
         }
     }
 }
+
+
+

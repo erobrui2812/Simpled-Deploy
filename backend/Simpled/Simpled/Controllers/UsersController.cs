@@ -21,6 +21,9 @@ namespace Simpled.Controllers
         }
 
         // GET: api/users
+        /// <summary>
+        /// Devuelve todos los usuarios registrados.
+        /// </summary>
         [HttpGet]
         public async Task<ActionResult<IEnumerable<UserReadDto>>> GetUsers()
         {
@@ -39,6 +42,9 @@ namespace Simpled.Controllers
         }
 
         // GET: api/users/{id}
+        /// <summary>
+        /// Devuelve un usuario por su ID.
+        /// 
         [HttpGet("{id}")]
         public async Task<ActionResult<UserReadDto>> GetUser(Guid id)
         {
@@ -61,6 +67,9 @@ namespace Simpled.Controllers
         }
 
 
+        /// <summary>
+        /// Registra un nuevo usuario
+        /// </summary>
         [AllowAnonymous]
         [HttpPost("register")]
         public async Task<ActionResult<UserReadDto>> Register([FromBody] UserRegisterDto userDto)
@@ -93,6 +102,9 @@ namespace Simpled.Controllers
         }
 
         // PUT: api/users/{id}
+        /// <summary>
+        /// Actualiza la información de un usuario.
+        /// </summary>
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateUser(Guid id, [FromBody] UserUpdateDto updatedDto)
         {
@@ -123,6 +135,9 @@ namespace Simpled.Controllers
         }
 
         // DELETE: api/users/{id}
+        /// <summary>
+        /// Elimina un usuario del sistema.
+        /// </summary>
         [HttpDelete("{id}")]
         // [Authorize(Roles = "admin")]
         public async Task<IActionResult> DeleteUser(Guid id)

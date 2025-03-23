@@ -1,0 +1,25 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Simpled API Docs</title>
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/swagger-ui-themes@3.0.0/themes/3.x/theme-material.css" />
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@latest/swagger-ui.css" />
+</head>
+<body>
+    <div id="swagger-ui"></div>
+    <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist/swagger-ui-bundle.js"></script>
+    <script>
+        const ui = SwaggerUIBundle({
+            url: "/swagger/v1/swagger.json",
+            dom_id: "#swagger-ui",
+            deepLinking: true,
+            presets: [SwaggerUIBundle.presets.apis],
+            layout: "BaseLayout",
+        });
+    </script>
+</body>
+</html>

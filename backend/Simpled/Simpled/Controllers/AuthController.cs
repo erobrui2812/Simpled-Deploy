@@ -25,6 +25,9 @@ namespace Simpled.Controllers
             _configuration = configuration;
         }
 
+        /// <summary>
+        /// Autentica a un usuario y devuelve un token JWT válido.
+        /// </summary>
         [HttpPost("login")]
         public IActionResult Login([FromBody] LoginRequestDto loginDto)
         {

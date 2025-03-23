@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace Simpled.Controllers
 {
-
     [Authorize]
     [ApiController]
     [Route("api/[controller]")]
@@ -20,7 +19,9 @@ namespace Simpled.Controllers
             _context = context;
         }
 
-        // GET /api/columns
+        /// <summary>
+        /// Devuelve todas las columnas.
+        /// </summary>
         [HttpGet]
         public async Task<ActionResult<IEnumerable<BoardColumnReadDto>>> GetAllColumns()
         {
@@ -36,7 +37,9 @@ namespace Simpled.Controllers
             return Ok(columnDtos);
         }
 
-        // GET /api/columns/{id}
+        /// <summary>
+        /// Devuelve una columna por su ID.
+        /// </summary>
         [HttpGet("{id}")]
         public async Task<ActionResult<BoardColumnReadDto>> GetColumn(Guid id)
         {
@@ -55,7 +58,9 @@ namespace Simpled.Controllers
             return Ok(columnDto);
         }
 
-        // POST /api/columns
+        /// <summary>
+        /// Crea una nueva columna en un board.
+        /// </summary>
         [HttpPost]
         public async Task<ActionResult<BoardColumnReadDto>> CreateColumn([FromBody] BoardColumnCreateDto createDto)
         {
@@ -81,7 +86,9 @@ namespace Simpled.Controllers
             return CreatedAtAction(nameof(GetColumn), new { id = newColumn.Id }, columnRead);
         }
 
-        // PUT /api/columns/{id}
+        /// <summary>
+        /// Actualiza una columna.
+        /// </summary>
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateColumn(Guid id, [FromBody] BoardColumnUpdateDto updateDto)
         {
@@ -100,8 +107,9 @@ namespace Simpled.Controllers
             return NoContent();
         }
 
-        // DELETE /api/columns/{id}
-        // Solo admin puede borrar columnas
+        /// <summary>
+        /// Elimina una columna.
+        /// </summary>
         [Authorize(Roles = "admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteColumn(Guid id)
@@ -116,3 +124,5 @@ namespace Simpled.Controllers
         }
     }
 }
+
+

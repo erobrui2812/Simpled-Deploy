@@ -1,4 +1,4 @@
-using Simpled.Data;
+﻿using Simpled.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -7,6 +7,7 @@ using Simpled.Hubs;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.OpenApi.Models;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -72,9 +73,27 @@ builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 // --------------------------------------------------
 //  Swagger + Bearer Authorization
 // --------------------------------------------------
-builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "🧩 Simpled API - Notion/Trello Clone",
+        Version = "v1",
+        Description = """
+            API RESTful para gestión colaborativa de tareas, columnas, tableros y usuarios.
+            Funcionalidades:
+            - Registro e inicio de sesión con JWT
+            - CRUD de usuarios, tableros, columnas e items
+            - Gestión de roles y permisos
+            - Edición colaborativa en tiempo real con SignalR
+            """,
+        Contact = new OpenApiContact
+        {
+            Name = "Simpled Team",
+            Url = new Uri("https://github.com/AdrianJS2009")
+        }
+    });
+
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -82,7 +101,7 @@ builder.Services.AddSwaggerGen(options =>
         Scheme = "bearer",
         BearerFormat = "JWT",
         In = ParameterLocation.Header,
-        Description = "JWT Authorization header usando el esquema Bearer. \r\n\r\nIntroduce 'Bearer <TOKEN>' para autenticarte."
+        Description = "Introduce tu token JWT: `Bearer <tu-token>`"
     });
 
     options.AddSecurityRequirement(new OpenApiSecurityRequirement
@@ -96,9 +115,16 @@ builder.Services.AddSwaggerGen(options =>
                     Id = "Bearer"
                 }
             },
-            new string[] {}
+            Array.Empty<string>()
         }
     });
+
+    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    if (File.Exists(xmlPath))
+    {
+        options.IncludeXmlComments(xmlPath, includeControllerXmlComments: true);
+    }
 });
 
 // --------------------------------------------------
@@ -130,7 +156,15 @@ app.UseCors("AllowAll");
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "Simpled API v1");
+
+
+        options.IndexStream = () =>
+     File.OpenRead(Path.Combine(app.Environment.WebRootPath, "swagger-ui", "index.html"));
+
+    });
 }
 
 app.UseHttpsRedirection();
