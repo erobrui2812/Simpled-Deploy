@@ -14,7 +14,7 @@ export default function Navbar() {
     }, []);
 
     return (
-            <nav className="flex justify-between items-center p-4">
+            <nav className="flex justify-between items-center p-4 border-b-[0.5] rounded-b-lg">
                 <h1 className="font-bold text-4xl">Simpled.</h1>
 
                 <div className={`grid ${mostrarLogin ? 'grid-cols-4' : 'grid-cols-3'} divide-x`}>
@@ -25,8 +25,6 @@ export default function Navbar() {
                         <a href="/login" className="text-lg px-4 text-center">Login</a>
                     ) : null}
                 </div>
-
-
             </nav>
     );
 }
