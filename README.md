@@ -127,9 +127,6 @@ Simpled/
 
 ![Esquema E/R](docs/Simpled_ER.png)
 
-- Relaciones 1-N: `Board → Columns → Items → Contents`
-- Relaciones N-M: `Users ↔ Boards (via BoardMembers)`
-- Roles integrados: `admin`, `editor`, `viewer`
 
 ---
 
