@@ -1,5 +1,4 @@
-﻿
-using Simpled.Models.TrelloNotionClone.Models;
+﻿using Simpled.Models.TrelloNotionClone.Models;
 
 namespace Simpled.Models
 {

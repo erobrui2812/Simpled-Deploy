@@ -7,6 +7,8 @@ using Simpled.Hubs;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.OpenApi.Models;
+using Simpled.Repository;
+using Simpled.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -110,6 +112,17 @@ builder.Services.AddSignalR();
 //  Authorization
 // --------------------------------------------------
 builder.Services.AddAuthorization();
+
+
+// --------------------------------------------------
+//  Servicios y Repositorios
+// --------------------------------------------------
+builder.Services.AddScoped<IAuthRepository, AuthService>();
+builder.Services.AddScoped<IUserRepository, UserService>();
+builder.Services.AddScoped<IBoardRepository, BoardService>();
+builder.Services.AddScoped<IColumnRepository, ColumnService>();
+builder.Services.AddScoped<IItemRepository, ItemService>();
+
 
 var app = builder.Build();
 
