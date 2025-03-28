@@ -11,7 +11,6 @@ namespace Simpled.Data
         {
         }
 
-
         public DbSet<User> Users => Set<User>();
         public DbSet<UserRole> UserRoles => Set<UserRole>();
         public DbSet<Board> Boards => Set<Board>();
@@ -24,38 +23,34 @@ namespace Simpled.Data
         {
             base.OnModelCreating(modelBuilder);
 
-
-
-
             modelBuilder.Entity<UserRole>()
                 .HasOne(ur => ur.User)
                 .WithMany(u => u.Roles)
                 .HasForeignKey(ur => ur.UserId);
-
 
             modelBuilder.Entity<Board>()
                 .HasOne(b => b.Owner)
                 .WithMany()
                 .HasForeignKey(b => b.OwnerId);
 
-
             modelBuilder.Entity<BoardColumn>()
                 .HasOne(c => c.Board)
                 .WithMany(b => b.Columns)
                 .HasForeignKey(c => c.BoardId);
-
 
             modelBuilder.Entity<Item>()
                 .HasOne(i => i.Column)
                 .WithMany(c => c.Items)
                 .HasForeignKey(i => i.ColumnId);
 
-
             modelBuilder.Entity<Content>()
                 .HasOne(cnt => cnt.Item)
                 .WithMany(i => i.Contents)
                 .HasForeignKey(cnt => cnt.ItemId);
 
+
+            modelBuilder.Entity<BoardMember>()
+                .HasKey(bm => new { bm.BoardId, bm.UserId });
 
             modelBuilder.Entity<BoardMember>()
                 .HasOne(bm => bm.Board)

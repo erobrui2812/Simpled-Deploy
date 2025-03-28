@@ -1,8 +1,9 @@
-﻿namespace Simpled.Models
+﻿using System;
+
+namespace Simpled.Models
 {
     public class BoardMember
     {
-        public Guid Id { get; set; }
         public Guid BoardId { get; set; }
         public Guid UserId { get; set; }
         public string Role { get; set; } = default!;  // "admin|editor|viewer"
