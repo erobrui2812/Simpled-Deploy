@@ -10,6 +10,7 @@ using Microsoft.OpenApi.Models;
 using Simpled.Repository;
 using Simpled.Services;
 using System.Reflection;
+using Simpled.Exception;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -152,6 +153,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseGlobalExceptionHandler();
 app.UseAuthentication();
 app.UseAuthorization();
 
