@@ -3,6 +3,7 @@ import { Figtree } from "next/font/google";
 import "./globals.css";
 
 import Navbar from "@/components/navbar";
+import Footer from "@/components/footer";
 
 const figtree = Figtree({
   variable: "--font-figtree",
@@ -28,6 +29,7 @@ export default function RootLayout({
       >
         <Navbar />
         {children}
+        <Footer />
       </body>
     </html>
   );

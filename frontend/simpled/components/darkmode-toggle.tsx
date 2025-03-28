@@ -26,7 +26,6 @@ export function DarkModeToggle() {
 
   return (
     <>
-      {/* Spinner de cambio de tema */}
       {isTransitioning && (
         <div
           className={`fixed inset-0 flex items-center justify-center z-50 transition-opacity duration-500 ${darkMode ? "bg-black bg-opacity-50" : "bg-white bg-opacity-50"}`}
@@ -35,10 +34,9 @@ export function DarkModeToggle() {
         </div>
       )}
 
-      {/* Toggle tema app */}
       <button
         onClick={toggleDarkMode}
-        className="p-2 rounded-full border bg-gray-200 dark:bg-gray-800"
+        className="p-2 rounded-full border bg-background text-foreground hover:bg-foreground hover:text-background"
       >
         {darkMode ?
           (
