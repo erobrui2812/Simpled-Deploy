@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Simpled.Models;
-using Simpled.Models.TrelloNotionClone.Models;
+
 
 namespace Simpled.Data
 {

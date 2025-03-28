@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using Simpled.Data;
 using Simpled.Dtos.Items;
 using Simpled.Models;
-using Simpled.Models.TrelloNotionClone.Models;
 using Simpled.Repository;
 
 namespace Simpled.Services

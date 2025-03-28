@@ -15,6 +15,11 @@ namespace Simpled.Controllers
             _authService = authService;
         }
 
+        /// <summary>
+        /// Inicia sesión y devuelve un token JWT válido si las credenciales son correctas.
+        /// </summary>
+        /// <param name="loginDto">Datos de acceso del usuario</param>
+        /// <returns>Token JWT</returns>
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequestDto loginDto)
         {

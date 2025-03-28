@@ -17,6 +17,9 @@ namespace Simpled.Controllers
             _boardService = boardService;
         }
 
+        /// <summary>
+        /// Obtiene todos los tableros disponibles.
+        /// </summary>
         [HttpGet]
         public async Task<IActionResult> GetAllBoards()
         {
@@ -24,6 +27,10 @@ namespace Simpled.Controllers
             return Ok(result);
         }
 
+        /// <summary>
+        /// Obtiene un tablero específico por ID.
+        /// </summary>
+        /// <param name="id">ID del tablero</param>
         [HttpGet("{id}")]
         public async Task<IActionResult> GetBoard(Guid id)
         {
@@ -31,6 +38,10 @@ namespace Simpled.Controllers
             return board == null ? NotFound("Board not found.") : Ok(board);
         }
 
+        /// <summary>
+        /// Crea un nuevo tablero.
+        /// </summary>
+        /// <param name="dto">Datos del tablero a crear</param>
         [HttpPost]
         public async Task<IActionResult> CreateBoard([FromBody] BoardCreateDto dto)
         {
@@ -38,6 +49,11 @@ namespace Simpled.Controllers
             return CreatedAtAction(nameof(GetBoard), new { id = created.Id }, created);
         }
 
+        /// <summary>
+        /// Actualiza un tablero existente.
+        /// </summary>
+        /// <param name="id">ID del tablero</param>
+        /// <param name="dto">Datos del tablero a actualizar</param>
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateBoard(Guid id, [FromBody] BoardUpdateDto dto)
         {
@@ -48,6 +64,10 @@ namespace Simpled.Controllers
             return success ? NoContent() : NotFound("Board not found.");
         }
 
+        /// <summary>
+        /// Elimina un tablero por ID.
+        /// </summary>
+        /// <param name="id">ID del tablero</param>
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteBoard(Guid id)
         {
@@ -56,3 +76,4 @@ namespace Simpled.Controllers
         }
     }
 }
+

@@ -1,4 +1,4 @@
-﻿using Simpled.Models.Simpled.Models;
+﻿
 using System.ComponentModel.DataAnnotations;
 
 namespace Simpled.Models

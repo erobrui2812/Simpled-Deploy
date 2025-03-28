@@ -17,6 +17,9 @@ namespace Simpled.Controllers
             _userService = userService;
         }
 
+        /// <summary>
+        /// Obtiene todos los usuarios registrados.
+        /// </summary>
         [HttpGet]
         public async Task<IActionResult> GetUsers()
         {
@@ -24,6 +27,10 @@ namespace Simpled.Controllers
             return Ok(result);
         }
 
+        /// <summary>
+        /// Obtiene un usuario específico por su ID.
+        /// </summary>
+        /// <param name="id">ID del usuario</param>
         [HttpGet("{id}")]
         public async Task<IActionResult> GetUser(Guid id)
         {
@@ -31,6 +38,9 @@ namespace Simpled.Controllers
             return user == null ? NotFound("User not found.") : Ok(user);
         }
 
+        /// <summary>
+        /// Registra un nuevo usuario en la plataforma.
+        /// </summary>
         [AllowAnonymous]
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] UserRegisterDto dto)
@@ -39,6 +49,10 @@ namespace Simpled.Controllers
             return CreatedAtAction(nameof(GetUser), new { id = createdUser.Id }, createdUser);
         }
 
+        /// <summary>
+        /// Actualiza la información de un usuario existente.
+        /// </summary>
+        /// <param name="id">ID del usuario</param>
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateUser(Guid id, [FromBody] UserUpdateDto dto)
         {
@@ -49,6 +63,10 @@ namespace Simpled.Controllers
             return success ? NoContent() : NotFound("User not found.");
         }
 
+        /// <summary>
+        /// Elimina un usuario de la base de datos.
+        /// </summary>
+        /// <param name="id">ID del usuario</param>
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(Guid id)
         {

@@ -9,6 +9,7 @@ using FluentValidation.AspNetCore;
 using Microsoft.OpenApi.Models;
 using Simpled.Repository;
 using Simpled.Services;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -101,6 +102,11 @@ builder.Services.AddSwaggerGen(options =>
             new string[] {}
         }
     });
+
+    // Incluir comentarios XML
+    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    options.IncludeXmlComments(xmlPath);
 });
 
 // --------------------------------------------------
@@ -113,7 +119,6 @@ builder.Services.AddSignalR();
 // --------------------------------------------------
 builder.Services.AddAuthorization();
 
-
 // --------------------------------------------------
 //  Servicios y Repositorios
 // --------------------------------------------------
@@ -122,7 +127,6 @@ builder.Services.AddScoped<IUserRepository, UserService>();
 builder.Services.AddScoped<IBoardRepository, BoardService>();
 builder.Services.AddScoped<IColumnRepository, ColumnService>();
 builder.Services.AddScoped<IItemRepository, ItemService>();
-
 
 var app = builder.Build();
 
@@ -155,5 +159,3 @@ app.MapControllers();
 app.MapHub<BoardHub>("/hubs/board");
 
 app.Run();
-
-
