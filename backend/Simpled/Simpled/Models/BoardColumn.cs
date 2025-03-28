@@ -1,18 +1,22 @@
-﻿namespace Simpled.Models
+﻿using Simpled.Models.TrelloNotionClone.Models;
+using System.ComponentModel.DataAnnotations;
+
+namespace Simpled.Models
 {
-
-    namespace TrelloNotionClone.Models
+    public class BoardColumn
     {
-        public class BoardColumn
-        {
-            public Guid Id { get; set; }
-            public Guid BoardId { get; set; }
-            public string Title { get; set; } = default!;
-            public int Order { get; set; }
+        public Guid Id { get; set; }
 
-            public Board? Board { get; set; }
-            public List<Item> Items { get; set; } = new();
-        }
+        [Required]
+        public Guid BoardId { get; set; }
+
+        [Required]
+        [MaxLength(100)]
+        public string Title { get; set; } = default!;
+
+        public int Order { get; set; }
+
+        public Board? Board { get; set; }
+        public List<Item> Items { get; set; } = new();
     }
-
 }

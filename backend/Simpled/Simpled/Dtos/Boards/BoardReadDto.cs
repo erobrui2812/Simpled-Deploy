@@ -1,6 +1,5 @@
 ﻿namespace Simpled.Dtos.Boards
 {
-
     public class BoardReadDto
     {
         public Guid Id { get; set; }

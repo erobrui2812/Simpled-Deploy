@@ -1,6 +1,5 @@
 ﻿namespace Simpled.Dtos.Users
 {
-
     public class UserReadDto
     {
         public Guid Id { get; set; }
