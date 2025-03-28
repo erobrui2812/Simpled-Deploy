@@ -17,13 +17,15 @@ Registro de tareas realizadas durante el desarrollo del proyecto **Simpled**.
 | 2025-03-24  | Adrián Jiménez   | Configuración de Swagger con autenticación Bearer                               |
 | 2025-03-25  | Elías Robles     | Reestructuración en DTOs + protección de endpoints con [Authorize]              |
 | 2025-03-25  | Ambos            | Preparación de anteproyecto en Notion y redacción del Readme.md                 |
+| 2025-03-25  | Elías Robles     | Creación del esqueleto de front y algunas páginas de prueba                     |
+| 2025-03-25  | Elías Robles     | Elección de fuentes y colores para la web + Creación de navbar                  |
+| 2025-03-25  | Elías Robles     | Creación form login y registro + Agregar ShadCN + Toggle temas Claro/Oscuro     |
 | 2025-03-28  | Adrián Jiménez   | Refactor completo a arquitectura por servicios + inyección de dependencias      |
 | 2025-03-28  | Adrián Jiménez   | Implementación de excepciones personalizadas y middleware global                |
 | 2025-03-28  | Adrián Jiménez   | CRUD completo para BoardMembers con soporte para inserción única o múltiple     |
 | 2025-03-28  | Adrián Jiménez   | Aplicación de control de roles (`admin`, `editor`, `viewer`) en endpoints       |
 | 2025-03-28  | Elías Robles     | Componentes navbar burguer, banner y footer con responsive para toda la web     |
 | 2025-03-28  | Elías Robles     | Landing page responsive con componentes creados                                 |
-| 2025-03-28  | Elías Robles     | Formulario de login y registro sin context ni conexion a back                   |
 
 ---
 
