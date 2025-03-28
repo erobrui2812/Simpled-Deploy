@@ -43,6 +43,7 @@ namespace Simpled.Controllers
         /// Crea un nuevo ítem dentro de una columna.
         /// </summary>
         /// <param name="dto">Datos del ítem a crear</param>
+        [Authorize(Roles = "admin,editor")]
         [HttpPost]
         public async Task<IActionResult> CreateItem([FromBody] ItemCreateDto dto)
         {
@@ -55,6 +56,7 @@ namespace Simpled.Controllers
         /// </summary>
         /// <param name="id">ID del ítem</param>
         /// <param name="dto">Datos del ítem a actualizar</param>
+        [Authorize(Roles = "admin,editor")]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateItem(Guid id, [FromBody] ItemUpdateDto dto)
         {
@@ -82,6 +84,7 @@ namespace Simpled.Controllers
         /// </summary>
         /// <param name="id">ID del ítem</param>
         /// <param name="file">Archivo a subir</param>
+        [Authorize(Roles = "admin,editor")]
         [HttpPost("{id}/upload")]
         public async Task<IActionResult> UploadFile(Guid id, IFormFile file)
         {

@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Simpled.Dtos.BoardMembers;
 using Simpled.Repository;
+using System.Text.Json;
 
 namespace Simpled.Controllers
 {
@@ -30,6 +31,7 @@ namespace Simpled.Controllers
         /// <summary>
         /// Obtiene los miembros de un tablero específico.
         /// </summary>
+        /// <param name="boardId">ID del tablero</param>
         [HttpGet("board/{boardId}")]
         public async Task<IActionResult> GetByBoardId(Guid boardId)
         {
@@ -40,6 +42,8 @@ namespace Simpled.Controllers
         /// <summary>
         /// Obtiene un miembro específico por BoardId y UserId.
         /// </summary>
+        /// <param name="boardId">ID del tablero</param>
+        /// <param name="userId">ID del usuario</param>
         [HttpGet("{boardId}/{userId}")]
         public async Task<IActionResult> Get(Guid boardId, Guid userId)
         {
@@ -50,43 +54,37 @@ namespace Simpled.Controllers
         /// <summary>
         /// Agrega uno o varios miembros a un tablero.
         /// </summary>
+
+        [Authorize(Roles = "admin")]
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] object body)
+        public async Task<IActionResult> Create([FromBody] JsonElement body)
         {
-            if (body is null)
-                return BadRequest("No se proporcionaron datos.");
-
-            if (HttpContext.Request.ContentType != "application/json")
-                return BadRequest("Formato de contenido inválido.");
-
-            try
+            if (body.ValueKind == JsonValueKind.Object)
             {
-                var singleDto = System.Text.Json.JsonSerializer.Deserialize<BoardMemberCreateDto>(body.ToString()!, new() { PropertyNameCaseInsensitive = true });
-                if (singleDto != null && singleDto.BoardId != Guid.Empty)
+                var dto = JsonSerializer.Deserialize<BoardMemberCreateDto>(body.GetRawText(), new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                if (dto != null)
                 {
-                    await _memberService.AddAsync(singleDto);
+                    await _memberService.AddAsync(dto);
                     return Ok("Miembro agregado.");
                 }
             }
-            catch { }
-
-            try
+            else if (body.ValueKind == JsonValueKind.Array)
             {
-                var listDto = System.Text.Json.JsonSerializer.Deserialize<List<BoardMemberCreateDto>>(body.ToString()!, new() { PropertyNameCaseInsensitive = true });
-                if (listDto != null && listDto.Count > 0)
+                var dtoList = JsonSerializer.Deserialize<List<BoardMemberCreateDto>>(body.GetRawText(), new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                if (dtoList != null && dtoList.Any())
                 {
-                    await _memberService.AddManyAsync(listDto);
+                    await _memberService.AddManyAsync(dtoList);
                     return Ok("Miembros agregados.");
                 }
             }
-            catch { }
 
-            return BadRequest("Datos inválidos.");
+            return BadRequest("Formato de datos inválido. Se esperaba un objeto o una lista de miembros.");
         }
 
         /// <summary>
         /// Actualiza el rol de un miembro en un tablero.
         /// </summary>
+        [Authorize(Roles = "admin")]
         [HttpPut]
         public async Task<IActionResult> Update([FromBody] BoardMemberUpdateDto dto)
         {
@@ -97,6 +95,9 @@ namespace Simpled.Controllers
         /// <summary>
         /// Elimina un miembro de un tablero.
         /// </summary>
+        /// <param name="boardId">ID del tablero</param>
+        /// <param name="userId">ID del usuario</param>
+        [Authorize(Roles = "admin")]
         [HttpDelete("{boardId}/{userId}")]
         public async Task<IActionResult> Delete(Guid boardId, Guid userId)
         {
@@ -105,3 +106,6 @@ namespace Simpled.Controllers
         }
     }
 }
+
+
+

@@ -42,6 +42,7 @@ namespace Simpled.Controllers
         /// Crea un nuevo tablero.
         /// </summary>
         /// <param name="dto">Datos del tablero a crear</param>
+        [Authorize(Roles = "admin,editor")]
         [HttpPost]
         public async Task<IActionResult> CreateBoard([FromBody] BoardCreateDto dto)
         {
@@ -54,6 +55,7 @@ namespace Simpled.Controllers
         /// </summary>
         /// <param name="id">ID del tablero</param>
         /// <param name="dto">Datos del tablero a actualizar</param>
+        [Authorize(Roles = "admin,editor")]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateBoard(Guid id, [FromBody] BoardUpdateDto dto)
         {
@@ -68,6 +70,7 @@ namespace Simpled.Controllers
         /// Elimina un tablero por ID.
         /// </summary>
         /// <param name="id">ID del tablero</param>
+        [Authorize(Roles = "admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteBoard(Guid id)
         {
