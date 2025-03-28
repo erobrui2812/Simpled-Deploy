@@ -3,6 +3,7 @@ using Simpled.Data;
 using Simpled.Dtos.Boards;
 using Simpled.Models;
 using Simpled.Repository;
+using Simpled.Exception;
 
 namespace Simpled.Services
 {
@@ -31,7 +32,8 @@ namespace Simpled.Services
         public async Task<BoardReadDto?> GetByIdAsync(Guid id)
         {
             var b = await _context.Boards.FindAsync(id);
-            if (b == null) return null;
+            if (b == null)
+                throw new NotFoundException("Tablero no encontrado.");
 
             return new BoardReadDto
             {
@@ -67,7 +69,8 @@ namespace Simpled.Services
         public async Task<bool> UpdateAsync(BoardUpdateDto dto)
         {
             var board = await _context.Boards.FindAsync(dto.Id);
-            if (board == null) return false;
+            if (board == null)
+                throw new NotFoundException("Tablero no encontrado.");
 
             board.Name = dto.Name;
             board.OwnerId = dto.OwnerId;
@@ -80,7 +83,8 @@ namespace Simpled.Services
         public async Task<bool> DeleteAsync(Guid id)
         {
             var board = await _context.Boards.FindAsync(id);
-            if (board == null) return false;
+            if (board == null)
+                throw new NotFoundException("Tablero no encontrado.");
 
             _context.Boards.Remove(board);
             await _context.SaveChangesAsync();

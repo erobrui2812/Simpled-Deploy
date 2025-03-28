@@ -3,6 +3,7 @@ using Simpled.Data;
 using Simpled.Dtos.Users;
 using Simpled.Models;
 using Simpled.Repository;
+using Simpled.Exception;
 
 namespace Simpled.Services
 {
@@ -30,7 +31,8 @@ namespace Simpled.Services
         public async Task<UserReadDto?> GetUserByIdAsync(Guid id)
         {
             var user = await _context.Users.Include(u => u.Roles).FirstOrDefaultAsync(u => u.Id == id);
-            if (user == null) return null;
+            if (user == null)
+                throw new NotFoundException("Usuario no encontrado.");
 
             return new UserReadDto
             {
@@ -66,7 +68,8 @@ namespace Simpled.Services
         public async Task<bool> UpdateAsync(UserUpdateDto updatedDto)
         {
             var existing = await _context.Users.Include(u => u.Roles).FirstOrDefaultAsync(u => u.Id == updatedDto.Id);
-            if (existing == null) return false;
+            if (existing == null)
+                throw new NotFoundException("Usuario no encontrado.");
 
             existing.Email = updatedDto.Email;
 
@@ -86,7 +89,8 @@ namespace Simpled.Services
         public async Task<bool> DeleteAsync(Guid id)
         {
             var user = await _context.Users.FindAsync(id);
-            if (user == null) return false;
+            if (user == null)
+                throw new NotFoundException("Usuario no encontrado.");
 
             _context.Users.Remove(user);
             await _context.SaveChangesAsync();

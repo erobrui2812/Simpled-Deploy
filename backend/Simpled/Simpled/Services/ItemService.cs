@@ -4,6 +4,7 @@ using Simpled.Data;
 using Simpled.Dtos.Items;
 using Simpled.Models;
 using Simpled.Repository;
+using Simpled.Exception;
 
 namespace Simpled.Services
 {
@@ -34,7 +35,8 @@ namespace Simpled.Services
         public async Task<ItemReadDto?> GetByIdAsync(Guid id)
         {
             var item = await _context.Items.Include(i => i.Contents).FirstOrDefaultAsync(i => i.Id == id);
-            if (item == null) return null;
+            if (item == null)
+                throw new NotFoundException("Ítem no encontrado.");
 
             return new ItemReadDto
             {
@@ -73,7 +75,8 @@ namespace Simpled.Services
         public async Task<bool> UpdateAsync(ItemUpdateDto dto)
         {
             var existing = await _context.Items.FindAsync(dto.Id);
-            if (existing == null) return false;
+            if (existing == null)
+                throw new NotFoundException("Ítem no encontrado.");
 
             existing.Title = dto.Title;
             existing.Description = dto.Description;
@@ -87,7 +90,8 @@ namespace Simpled.Services
         public async Task<bool> DeleteAsync(Guid id)
         {
             var item = await _context.Items.FindAsync(id);
-            if (item == null) return false;
+            if (item == null)
+                throw new NotFoundException("Ítem no encontrado.");
 
             _context.Items.Remove(item);
             await _context.SaveChangesAsync();
@@ -97,8 +101,11 @@ namespace Simpled.Services
         public async Task<Content?> UploadFileAsync(Guid itemId, IFormFile file)
         {
             var item = await _context.Items.FindAsync(itemId);
-            if (item == null || file == null || file.Length == 0)
-                return null;
+            if (item == null)
+                throw new NotFoundException("Ítem no encontrado para subir archivo.");
+
+            if (file == null || file.Length == 0)
+                throw new ApiException("El archivo es inválido o está vacío.", 400);
 
             var uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
             Directory.CreateDirectory(uploadsPath);

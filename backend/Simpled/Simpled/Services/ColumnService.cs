@@ -2,9 +2,8 @@
 using Simpled.Data;
 using Simpled.Dtos.Columns;
 using Simpled.Models;
-
-
 using Simpled.Repository;
+using Simpled.Exception;
 
 namespace Simpled.Services
 {
@@ -33,7 +32,8 @@ namespace Simpled.Services
         public async Task<BoardColumnReadDto?> GetByIdAsync(Guid id)
         {
             var column = await _context.BoardColumns.FindAsync(id);
-            if (column == null) return null;
+            if (column == null)
+                throw new NotFoundException("Columna no encontrada.");
 
             return new BoardColumnReadDto
             {
@@ -69,7 +69,8 @@ namespace Simpled.Services
         public async Task<bool> UpdateAsync(BoardColumnUpdateDto dto)
         {
             var column = await _context.BoardColumns.FindAsync(dto.Id);
-            if (column == null) return false;
+            if (column == null)
+                throw new NotFoundException("Columna no encontrada.");
 
             column.BoardId = dto.BoardId;
             column.Title = dto.Title;
@@ -82,7 +83,8 @@ namespace Simpled.Services
         public async Task<bool> DeleteAsync(Guid id)
         {
             var column = await _context.BoardColumns.FindAsync(id);
-            if (column == null) return false;
+            if (column == null)
+                throw new NotFoundException("Columna no encontrada.");
 
             _context.BoardColumns.Remove(column);
             await _context.SaveChangesAsync();
