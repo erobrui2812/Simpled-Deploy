@@ -6,6 +6,17 @@ export function DarkModeToggle() {
     const storedPreference = localStorage.getItem("darkMode");
     return storedPreference === "true";
   });
+
+  /* ## Arreglar error de localStorage en consola de front pero genera flash porque empieza en blanco y luego pone el tema predeterminado ## 
+    
+    const [darkMode, setDarkMode] = useState(() => {
+    if (typeof window !== "undefined") {
+      const storedPreference = localStorage.getItem("darkMode");
+      return storedPreference !== "false"; 
+    }
+    return true;
+  }); */
+
   const [isTransitioning, setIsTransitioning] = useState(false);
 
   const toggleDarkMode = () => {
