@@ -5,6 +5,9 @@ import "./globals.css";
 import Navbar from "@/components/navbar";
 import Footer from "@/components/footer";
 
+import { AuthProvider } from "@/contexts/AuthContext";
+import { Slide, ToastContainer } from "react-toastify";
+
 const figtree = Figtree({
   variable: "--font-figtree",
   subsets: ["latin"],
@@ -23,14 +26,29 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es">
-      <body
-        className={`${figtree.variable} antialiased`}
-      >
-        <Navbar />
-        {children}
-        <Footer />
-      </body>
-    </html>
+    <AuthProvider>
+      <html lang="es">
+        <body
+          className={`${figtree.variable} antialiased`}
+        >
+          <ToastContainer
+            position="top-right"
+            autoClose={5000}
+            hideProgressBar={false}
+            newestOnTop={false}
+            closeOnClick={false}
+            rtl={false}
+            pauseOnFocusLoss
+            draggable={false}
+            pauseOnHover
+            theme="dark"
+            transition={Slide}
+          />
+          <Navbar />
+          {children}
+          <Footer />
+        </body>
+      </html>
+    </AuthProvider>
   );
 }
