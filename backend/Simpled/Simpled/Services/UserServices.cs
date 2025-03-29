@@ -50,8 +50,15 @@ namespace Simpled.Services
                 Id = Guid.NewGuid(),
                 Email = userDto.Email,
                 CreatedAt = DateTime.UtcNow,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(userDto.Password)
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(userDto.Password),
+                Roles = new List<UserRole>()
             };
+
+            user.Roles.Add(new UserRole
+            {
+                UserId = user.Id,
+                Role = "viewer"
+            });
 
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
@@ -61,9 +68,11 @@ namespace Simpled.Services
                 Id = user.Id,
                 Email = user.Email,
                 CreatedAt = user.CreatedAt,
-                Roles = new List<string>()
+                Roles = user.Roles.Select(r => r.Role).ToList()
             };
         }
+
+
 
         public async Task<bool> UpdateAsync(UserUpdateDto updatedDto)
         {

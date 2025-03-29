@@ -5,7 +5,6 @@ using Simpled.Repository;
 
 namespace Simpled.Controllers
 {
-    [Authorize(Roles = "admin")]
     [ApiController]
     [Route("api/[controller]")]
     public class UsersController : ControllerBase
@@ -75,5 +74,6 @@ namespace Simpled.Controllers
         }
     }
 }
+
 
 
