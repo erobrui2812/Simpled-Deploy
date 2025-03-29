@@ -12,7 +12,7 @@ namespace Simpled.Validators
                 .NotEmpty()
                 .MaximumLength(100);
 
-            RuleFor(x => x.OwnerId).NotEmpty();
+          
         }
     }
 }

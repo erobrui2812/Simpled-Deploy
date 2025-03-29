@@ -16,9 +16,13 @@ namespace Simpled.Services
             _context = context;
         }
 
-        public async Task<IEnumerable<BoardReadDto>> GetAllAsync()
+        public async Task<IEnumerable<BoardReadDto>> GetAllAsync(Guid? userId = null)
         {
             return await _context.Boards
+                .Where(b =>
+                    b.IsPublic ||
+                    (userId != null &&
+                     _context.BoardMembers.Any(m => m.BoardId == b.Id && m.UserId == userId)))
                 .Select(b => new BoardReadDto
                 {
                     Id = b.Id,
@@ -74,7 +78,6 @@ namespace Simpled.Services
             };
         }
 
-
         public async Task<bool> UpdateAsync(BoardUpdateDto dto)
         {
             var board = await _context.Boards.FindAsync(dto.Id);
@@ -82,12 +85,12 @@ namespace Simpled.Services
                 throw new NotFoundException("Tablero no encontrado.");
 
             board.Name = dto.Name;
-            board.OwnerId = dto.OwnerId;
             board.IsPublic = dto.IsPublic;
 
             await _context.SaveChangesAsync();
             return true;
         }
+
 
         public async Task<bool> DeleteAsync(Guid id)
         {

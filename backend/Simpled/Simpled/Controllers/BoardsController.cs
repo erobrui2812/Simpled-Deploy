@@ -6,7 +6,6 @@ using System.Security.Claims;
 
 namespace Simpled.Controllers
 {
-    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class BoardsController : ControllerBase
@@ -19,19 +18,21 @@ namespace Simpled.Controllers
         }
 
         /// <summary>
-        /// Obtiene todos los tableros disponibles.
+        /// Obtiene todos los tableros visibles para el usuario (públicos o propios).
         /// </summary>
         [HttpGet]
         public async Task<IActionResult> GetAllBoards()
         {
-            var result = await _boardService.GetAllAsync();
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            Guid? userId = string.IsNullOrEmpty(userIdClaim) ? null : Guid.Parse(userIdClaim);
+
+            var result = await _boardService.GetAllAsync(userId);
             return Ok(result);
         }
 
         /// <summary>
         /// Obtiene un tablero específico por ID.
         /// </summary>
-        /// <param name="id">ID del tablero</param>
         [HttpGet("{id}")]
         public async Task<IActionResult> GetBoard(Guid id)
         {
@@ -42,7 +43,7 @@ namespace Simpled.Controllers
         /// <summary>
         /// Crea un nuevo tablero.
         /// </summary>
-        /// <param name="dto">Datos del tablero a crear</param>
+        [Authorize]
         [HttpPost]
         public async Task<IActionResult> CreateBoard([FromBody] BoardCreateDto dto)
         {
@@ -57,9 +58,7 @@ namespace Simpled.Controllers
         /// <summary>
         /// Actualiza un tablero existente.
         /// </summary>
-        /// <param name="id">ID del tablero</param>
-        /// <param name="dto">Datos del tablero a actualizar</param>
-        [Authorize(Roles = "admin,editor")]
+        [Authorize]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateBoard(Guid id, [FromBody] BoardUpdateDto dto)
         {
@@ -73,8 +72,7 @@ namespace Simpled.Controllers
         /// <summary>
         /// Elimina un tablero por ID.
         /// </summary>
-        /// <param name="id">ID del tablero</param>
-        [Authorize(Roles = "admin")]
+        [Authorize]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteBoard(Guid id)
         {
@@ -83,4 +81,3 @@ namespace Simpled.Controllers
         }
     }
 }
-

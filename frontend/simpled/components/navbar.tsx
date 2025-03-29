@@ -39,7 +39,7 @@ export default function Navbar() {
           <a href="/nosotros" className="text-lg px-4 text-center">
             Nosotros
           </a>
-          <a href="/boards" className="text-lg px-4 text-center">
+          <a href="/tableros" className="text-lg px-4 text-center">
             Tableros
           </a>
           {mostrarLogin ? (

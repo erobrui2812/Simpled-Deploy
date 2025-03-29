@@ -9,6 +9,7 @@ export type Board = {
   id: string;
   name: string;
   isPublic: boolean;
+  ownerId?: string; // útil para control de botones
 };
 
 type BoardsContextType = {
@@ -16,6 +17,11 @@ type BoardsContextType = {
   loading: boolean;
   fetchBoards: () => Promise<void>;
   createBoard: (name: string, isPublic?: boolean) => Promise<void>;
+  updateBoard: (
+    id: string,
+    data: { name: string; isPublic: boolean }
+  ) => Promise<void>;
+  deleteBoard: (id: string) => Promise<void>;
 };
 
 const BoardsContext = createContext<BoardsContextType | undefined>(undefined);
@@ -28,10 +34,14 @@ export const BoardsProvider = ({ children }: { children: React.ReactNode }) => {
   const fetchBoards = async () => {
     setLoading(true);
     try {
+      const headers: HeadersInit = {};
+
+      if (auth.token) {
+        headers["Authorization"] = `Bearer ${auth.token}`;
+      }
+
       const res = await fetch(`${API_URL}api/Boards`, {
-        headers: {
-          Authorization: `Bearer ${auth.token}`,
-        },
+        headers,
       });
 
       if (!res.ok) throw new Error("Error al obtener tableros.");
@@ -70,15 +80,63 @@ export const BoardsProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  useEffect(() => {
-    if (auth.token) {
-      fetchBoards();
+  const updateBoard = async (
+    id: string,
+    data: { name: string; isPublic: boolean }
+  ) => {
+    try {
+      const res = await fetch(`${API_URL}api/Boards/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${auth.token}`,
+        },
+        body: JSON.stringify({ id, ...data }),
+      });
+
+      if (!res.ok) throw new Error("Error al actualizar el tablero.");
+
+      toast.success("Tablero actualizado correctamente.");
+      await fetchBoards();
+    } catch (err) {
+      console.error(err);
+      toast.error("Error al actualizar el tablero.");
     }
+  };
+
+  const deleteBoard = async (id: string) => {
+    try {
+      const res = await fetch(`${API_URL}api/Boards/${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${auth.token}`,
+        },
+      });
+
+      if (!res.ok) throw new Error("Error al eliminar el tablero.");
+
+      toast.success("Tablero eliminado.");
+      await fetchBoards();
+    } catch (err) {
+      console.error(err);
+      toast.error("Error al eliminar el tablero.");
+    }
+  };
+
+  useEffect(() => {
+    fetchBoards(); // Cargar siempre, y dentro se añade o no el header
   }, [auth.token]);
 
   return (
     <BoardsContext.Provider
-      value={{ boards, loading, fetchBoards, createBoard }}
+      value={{
+        boards,
+        loading,
+        fetchBoards,
+        createBoard,
+        updateBoard,
+        deleteBoard,
+      }}
     >
       {children}
     </BoardsContext.Provider>
