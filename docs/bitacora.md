@@ -28,6 +28,11 @@ Registro de tareas realizadas durante el desarrollo del proyecto **Simpled**.
 | 2025-03-28  | Elías Robles     | Landing page responsive con componentes creados                                 |
 | 2025-03-29  | Elías Robles     | Creación del context de auth, arreglos a algun textos                           |
 | 2025-03-29  | Elías Robles     | Vincular los forms de login y registro con el context, cambios al layout        |
+| 2025-03-29  | Adrián Jiménez   | Gestión completa de tableros por usuario con rol `admin` por defecto            |
+| 2025-03-29  | Adrián Jiménez   | Filtrado de tableros públicos si no hay sesión, y propios si el usuario está logueado |
+| 2025-03-29  | Adrián Jiménez   | Vista de tableros `/boards` terminada con botón editar/eliminar según propietario |
+| 2025-03-29  | Adrián Jiménez   | Implementación de vista de detalle del tablero con columnas, items y miembros   |
+| 2025-03-29  | Adrián Jiménez   | Correcciones en rutas dinámicas con `params.id` y errores con parse de tokens   |
 
 ---
 
