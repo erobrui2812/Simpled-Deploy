@@ -26,6 +26,8 @@ Registro de tareas realizadas durante el desarrollo del proyecto **Simpled**.
 | 2025-03-28  | Adrián Jiménez   | Aplicación de control de roles (`admin`, `editor`, `viewer`) en endpoints       |
 | 2025-03-28  | Elías Robles     | Componentes navbar burguer, banner y footer con responsive para toda la web     |
 | 2025-03-28  | Elías Robles     | Landing page responsive con componentes creados                                 |
+| 2025-03-29  | Elías Robles     | Creación del context de auth, arreglos a algun textos                           |
+| 2025-03-29  | Elías Robles     | Vincular los forms de login y registro, cambios al layout                       |
 
 ---
 
