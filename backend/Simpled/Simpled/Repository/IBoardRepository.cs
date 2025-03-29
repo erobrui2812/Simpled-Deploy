@@ -9,8 +9,10 @@ namespace Simpled.Repository
     {
         Task<IEnumerable<BoardReadDto>> GetAllAsync();
         Task<BoardReadDto?> GetByIdAsync(Guid id);
-        Task<BoardReadDto> CreateAsync(BoardCreateDto dto);
+
         Task<bool> UpdateAsync(BoardUpdateDto dto);
         Task<bool> DeleteAsync(Guid id);
+        Task<BoardReadDto> CreateAsync(BoardCreateDto dto, Guid userId);
+
     }
 }

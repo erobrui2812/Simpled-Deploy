@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Simpled.Dtos.Boards;
 using Simpled.Repository;
+using System.Security.Claims;
 
 namespace Simpled.Controllers
 {
@@ -42,11 +43,14 @@ namespace Simpled.Controllers
         /// Crea un nuevo tablero.
         /// </summary>
         /// <param name="dto">Datos del tablero a crear</param>
-        [Authorize(Roles = "admin,editor")]
         [HttpPost]
         public async Task<IActionResult> CreateBoard([FromBody] BoardCreateDto dto)
         {
-            var created = await _boardService.CreateAsync(dto);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized("No se pudo identificar al usuario.");
+
+            var created = await _boardService.CreateAsync(dto, Guid.Parse(userId));
             return CreatedAtAction(nameof(GetBoard), new { id = created.Id }, created);
         }
 

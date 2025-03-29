@@ -44,17 +44,25 @@ namespace Simpled.Services
             };
         }
 
-        public async Task<BoardReadDto> CreateAsync(BoardCreateDto dto)
+        public async Task<BoardReadDto> CreateAsync(BoardCreateDto dto, Guid userId)
         {
             var newBoard = new Board
             {
                 Id = Guid.NewGuid(),
                 Name = dto.Name,
-                OwnerId = dto.OwnerId,
+                OwnerId = userId,
                 IsPublic = dto.IsPublic
             };
 
             _context.Boards.Add(newBoard);
+
+            _context.BoardMembers.Add(new BoardMember
+            {
+                BoardId = newBoard.Id,
+                UserId = userId,
+                Role = "admin"
+            });
+
             await _context.SaveChangesAsync();
 
             return new BoardReadDto
@@ -65,6 +73,7 @@ namespace Simpled.Services
                 IsPublic = newBoard.IsPublic
             };
         }
+
 
         public async Task<bool> UpdateAsync(BoardUpdateDto dto)
         {
