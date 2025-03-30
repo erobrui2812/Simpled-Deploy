@@ -9,7 +9,7 @@ export type Board = {
   id: string;
   name: string;
   isPublic: boolean;
-  ownerId?: string; // útil para control de botones
+  ownerId?: string;
 };
 
 type BoardsContextType = {
@@ -124,7 +124,7 @@ export const BoardsProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   useEffect(() => {
-    fetchBoards(); // Cargar siempre, y dentro se añade o no el header
+    fetchBoards(); 
   }, [auth.token]);
 
   return (

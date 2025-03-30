@@ -3,7 +3,6 @@ import React, { createContext, useCallback, useContext, useEffect, useState } fr
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 
-//const API_URL = process.env.NEXT_PUBLIC_API_URL;
 const API_URL = "https://localhost:7177/";
 
 type AuthContextType = {
