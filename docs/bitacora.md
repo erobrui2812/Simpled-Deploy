@@ -36,6 +36,8 @@ Registro de tareas realizadas durante el desarrollo del proyecto **Simpled**.
 | 2025-03-30  | Elías Robles     | Creacion de layout para un tablero individual                                   |
 | 2025-03-30  | Elías Robles     | Maquetacion e intento de sidebar colapsable para la vista de tablero/id         |
 | 2025-03-30  | Elías Robles     | Investigar como incluir TinyMCE para las tablas y los elementos                 |
+| 2025-03-30  | Adrián Jiménez   | Implementación de creación de columnas e ítems desde la vista de tablero        |
+| 2025-03-30  | Adrián Jiménez   | Integración de permisos personalizados para crear, editar y borrar ítems        |
 
 ---
 
