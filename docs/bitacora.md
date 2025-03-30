@@ -33,6 +33,9 @@ Registro de tareas realizadas durante el desarrollo del proyecto **Simpled**.
 | 2025-03-29  | Adrián Jiménez   | Vista de tableros `/boards` terminada con botón editar/eliminar según propietario |
 | 2025-03-29  | Adrián Jiménez   | Implementación de vista de detalle del tablero con columnas, items y miembros   |
 | 2025-03-29  | Adrián Jiménez   | Correcciones en rutas dinámicas con `params.id` y errores con parse de tokens   |
+| 2025-03-30  | Elías Robles     | Creacion de layout para un tablero individual                                   |
+| 2025-03-30  | Elías Robles     | Maquetacion e intento de sidebar colapsable para la vista de tablero/id         |
+| 2025-03-30  | Elías Robles     | Investigar como incluir TinyMCE para las tablas y los elementos                 |
 
 ---
 
