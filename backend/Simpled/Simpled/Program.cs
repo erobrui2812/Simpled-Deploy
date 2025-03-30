@@ -128,6 +128,8 @@ builder.Services.AddScoped<IUserRepository, UserService>();
 builder.Services.AddScoped<IBoardRepository, BoardService>();
 builder.Services.AddScoped<IColumnRepository, ColumnService>();
 builder.Services.AddScoped<IItemRepository, ItemService>();
+builder.Services.AddScoped<IBoardMemberRepository, BoardMemberService>();
+
 
 var app = builder.Build();
 

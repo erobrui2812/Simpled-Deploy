@@ -1,7 +1,9 @@
 "use client";
 
 import ColumnCreateModal from "@/components/ColumnCreateModal";
+import ColumnEditModal from "@/components/ColumnEditModal";
 import ItemCreateModal from "@/components/ItemCreateModal";
+import ItemEditModal from "@/components/ItemEditModal";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
 
@@ -19,6 +21,9 @@ export default function BoardDetails({ boardId }: { boardId: string }) {
   const [createItemColumnId, setCreateItemColumnId] = useState<string | null>(
     null
   );
+  const [editColumnId, setEditColumnId] = useState<string | null>(null);
+  const [editColumnTitle, setEditColumnTitle] = useState<string>("");
+  const [editItem, setEditItem] = useState<any>(null);
 
   const userId = getUserIdFromToken(auth.token);
   const userMember = Array.isArray(members)
@@ -102,14 +107,28 @@ export default function BoardDetails({ boardId }: { boardId: string }) {
             key={col.id}
             className="bg-white dark:bg-neutral-800 p-4 rounded shadow"
           >
-            <h2 className="font-semibold text-lg mb-2">{col.title}</h2>
+            <div className="flex justify-between items-center mb-2">
+              <h2 className="font-semibold text-lg">{col.title}</h2>
+              {canEdit && (
+                <button
+                  onClick={() => {
+                    setEditColumnId(col.id);
+                    setEditColumnTitle(col.title);
+                  }}
+                  className="text-sm text-blue-500 hover:underline"
+                >
+                  ✏️ Editar
+                </button>
+              )}
+            </div>
             <div className="flex flex-col gap-2">
               {items
                 .filter((item) => item.columnId === col.id)
                 .map((item) => (
                   <div
                     key={item.id}
-                    className="border rounded p-2 bg-neutral-50 dark:bg-neutral-900"
+                    className="border rounded p-2 bg-neutral-50 dark:bg-neutral-900 cursor-pointer"
+                    onClick={() => canEdit && setEditItem(item)}
                   >
                     <strong>{item.title}</strong>
                     {item.description && (
@@ -145,6 +164,24 @@ export default function BoardDetails({ boardId }: { boardId: string }) {
           columnId={createItemColumnId}
           onClose={() => setCreateItemColumnId(null)}
           onCreated={fetchData}
+        />
+      )}
+
+      {editColumnId && (
+        <ColumnEditModal
+          columnId={editColumnId}
+          currentTitle={editColumnTitle}
+          onClose={() => setEditColumnId(null)}
+          onUpdated={fetchData}
+          token={auth.token!}
+        />
+      )}
+
+      {editItem && (
+        <ItemEditModal
+          item={editItem}
+          onClose={() => setEditItem(null)}
+          onUpdated={fetchData}
         />
       )}
     </div>

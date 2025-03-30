@@ -1,71 +1,111 @@
 "use client";
+
+import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
+import { toast } from "react-toastify";
+
+const API = "https://localhost:7177";
+
+type Props = {
+  columnId: string;
+  onClose: () => void;
+  onCreated: () => void;
+};
 
 export default function ItemCreateModal({
   columnId,
   onClose,
   onCreated,
-}: {
-  columnId: string;
-  onClose: () => void;
-  onCreated: () => void;
-}) {
+}: Props) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [dueDate, setDueDate] = useState<string>("");
+  const [loading, setLoading] = useState(false);
+  const { auth } = useAuth();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const res = await fetch("https://localhost:7177/api/Items", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ columnId, title, description }),
-    });
+  const handleCreate = async () => {
+    if (!title.trim()) {
+      toast.warning("El título es obligatorio.");
+      return;
+    }
 
-    if (res.ok) {
+    setLoading(true);
+    try {
+      const response = await fetch(`${API}/api/Items`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${auth.token}`,
+        },
+        body: JSON.stringify({
+          title,
+          description: description || null,
+          dueDate: dueDate ? new Date(dueDate).toISOString() : null,
+          columnId,
+        }),
+      });
+
+      if (!response.ok) throw new Error("No se pudo crear la tarea.");
+
+      toast.success("Tarea creada correctamente.");
       onCreated();
       onClose();
-    } else {
-      alert("Error al crear el item");
+    } catch (err) {
+      console.error(err);
+      toast.error("Error al crear tarea.");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-neutral-900 p-6 rounded max-w-sm w-full shadow">
-        <h2 className="text-lg font-semibold mb-4">Crear nueva tarea</h2>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <input
-            type="text"
-            placeholder="Título"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            required
-            className="border rounded px-3 py-2"
-          />
-          <textarea
-            placeholder="Descripción"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className="border rounded px-3 py-2"
-          />
-          <div className="flex justify-end gap-2">
-            <button
-              onClick={onClose}
-              type="button"
-              className="text-sm text-gray-600"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-            >
-              Crear
-            </button>
-          </div>
-        </form>
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+      <div className="bg-white dark:bg-neutral-900 p-6 rounded shadow max-w-sm w-full">
+        <h2 className="text-xl font-semibold mb-4">Nueva tarea</h2>
+
+        <input
+          type="text"
+          placeholder="Título"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          className="w-full border rounded px-3 py-2 mb-3"
+        />
+
+        <textarea
+          placeholder="Descripción (opcional)"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          className="w-full border rounded px-3 py-2 mb-3"
+          rows={3}
+        />
+
+        <label htmlFor="dueDate" className="block text-sm font-medium mb-1">
+          Fecha de vencimiento
+        </label>
+        <input
+          id="dueDate"
+          type="date"
+          value={dueDate}
+          onChange={(e) => setDueDate(e.target.value)}
+          className="w-full border rounded px-3 py-2 mb-4"
+          title="Selecciona una fecha de vencimiento"
+        />
+
+        <div className="flex justify-end gap-2">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 bg-gray-300 dark:bg-gray-700 rounded"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={handleCreate}
+            disabled={loading}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            {loading ? "Creando..." : "Crear"}
+          </button>
+        </div>
       </div>
     </div>
   );
