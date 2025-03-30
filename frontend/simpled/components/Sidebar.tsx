@@ -4,7 +4,7 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Home, Settings, Menu, ChevronRight, ChevronDown } from "lucide-react";
+import { Home, Settings, Menu, ChevronRight, ChevronDown, RefreshCw } from "lucide-react";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 import { useBoards } from "@/contexts/BoardsContext";
@@ -13,7 +13,7 @@ import { useParams, useRouter } from "next/navigation";
 
 const Sidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const { boards } = useBoards();
+  const { boards, fetchBoards } = useBoards();
   const params = useParams();
   const router = useRouter();
   const selectedBoardId = params.id as string;
@@ -38,28 +38,38 @@ const Sidebar = () => {
       <nav className="space-y-2">
         <NavItem icon={<Home />} isCollapsed={isCollapsed}>Home</NavItem>
 
-        <NavItem icon={null} isCollapsed={isCollapsed}>
-          <Select defaultValue={selectedBoardId} onValueChange={(value) => router.push(`/tableros/${value}`)}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectLabel>Tableros disponibles</SelectLabel>
+        {!isCollapsed &&
+          <div className="flex flex-row gap-1">
+            <Select defaultValue={selectedBoardId} onValueChange={(value) => router.push(`/tableros/${value}`)}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Tableros disponibles</SelectLabel>
 
-                {boards.map((board) => (
-                  <SelectItem
-                    key={board.id}
-                    value={board.id}
-                  >
-                    {board.name}
-                  </SelectItem>
-                ))}
+                  {boards.map((board) => (
+                    <SelectItem
+                      key={board.id}
+                      value={board.id}
+                    >
+                      {board.name}
+                    </SelectItem>
+                  ))}
 
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-        </NavItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+
+            <Button
+              variant="outline"
+              className="mb-4 flex items-center gap-2"
+              onClick={() => fetchBoards()}
+            >
+              <RefreshCw />
+            </Button>
+          </div>
+        }
 
         <Accordion type="single" collapsible className="w-full">
           <AccordionItem value="settings">
