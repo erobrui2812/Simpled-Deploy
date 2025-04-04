@@ -25,8 +25,7 @@ export default function Home() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
               asChild
-              size="lg"
-              variant="outline"
+              size="lg"        
               className="bg-white text-indigo-600 hover:bg-white/90"
             >
               <a href="#caracteristicas">Descubre más</a>
@@ -34,7 +33,6 @@ export default function Home() {
             <Button
               asChild
               size="lg"
-              variant="outline"
               className="bg-white text-indigo-600 hover:bg-white/90"
             >
               <a href="/registro">Comenzar gratis</a>
@@ -135,7 +133,6 @@ export default function Home() {
           <Button
             asChild
             size="lg"
-            variant="outline"
             className="bg-white text-indigo-600 hover:bg-white/90"
           >
             <a href="/registro">Regístrate</a>

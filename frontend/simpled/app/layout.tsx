@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { Figtree } from "next/font/google";
 import "./globals.css";
 
-import Footer from "@/components/footer";
-import Navbar from "@/components/navbar";
+import Footer from "@/components/Footer";
+import Navbar from "@/components/Navbar";
 
 import { AuthProvider } from "@/contexts/AuthContext";
 import { BoardsProvider } from "@/contexts/BoardsContext";
