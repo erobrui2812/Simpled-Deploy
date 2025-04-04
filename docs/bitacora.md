@@ -42,6 +42,7 @@ Registro de tareas realizadas durante el desarrollo del proyecto **Simpled**.
 | 2025-04-04  | Adrián Jiménez   | Creación del `SignalRContext` en el frontend y conexión global con eventos en tiempo real  |
 | 2025-04-04  | Adrián Jiménez   | Corrección del filtrado de tableros por propiedad (`OwnerId`) y mejoras en visibilidad de boards |
 | 2025-04-04  | Adrián Jiménez   | Verificación de toast en frontend, pruebas de eventos simultáneos en Swagger y conexión entre usuarios |
+| 2025-04-04  | Elías Robles     | Mejoras visuales, mas componetizacion para reusabilidad de los componentes de link en el sidebar de tablero |
 
 
 ---
