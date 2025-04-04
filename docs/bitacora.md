@@ -38,6 +38,11 @@ Registro de tareas realizadas durante el desarrollo del proyecto **Simpled**.
 | 2025-03-30  | Elías Robles     | Investigar como incluir TinyMCE para las tablas y los elementos                 |
 | 2025-03-30  | Adrián Jiménez   | Implementación de creación de columnas e ítems desde la vista de tablero        |
 | 2025-03-30  | Adrián Jiménez   | Integración de permisos personalizados para crear, editar y borrar ítems        |
+| 2025-04-04  | Adrián Jiménez   | Implementación del sistema de invitaciones (crear, aceptar, rechazar) con SignalR y tokens |
+| 2025-04-04  | Adrián Jiménez   | Creación del `SignalRContext` en el frontend y conexión global con eventos en tiempo real  |
+| 2025-04-04  | Adrián Jiménez   | Corrección del filtrado de tableros por propiedad (`OwnerId`) y mejoras en visibilidad de boards |
+| 2025-04-04  | Adrián Jiménez   | Verificación de toast en frontend, pruebas de eventos simultáneos en Swagger y conexión entre usuarios |
+
 
 ---
 
