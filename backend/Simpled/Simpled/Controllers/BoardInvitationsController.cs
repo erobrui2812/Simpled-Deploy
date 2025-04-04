@@ -4,6 +4,8 @@ using Simpled.Dtos.BoardInvitations;
 using Simpled.Helpers;
 using Simpled.Repository;
 using System.Security.Claims;
+using Microsoft.AspNetCore.SignalR;
+using Simpled.Hubs;
 
 namespace Simpled.Controllers
 {
@@ -14,13 +16,16 @@ namespace Simpled.Controllers
     {
         private readonly IBoardInvitationRepository _invitationService;
         private readonly IBoardMemberRepository _boardMemberRepo;
+        private readonly IHubContext<BoardHub> _hub;
 
         public BoardInvitationsController(
             IBoardInvitationRepository invitationService,
-            IBoardMemberRepository boardMemberRepo)
+            IBoardMemberRepository boardMemberRepo,
+            IHubContext<BoardHub> hub)
         {
             _invitationService = invitationService;
             _boardMemberRepo = boardMemberRepo;
+            _hub = hub;
         }
 
         /// <summary>
@@ -40,6 +45,7 @@ namespace Simpled.Controllers
         /// <summary>
         /// Obtiene una invitación por token.
         /// </summary>
+        /// <param name="token">Token de la invitación</param>
         [HttpGet("{token}")]
         public async Task<IActionResult> GetByToken(string token)
         {
@@ -50,6 +56,7 @@ namespace Simpled.Controllers
         /// <summary>
         /// Crea una nueva invitación a un tablero (solo admin del board).
         /// </summary>
+        /// <param name="dto">Datos de la invitación a crear</param>
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] BoardInvitationCreateDto dto)
         {
@@ -60,12 +67,17 @@ namespace Simpled.Controllers
                 return Forbid("No tienes permisos para invitar usuarios a este tablero.");
 
             await _invitationService.CreateAsync(dto);
+            await _hub.Clients.User(dto.Email).SendAsync(
+                "InvitationReceived",
+                $"Has sido invitado al tablero con rol {dto.Role}");
+
             return Ok("Invitación enviada.");
         }
 
         /// <summary>
         /// Acepta una invitación usando el token.
         /// </summary>
+        /// <param name="dto">Datos de la invitación a aceptar</param>
         [HttpPost("accept")]
         public async Task<IActionResult> Accept([FromBody] BoardInvitationAcceptDto dto)
         {
@@ -74,12 +86,22 @@ namespace Simpled.Controllers
                 return Unauthorized();
 
             var success = await _invitationService.AcceptAsync(dto.Token, Guid.Parse(userId));
+            if (success)
+            {
+                var boardId = (await _invitationService.GetByTokenAsync(dto.Token))?.BoardId;
+                if (boardId != null)
+                {
+                    await _hub.Clients.Group(boardId.ToString()!).SendAsync("BoardUpdated", boardId);
+                }
+            }
+
             return success ? Ok("Invitación aceptada.") : BadRequest("No se pudo aceptar la invitación.");
         }
 
         /// <summary>
         /// Rechaza una invitación usando el token.
         /// </summary>
+        /// <param name="dto">Datos de la invitación a rechazar</param>
         [HttpPost("reject")]
         public async Task<IActionResult> Reject([FromBody] BoardInvitationAcceptDto dto)
         {
