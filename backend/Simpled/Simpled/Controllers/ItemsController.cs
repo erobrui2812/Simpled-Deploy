@@ -1,8 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Simpled.Dtos.Items;
-using Simpled.Models;
+using Simpled.Helpers;
 using Simpled.Repository;
+using System.Security.Claims;
 
 namespace Simpled.Controllers
 {
@@ -12,10 +13,12 @@ namespace Simpled.Controllers
     public class ItemsController : ControllerBase
     {
         private readonly IItemRepository _itemService;
+        private readonly IBoardMemberRepository _boardMemberRepo;
 
-        public ItemsController(IItemRepository itemService)
+        public ItemsController(IItemRepository itemService, IBoardMemberRepository boardMemberRepo)
         {
             _itemService = itemService;
+            _boardMemberRepo = boardMemberRepo;
         }
 
         /// <summary>
@@ -43,10 +46,16 @@ namespace Simpled.Controllers
         /// Crea un nuevo ítem dentro de una columna.
         /// </summary>
         /// <param name="dto">Datos del ítem a crear</param>
-        [Authorize(Roles = "admin,editor")]
         [HttpPost]
         public async Task<IActionResult> CreateItem([FromBody] ItemCreateDto dto)
         {
+            var boardId = await _itemService.GetBoardIdByColumnId(dto.ColumnId);
+            var hasPermission = await BoardAuthorizationHelper.HasBoardPermissionAsync(
+                User, boardId, new[] { "admin", "editor" }, _boardMemberRepo);
+
+            if (!hasPermission)
+                return Forbid("No tienes permisos suficientes para crear un item en este board.");
+
             var created = await _itemService.CreateAsync(dto);
             return CreatedAtAction(nameof(GetItem), new { id = created.Id }, created);
         }
@@ -56,12 +65,18 @@ namespace Simpled.Controllers
         /// </summary>
         /// <param name="id">ID del ítem</param>
         /// <param name="dto">Datos del ítem a actualizar</param>
-        [Authorize(Roles = "admin,editor")]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateItem(Guid id, [FromBody] ItemUpdateDto dto)
         {
             if (id != dto.Id)
                 return BadRequest("ID mismatch.");
+
+            var boardId = await _itemService.GetBoardIdByColumnId(dto.ColumnId);
+            var hasPermission = await BoardAuthorizationHelper.HasBoardPermissionAsync(
+                User, boardId, new[] { "admin", "editor" }, _boardMemberRepo);
+
+            if (!hasPermission)
+                return Forbid("No tienes permisos suficientes para editar este item.");
 
             var success = await _itemService.UpdateAsync(dto);
             return success ? NoContent() : NotFound("Item not found.");
@@ -71,10 +86,16 @@ namespace Simpled.Controllers
         /// Elimina un ítem existente (requiere rol admin).
         /// </summary>
         /// <param name="id">ID del ítem</param>
-        [Authorize(Roles = "admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteItem(Guid id)
         {
+            var boardId = await _itemService.GetBoardIdByItemId(id);
+            var hasPermission = await BoardAuthorizationHelper.HasBoardPermissionAsync(
+                User, boardId, new[] { "admin" }, _boardMemberRepo);
+
+            if (!hasPermission)
+                return Forbid("No tienes permisos suficientes para eliminar este item.");
+
             var success = await _itemService.DeleteAsync(id);
             return success ? NoContent() : NotFound("Item not found.");
         }
@@ -84,14 +105,18 @@ namespace Simpled.Controllers
         /// </summary>
         /// <param name="id">ID del ítem</param>
         /// <param name="file">Archivo a subir</param>
-        [Authorize(Roles = "admin,editor")]
         [HttpPost("{id}/upload")]
         public async Task<IActionResult> UploadFile(Guid id, IFormFile file)
         {
+            var boardId = await _itemService.GetBoardIdByItemId(id);
+            var hasPermission = await BoardAuthorizationHelper.HasBoardPermissionAsync(
+                User, boardId, new[] { "admin", "editor" }, _boardMemberRepo);
+
+            if (!hasPermission)
+                return Forbid("No tienes permisos suficientes para subir archivos en este item.");
+
             var result = await _itemService.UploadFileAsync(id, file);
             return result == null ? BadRequest("Error uploading file or item not found.") : Ok(result);
         }
     }
 }
-
-

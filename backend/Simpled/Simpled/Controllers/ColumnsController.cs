@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Simpled.Dtos.Columns;
+using Simpled.Helpers;
 using Simpled.Repository;
 
 namespace Simpled.Controllers
@@ -11,10 +12,12 @@ namespace Simpled.Controllers
     public class ColumnsController : ControllerBase
     {
         private readonly IColumnRepository _columnService;
+        private readonly IBoardMemberRepository _boardMemberRepo;
 
-        public ColumnsController(IColumnRepository columnService)
+        public ColumnsController(IColumnRepository columnService, IBoardMemberRepository boardMemberRepo)
         {
             _columnService = columnService;
+            _boardMemberRepo = boardMemberRepo;
         }
 
         /// <summary>
@@ -45,6 +48,12 @@ namespace Simpled.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateColumn([FromBody] BoardColumnCreateDto dto)
         {
+            var hasPermission = await BoardAuthorizationHelper.HasBoardPermissionAsync(
+                User, dto.BoardId, new[] { "admin", "editor" }, _boardMemberRepo);
+
+            if (!hasPermission)
+                return Forbid("No tienes permisos para crear columnas en este tablero.");
+
             var created = await _columnService.CreateAsync(dto);
             return CreatedAtAction(nameof(GetColumn), new { id = created.Id }, created);
         }
@@ -60,21 +69,33 @@ namespace Simpled.Controllers
             if (id != dto.Id)
                 return BadRequest("ID mismatch.");
 
+            var boardId = await _columnService.GetBoardIdByColumnId(dto.Id);
+            var hasPermission = await BoardAuthorizationHelper.HasBoardPermissionAsync(
+                User, boardId, new[] { "admin", "editor" }, _boardMemberRepo);
+
+            if (!hasPermission)
+                return Forbid("No tienes permisos para modificar columnas en este tablero.");
+
             var success = await _columnService.UpdateAsync(dto);
             return success ? NoContent() : NotFound("Column not found.");
         }
 
         /// <summary>
-        /// Elimina una columna (requiere rol admin).
+        /// Elimina una columna (requiere rol admin en el board).
         /// </summary>
         /// <param name="id">ID de la columna</param>
-        [Authorize(Roles = "admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteColumn(Guid id)
         {
+            var boardId = await _columnService.GetBoardIdByColumnId(id);
+            var hasPermission = await BoardAuthorizationHelper.HasBoardPermissionAsync(
+                User, boardId, new[] { "admin" }, _boardMemberRepo);
+
+            if (!hasPermission)
+                return Forbid("No tienes permisos para eliminar columnas en este tablero.");
+
             var success = await _columnService.DeleteAsync(id);
             return success ? NoContent() : NotFound("Column not found.");
         }
     }
 }
-

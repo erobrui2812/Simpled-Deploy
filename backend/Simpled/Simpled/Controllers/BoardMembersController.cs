@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Simpled.Dtos.BoardMembers;
+using Simpled.Helpers;
 using Simpled.Repository;
 using System.Text.Json;
 
@@ -54,11 +55,27 @@ namespace Simpled.Controllers
         /// <summary>
         /// Agrega uno o varios miembros a un tablero.
         /// </summary>
-
-        [Authorize(Roles = "admin")]
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] JsonElement body)
         {
+            Guid boardId;
+
+            if (body.TryGetProperty("boardId", out var boardIdProp))
+                boardId = boardIdProp.GetGuid();
+            else if (body.ValueKind == JsonValueKind.Array)
+            {
+                var first = JsonDocument.Parse(body.GetRawText()).RootElement[0];
+                boardId = first.GetProperty("boardId").GetGuid();
+            }
+            else
+                return BadRequest("No se pudo determinar el BoardId.");
+
+            var hasPermission = await BoardAuthorizationHelper.HasBoardPermissionAsync(
+                User, boardId, new[] { "admin" }, _memberService);
+
+            if (!hasPermission)
+                return Forbid("No tienes permisos para agregar miembros a este tablero.");
+
             if (body.ValueKind == JsonValueKind.Object)
             {
                 var dto = JsonSerializer.Deserialize<BoardMemberCreateDto>(body.GetRawText(), new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
@@ -78,16 +95,21 @@ namespace Simpled.Controllers
                 }
             }
 
-            return BadRequest("Formato de datos inválido. Se esperaba un objeto o una lista de miembros.");
+            return BadRequest("Formato de datos inválido.");
         }
 
         /// <summary>
         /// Actualiza el rol de un miembro en un tablero.
         /// </summary>
-        [Authorize(Roles = "admin")]
         [HttpPut]
         public async Task<IActionResult> Update([FromBody] BoardMemberUpdateDto dto)
         {
+            var hasPermission = await BoardAuthorizationHelper.HasBoardPermissionAsync(
+                User, dto.BoardId, new[] { "admin" }, _memberService);
+
+            if (!hasPermission)
+                return Forbid("No tienes permisos para actualizar este miembro.");
+
             var success = await _memberService.UpdateAsync(dto);
             return success ? NoContent() : NotFound("Miembro no encontrado.");
         }
@@ -97,15 +119,17 @@ namespace Simpled.Controllers
         /// </summary>
         /// <param name="boardId">ID del tablero</param>
         /// <param name="userId">ID del usuario</param>
-        [Authorize(Roles = "admin")]
         [HttpDelete("{boardId}/{userId}")]
         public async Task<IActionResult> Delete(Guid boardId, Guid userId)
         {
+            var hasPermission = await BoardAuthorizationHelper.HasBoardPermissionAsync(
+                User, boardId, new[] { "admin" }, _memberService);
+
+            if (!hasPermission)
+                return Forbid("No tienes permisos para eliminar miembros de este tablero.");
+
             var success = await _memberService.DeleteAsync(boardId, userId);
             return success ? NoContent() : NotFound("Miembro no encontrado.");
         }
     }
 }
-
-
-

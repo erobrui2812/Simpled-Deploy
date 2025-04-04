@@ -12,5 +12,8 @@ namespace Simpled.Repository
         Task<BoardColumnReadDto> CreateAsync(BoardColumnCreateDto dto);
         Task<bool> UpdateAsync(BoardColumnUpdateDto dto);
         Task<bool> DeleteAsync(Guid id);
+
+        Task<Guid> GetBoardIdByColumnId(Guid columnId);
+
     }
 }

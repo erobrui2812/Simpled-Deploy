@@ -90,5 +90,16 @@ namespace Simpled.Services
             await _context.SaveChangesAsync();
             return true;
         }
+
+
+        public async Task<Guid> GetBoardIdByColumnId(Guid columnId)
+        {
+            var column = await _context.BoardColumns.FindAsync(columnId);
+            if (column == null)
+                throw new NotFoundException("Columna no encontrada.");
+
+            return column.BoardId;
+        }
+
     }
 }

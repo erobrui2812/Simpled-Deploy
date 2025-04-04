@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Simpled.Dtos.Boards;
+using Simpled.Helpers;
 using Simpled.Repository;
 using System.Security.Claims;
 
@@ -11,10 +12,12 @@ namespace Simpled.Controllers
     public class BoardsController : ControllerBase
     {
         private readonly IBoardRepository _boardService;
+        private readonly IBoardMemberRepository _boardMemberRepo;
 
-        public BoardsController(IBoardRepository boardService)
+        public BoardsController(IBoardRepository boardService, IBoardMemberRepository boardMemberRepo)
         {
             _boardService = boardService;
+            _boardMemberRepo = boardMemberRepo;
         }
 
         /// <summary>
@@ -65,6 +68,12 @@ namespace Simpled.Controllers
             if (id != dto.Id)
                 return BadRequest("ID mismatch.");
 
+            var hasPermission = await BoardAuthorizationHelper.HasBoardPermissionAsync(
+                User, dto.Id, new[] { "admin" }, _boardMemberRepo);
+
+            if (!hasPermission)
+                return Forbid("No tienes permisos para modificar este tablero.");
+
             var success = await _boardService.UpdateAsync(dto);
             return success ? NoContent() : NotFound("Board not found.");
         }
@@ -76,6 +85,12 @@ namespace Simpled.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteBoard(Guid id)
         {
+            var hasPermission = await BoardAuthorizationHelper.HasBoardPermissionAsync(
+                User, id, new[] { "admin" }, _boardMemberRepo);
+
+            if (!hasPermission)
+                return Forbid("No tienes permisos para eliminar este tablero.");
+
             var success = await _boardService.DeleteAsync(id);
             return success ? NoContent() : NotFound("Board not found.");
         }

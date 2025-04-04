@@ -15,5 +15,8 @@ namespace Simpled.Repository
         Task<bool> UpdateAsync(ItemUpdateDto dto);
         Task<bool> DeleteAsync(Guid id);
         Task<Content?> UploadFileAsync(Guid itemId, IFormFile file);
+
+        Task<Guid> GetBoardIdByColumnId(Guid columnId);
+        Task<Guid> GetBoardIdByItemId(Guid itemId);
     }
 }

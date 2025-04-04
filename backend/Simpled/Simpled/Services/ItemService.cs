@@ -131,5 +131,29 @@ namespace Simpled.Services
 
             return content;
         }
+
+
+        public async Task<Guid> GetBoardIdByColumnId(Guid columnId)
+        {
+            var column = await _context.BoardColumns.FindAsync(columnId);
+            if (column == null)
+                throw new NotFoundException("Columna no encontrada.");
+
+            return column.BoardId;
+        }
+
+        public async Task<Guid> GetBoardIdByItemId(Guid itemId)
+        {
+            var item = await _context.Items.FindAsync(itemId);
+            if (item == null)
+                throw new NotFoundException("Ítem no encontrado.");
+
+            var column = await _context.BoardColumns.FindAsync(item.ColumnId);
+            if (column == null)
+                throw new NotFoundException("Columna del ítem no encontrada.");
+
+            return column.BoardId;
+        }
+
     }
 }
