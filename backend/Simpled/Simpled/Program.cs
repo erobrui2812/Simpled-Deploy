@@ -1,4 +1,4 @@
-using Simpled.Data;
+﻿using Simpled.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -57,13 +57,13 @@ builder.Services.AddAuthentication(options =>
 // --------------------------------------------------
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll",
-        policy =>
-        {
-            policy.AllowAnyOrigin()
-                  .AllowAnyMethod()
-                  .AllowAnyHeader();
-        });
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:3000") // o el dominio de Vercel
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
 });
 
 // --------------------------------------------------
@@ -129,6 +129,10 @@ builder.Services.AddScoped<IBoardRepository, BoardService>();
 builder.Services.AddScoped<IColumnRepository, ColumnService>();
 builder.Services.AddScoped<IItemRepository, ItemService>();
 builder.Services.AddScoped<IBoardMemberRepository, BoardMemberService>();
+builder.Services.AddScoped<IBoardInvitationRepository, BoardInvitationService>();
+
+
+
 
 
 var app = builder.Build();
@@ -145,7 +149,7 @@ using (var scope = app.Services.CreateScope())
 // --------------------------------------------------
 //  Middlewares
 // --------------------------------------------------
-app.UseCors("AllowAll");
+app.UseCors("AllowFrontend");
 
 if (app.Environment.IsDevelopment())
 {

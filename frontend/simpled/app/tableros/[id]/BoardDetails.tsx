@@ -125,9 +125,9 @@ export default function BoardDetails({ boardId }: { boardId: string }) {
               {items
                 .filter((item) => item.columnId === col.id)
                 .map((item) => (
-                  <div
+                  <button
                     key={item.id}
-                    className="border rounded p-2 bg-neutral-50 dark:bg-neutral-900 cursor-pointer"
+                    className="border rounded p-2 bg-neutral-50 dark:bg-neutral-900 cursor-pointer text-left"
                     onClick={() => canEdit && setEditItem(item)}
                   >
                     <strong>{item.title}</strong>
@@ -136,7 +136,7 @@ export default function BoardDetails({ boardId }: { boardId: string }) {
                         {item.description}
                       </p>
                     )}
-                  </div>
+                  </button>
                 ))}
             </div>
             {canEdit && (

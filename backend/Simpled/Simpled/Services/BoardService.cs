@@ -22,7 +22,8 @@ namespace Simpled.Services
                 .Where(b =>
                     b.IsPublic ||
                     (userId != null &&
-                     _context.BoardMembers.Any(m => m.BoardId == b.Id && m.UserId == userId)))
+                     (b.OwnerId == userId ||
+                      _context.BoardMembers.Any(m => m.BoardId == b.Id && m.UserId == userId))))
                 .Select(b => new BoardReadDto
                 {
                     Id = b.Id,
@@ -40,6 +41,7 @@ namespace Simpled.Services
 
             return boards;
         }
+
 
         public async Task<BoardReadDto?> GetByIdAsync(Guid id)
         {
