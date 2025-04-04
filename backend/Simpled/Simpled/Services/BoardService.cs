@@ -18,7 +18,7 @@ namespace Simpled.Services
 
         public async Task<IEnumerable<BoardReadDto>> GetAllAsync(Guid? userId = null)
         {
-            return await _context.Boards
+            var boards = await _context.Boards
                 .Where(b =>
                     b.IsPublic ||
                     (userId != null &&
@@ -28,9 +28,17 @@ namespace Simpled.Services
                     Id = b.Id,
                     Name = b.Name,
                     OwnerId = b.OwnerId,
-                    IsPublic = b.IsPublic
+                    IsPublic = b.IsPublic,
+                    UserRole = userId != null
+                        ? _context.BoardMembers
+                            .Where(m => m.BoardId == b.Id && m.UserId == userId)
+                            .Select(m => m.Role)
+                            .FirstOrDefault()
+                        : null
                 })
                 .ToListAsync();
+
+            return boards;
         }
 
         public async Task<BoardReadDto?> GetByIdAsync(Guid id)
