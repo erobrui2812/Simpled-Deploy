@@ -19,6 +19,10 @@ namespace Simpled.Data
         public DbSet<Content> Contents => Set<Content>();
         public DbSet<BoardMember> BoardMembers => Set<BoardMember>();
 
+        public DbSet<BoardInvitation> BoardInvitations => Set<BoardInvitation>();
+
+
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -61,6 +65,14 @@ namespace Simpled.Data
                 .HasOne(bm => bm.User)
                 .WithMany(u => u.BoardMembers)
                 .HasForeignKey(bm => bm.UserId);
+
+            modelBuilder.Entity<BoardInvitation>()
+                .HasOne(i => i.Board)
+                .WithMany()
+                .HasForeignKey(i => i.BoardId);
+
         }
+
+
     }
 }

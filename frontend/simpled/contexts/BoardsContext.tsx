@@ -9,7 +9,8 @@ export type Board = {
   id: string;
   name: string;
   isPublic: boolean;
-  ownerId?: string; // útil para control de botones
+  ownerId?: string;
+  userRole?: "admin" | "editor" | "viewer";
 };
 
 type BoardsContextType = {
