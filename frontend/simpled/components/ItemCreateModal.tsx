@@ -7,9 +7,9 @@ import { toast } from "react-toastify";
 const API = "https://localhost:7177";
 
 type Props = {
-  columnId: string;
-  onClose: () => void;
-  onCreated: () => void;
+  readonly columnId: string;
+  readonly onCreated: () => void;
+  readonly onClose: () => void;
 };
 
 export default function ItemCreateModal({
