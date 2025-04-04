@@ -1,9 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Simpled.Data;
-using Simpled.Models.TrelloNotionClone.Models;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Simpled.Dtos.Columns;
-using Microsoft.AspNetCore.Authorization;
+using Simpled.Helpers;
+using Simpled.Repository;
 
 namespace Simpled.Controllers
 {
@@ -12,117 +11,91 @@ namespace Simpled.Controllers
     [Route("api/[controller]")]
     public class ColumnsController : ControllerBase
     {
-        private readonly SimpledDbContext _context;
+        private readonly IColumnRepository _columnService;
+        private readonly IBoardMemberRepository _boardMemberRepo;
 
-        public ColumnsController(SimpledDbContext context)
+        public ColumnsController(IColumnRepository columnService, IBoardMemberRepository boardMemberRepo)
         {
-            _context = context;
+            _columnService = columnService;
+            _boardMemberRepo = boardMemberRepo;
         }
 
         /// <summary>
-        /// Devuelve todas las columnas.
+        /// Lista todas las columnas de todos los tableros.
         /// </summary>
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<BoardColumnReadDto>>> GetAllColumns()
+        public async Task<IActionResult> GetAllColumns()
         {
-            var columns = await _context.BoardColumns.ToListAsync();
-            var columnDtos = columns.Select(c => new BoardColumnReadDto
-            {
-                Id = c.Id,
-                BoardId = c.BoardId,
-                Title = c.Title,
-                Order = c.Order
-            }).ToList();
-
-            return Ok(columnDtos);
+            var result = await _columnService.GetAllAsync();
+            return Ok(result);
         }
 
         /// <summary>
-        /// Devuelve una columna por su ID.
+        /// Obtiene una columna por ID.
         /// </summary>
+        /// <param name="id">ID de la columna</param>
         [HttpGet("{id}")]
-        public async Task<ActionResult<BoardColumnReadDto>> GetColumn(Guid id)
+        public async Task<IActionResult> GetColumn(Guid id)
         {
-            var column = await _context.BoardColumns.FindAsync(id);
-            if (column == null)
-                return NotFound("Column not found.");
-
-            var columnDto = new BoardColumnReadDto
-            {
-                Id = column.Id,
-                BoardId = column.BoardId,
-                Title = column.Title,
-                Order = column.Order
-            };
-
-            return Ok(columnDto);
+            var column = await _columnService.GetByIdAsync(id);
+            return column == null ? NotFound("Column not found.") : Ok(column);
         }
 
         /// <summary>
-        /// Crea una nueva columna en un board.
+        /// Crea una nueva columna en un tablero.
         /// </summary>
+        /// <param name="dto">Datos de la columna a crear</param>
         [HttpPost]
-        public async Task<ActionResult<BoardColumnReadDto>> CreateColumn([FromBody] BoardColumnCreateDto createDto)
+        public async Task<IActionResult> CreateColumn([FromBody] BoardColumnCreateDto dto)
         {
-            var newColumn = new BoardColumn
-            {
-                Id = Guid.NewGuid(),
-                BoardId = createDto.BoardId,
-                Title = createDto.Title,
-                Order = createDto.Order
-            };
+            var hasPermission = await BoardAuthorizationHelper.HasBoardPermissionAsync(
+                User, dto.BoardId, new[] { "admin", "editor" }, _boardMemberRepo);
 
-            _context.BoardColumns.Add(newColumn);
-            await _context.SaveChangesAsync();
+            if (!hasPermission)
+                return Forbid("No tienes permisos para crear columnas en este tablero.");
 
-            var columnRead = new BoardColumnReadDto
-            {
-                Id = newColumn.Id,
-                BoardId = newColumn.BoardId,
-                Title = newColumn.Title,
-                Order = newColumn.Order
-            };
-
-            return CreatedAtAction(nameof(GetColumn), new { id = newColumn.Id }, columnRead);
+            var created = await _columnService.CreateAsync(dto);
+            return CreatedAtAction(nameof(GetColumn), new { id = created.Id }, created);
         }
 
         /// <summary>
-        /// Actualiza una columna.
+        /// Actualiza una columna existente.
         /// </summary>
+        /// <param name="id">ID de la columna</param>
+        /// <param name="dto">Datos de la columna a actualizar</param>
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateColumn(Guid id, [FromBody] BoardColumnUpdateDto updateDto)
+        public async Task<IActionResult> UpdateColumn(Guid id, [FromBody] BoardColumnUpdateDto dto)
         {
-            if (id != updateDto.Id)
+            if (id != dto.Id)
                 return BadRequest("ID mismatch.");
 
-            var existing = await _context.BoardColumns.FindAsync(id);
-            if (existing == null)
-                return NotFound("Column not found.");
+            var boardId = await _columnService.GetBoardIdByColumnId(dto.Id);
+            var hasPermission = await BoardAuthorizationHelper.HasBoardPermissionAsync(
+                User, boardId, new[] { "admin", "editor" }, _boardMemberRepo);
 
-            existing.BoardId = updateDto.BoardId;
-            existing.Title = updateDto.Title;
-            existing.Order = updateDto.Order;
+            if (!hasPermission)
+                return Forbid("No tienes permisos para modificar columnas en este tablero.");
 
-            await _context.SaveChangesAsync();
-            return NoContent();
+            var success = await _columnService.UpdateAsync(dto);
+            return success ? NoContent() : NotFound("Column not found.");
         }
 
         /// <summary>
-        /// Elimina una columna.
+        /// Elimina una columna (requiere rol admin en el board).
         /// </summary>
-        [Authorize(Roles = "admin")]
+        /// <param name="id">ID de la columna</param>
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteColumn(Guid id)
         {
-            var column = await _context.BoardColumns.FindAsync(id);
-            if (column == null)
-                return NotFound("Column not found.");
+            var boardId = await _columnService.GetBoardIdByColumnId(id);
+            var hasPermission = await BoardAuthorizationHelper.HasBoardPermissionAsync(
+                User, boardId, new[] { "admin" }, _boardMemberRepo);
 
-            _context.BoardColumns.Remove(column);
-            await _context.SaveChangesAsync();
-            return NoContent();
+            if (!hasPermission)
+                return Forbid("No tienes permisos para eliminar columnas en este tablero.");
+
+            var success = await _columnService.DeleteAsync(id);
+            return success ? NoContent() : NotFound("Column not found.");
         }
     }
 }
-
-

@@ -1,154 +1,79 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Simpled.Data;
-using Simpled.Models;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Simpled.Dtos.Users;
-using Microsoft.AspNetCore.Authorization;
+using Simpled.Repository;
 
 namespace Simpled.Controllers
 {
-
-    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class UsersController : ControllerBase
     {
-        private readonly SimpledDbContext _context;
+        private readonly IUserRepository _userService;
 
-        public UsersController(SimpledDbContext context)
+        public UsersController(IUserRepository userService)
         {
-            _context = context;
+            _userService = userService;
         }
 
-        // GET: api/users
         /// <summary>
-        /// Devuelve todos los usuarios registrados.
+        /// Obtiene todos los usuarios registrados.
         /// </summary>
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<UserReadDto>>> GetUsers()
+        public async Task<IActionResult> GetUsers()
         {
-            var users = await _context.Users.Include(u => u.Roles).ToListAsync();
-
-
-            var result = users.Select(u => new UserReadDto
-            {
-                Id = u.Id,
-                Email = u.Email,
-                CreatedAt = u.CreatedAt,
-                Roles = u.Roles.Select(r => r.Role).ToList()
-            }).ToList();
-
+            var result = await _userService.GetAllUsersAsync();
             return Ok(result);
         }
 
-        // GET: api/users/{id}
         /// <summary>
-        /// Devuelve un usuario por su ID.
-        /// 
+        /// Obtiene un usuario específico por su ID.
+        /// </summary>
+        /// <param name="id">ID del usuario</param>
         [HttpGet("{id}")]
-        public async Task<ActionResult<UserReadDto>> GetUser(Guid id)
+        public async Task<IActionResult> GetUser(Guid id)
         {
-            var user = await _context.Users
-                .Include(u => u.Roles)
-                .FirstOrDefaultAsync(u => u.Id == id);
-
-            if (user == null)
-                return NotFound("User not found.");
-
-            var userDto = new UserReadDto
-            {
-                Id = user.Id,
-                Email = user.Email,
-                CreatedAt = user.CreatedAt,
-                Roles = user.Roles.Select(r => r.Role).ToList()
-            };
-
-            return Ok(userDto);
+            var user = await _userService.GetUserByIdAsync(id);
+            return user == null ? NotFound("User not found.") : Ok(user);
         }
 
-
         /// <summary>
-        /// Registra un nuevo usuario
+        /// Registra un nuevo usuario en la plataforma.
         /// </summary>
         [AllowAnonymous]
         [HttpPost("register")]
-        public async Task<ActionResult<UserReadDto>> Register([FromBody] UserRegisterDto userDto)
+        public async Task<IActionResult> Register([FromBody] UserRegisterDto dto)
         {
-
-            var user = new User
-            {
-                Id = Guid.NewGuid(),
-                Email = userDto.Email,
-                CreatedAt = DateTime.UtcNow
-            };
-
-            // Hash password
-            var hashedPassword = BCrypt.Net.BCrypt.HashPassword(userDto.Password);
-            user.PasswordHash = hashedPassword;
-
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
-
-
-            var createdUserDto = new UserReadDto
-            {
-                Id = user.Id,
-                Email = user.Email,
-                CreatedAt = user.CreatedAt,
-                Roles = new List<string>() // aún no hemos asignado roles
-            };
-
-            return CreatedAtAction(nameof(GetUser), new { id = user.Id }, createdUserDto);
+            var createdUser = await _userService.RegisterAsync(dto);
+            return CreatedAtAction(nameof(GetUser), new { id = createdUser.Id }, createdUser);
         }
 
-        // PUT: api/users/{id}
         /// <summary>
-        /// Actualiza la información de un usuario.
+        /// Actualiza la información de un usuario existente.
         /// </summary>
+        /// <param name="id">ID del usuario</param>
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateUser(Guid id, [FromBody] UserUpdateDto updatedDto)
+        public async Task<IActionResult> UpdateUser(Guid id, [FromBody] UserUpdateDto dto)
         {
-            if (id != updatedDto.Id)
+            if (id != dto.Id)
                 return BadRequest("ID mismatch.");
 
-            var existingUser = await _context.Users
-                                             .Include(u => u.Roles)
-                                             .FirstOrDefaultAsync(u => u.Id == id);
-
-            if (existingUser == null)
-                return NotFound("User not found.");
-
-            existingUser.Email = updatedDto.Email;
-
-
-            if (!string.IsNullOrWhiteSpace(updatedDto.Password))
-            {
-                bool samePassword = BCrypt.Net.BCrypt.Verify(updatedDto.Password, existingUser.PasswordHash);
-                if (!samePassword)
-                {
-                    existingUser.PasswordHash = BCrypt.Net.BCrypt.HashPassword(updatedDto.Password);
-                }
-            }
-
-            await _context.SaveChangesAsync();
-            return NoContent();
+            var success = await _userService.UpdateAsync(dto);
+            return success ? NoContent() : NotFound("User not found.");
         }
 
-        // DELETE: api/users/{id}
         /// <summary>
-        /// Elimina un usuario del sistema.
+        /// Elimina un usuario de la base de datos.
         /// </summary>
+        /// <param name="id">ID del usuario</param>
         [HttpDelete("{id}")]
-        // [Authorize(Roles = "admin")]
         public async Task<IActionResult> DeleteUser(Guid id)
         {
-            var user = await _context.Users.FindAsync(id);
-            if (user == null)
-                return NotFound("User not found.");
-
-            _context.Users.Remove(user);
-            await _context.SaveChangesAsync();
-            return NoContent();
+            var success = await _userService.DeleteAsync(id);
+            return success ? NoContent() : NotFound("User not found.");
         }
     }
 }
+
+
+

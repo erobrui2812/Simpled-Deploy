@@ -7,7 +7,10 @@ using Simpled.Hubs;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.OpenApi.Models;
+using Simpled.Repository;
+using Simpled.Services;
 using System.Reflection;
+using Simpled.Exception;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -54,13 +57,13 @@ builder.Services.AddAuthentication(options =>
 // --------------------------------------------------
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll",
-        policy =>
-        {
-            policy.AllowAnyOrigin()
-                  .AllowAnyMethod()
-                  .AllowAnyHeader();
-        });
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:3000") // o el dominio de Vercel
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
 });
 
 // --------------------------------------------------
@@ -73,27 +76,9 @@ builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 // --------------------------------------------------
 //  Swagger + Bearer Authorization
 // --------------------------------------------------
+builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
-    options.SwaggerDoc("v1", new OpenApiInfo
-    {
-        Title = "🧩 Simpled API - Notion/Trello Clone",
-        Version = "v1",
-        Description = """
-            API RESTful para gestión colaborativa de tareas, columnas, tableros y usuarios.
-            Funcionalidades:
-            - Registro e inicio de sesión con JWT
-            - CRUD de usuarios, tableros, columnas e items
-            - Gestión de roles y permisos
-            - Edición colaborativa en tiempo real con SignalR
-            """,
-        Contact = new OpenApiContact
-        {
-            Name = "Simpled Team",
-            Url = new Uri("https://github.com/AdrianJS2009")
-        }
-    });
-
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -101,7 +86,7 @@ builder.Services.AddSwaggerGen(options =>
         Scheme = "bearer",
         BearerFormat = "JWT",
         In = ParameterLocation.Header,
-        Description = "Introduce tu token JWT: `Bearer <tu-token>`"
+        Description = "JWT Authorization header usando el esquema Bearer. \r\n\r\nIntroduce 'Bearer <TOKEN>' para autenticarte."
     });
 
     options.AddSecurityRequirement(new OpenApiSecurityRequirement
@@ -115,16 +100,14 @@ builder.Services.AddSwaggerGen(options =>
                     Id = "Bearer"
                 }
             },
-            Array.Empty<string>()
+            new string[] {}
         }
     });
 
+    // Incluir comentarios XML
     var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-    if (File.Exists(xmlPath))
-    {
-        options.IncludeXmlComments(xmlPath, includeControllerXmlComments: true);
-    }
+    options.IncludeXmlComments(xmlPath);
 });
 
 // --------------------------------------------------
@@ -136,6 +119,21 @@ builder.Services.AddSignalR();
 //  Authorization
 // --------------------------------------------------
 builder.Services.AddAuthorization();
+
+// --------------------------------------------------
+//  Servicios y Repositorios
+// --------------------------------------------------
+builder.Services.AddScoped<IAuthRepository, AuthService>();
+builder.Services.AddScoped<IUserRepository, UserService>();
+builder.Services.AddScoped<IBoardRepository, BoardService>();
+builder.Services.AddScoped<IColumnRepository, ColumnService>();
+builder.Services.AddScoped<IItemRepository, ItemService>();
+builder.Services.AddScoped<IBoardMemberRepository, BoardMemberService>();
+builder.Services.AddScoped<IBoardInvitationRepository, BoardInvitationService>();
+
+
+
+
 
 var app = builder.Build();
 
@@ -151,24 +149,17 @@ using (var scope = app.Services.CreateScope())
 // --------------------------------------------------
 //  Middlewares
 // --------------------------------------------------
-app.UseCors("AllowAll");
+app.UseCors("AllowFrontend");
 
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI(options =>
-    {
-        options.SwaggerEndpoint("/swagger/v1/swagger.json", "Simpled API v1");
-
-
-        options.IndexStream = () =>
-     File.OpenRead(Path.Combine(app.Environment.WebRootPath, "swagger-ui", "index.html"));
-
-    });
+    app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();
 
+app.UseGlobalExceptionHandler();
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -176,5 +167,3 @@ app.MapControllers();
 app.MapHub<BoardHub>("/hubs/board");
 
 app.Run();
-
-

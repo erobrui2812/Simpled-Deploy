@@ -1,131 +1,98 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Simpled.Data;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Simpled.Dtos.Boards;
-using Simpled.Models.TrelloNotionClone.Models;
-using Microsoft.AspNetCore.Authorization;
-using Simpled.Models;
+using Simpled.Helpers;
+using Simpled.Repository;
+using System.Security.Claims;
 
 namespace Simpled.Controllers
 {
-    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class BoardsController : ControllerBase
     {
-        private readonly SimpledDbContext _context;
+        private readonly IBoardRepository _boardService;
+        private readonly IBoardMemberRepository _boardMemberRepo;
 
-        public BoardsController(SimpledDbContext context)
+        public BoardsController(IBoardRepository boardService, IBoardMemberRepository boardMemberRepo)
         {
-            _context = context;
+            _boardService = boardService;
+            _boardMemberRepo = boardMemberRepo;
         }
 
         /// <summary>
-        /// Devuelve todos los tableros existentes.
+        /// Obtiene todos los tableros visibles para el usuario (públicos o propios).
         /// </summary>
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<BoardReadDto>>> GetBoards()
+        public async Task<IActionResult> GetAllBoards()
         {
-            var boards = await _context.Boards.ToListAsync();
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            Guid? userId = string.IsNullOrEmpty(userIdClaim) ? null : Guid.Parse(userIdClaim);
 
-            var boardDtos = boards.Select(b => new BoardReadDto
-            {
-                Id = b.Id,
-                Name = b.Name,
-                OwnerId = b.OwnerId,
-                IsPublic = b.IsPublic
-            }).ToList();
-
-            return Ok(boardDtos);
+            var result = await _boardService.GetAllAsync(userId);
+            return Ok(result);
         }
 
         /// <summary>
-        /// Devuelve los detalles de un tablero por ID.
+        /// Obtiene un tablero específico por ID.
         /// </summary>
         [HttpGet("{id}")]
-        public async Task<ActionResult<BoardReadDto>> GetBoard(Guid id)
+        public async Task<IActionResult> GetBoard(Guid id)
         {
-            var board = await _context.Boards.FindAsync(id);
-            if (board == null)
-                return NotFound("Board not found.");
-
-            var boardDto = new BoardReadDto
-            {
-                Id = board.Id,
-                Name = board.Name,
-                OwnerId = board.OwnerId,
-                IsPublic = board.IsPublic
-            };
-
-            return Ok(boardDto);
+            var board = await _boardService.GetByIdAsync(id);
+            return board == null ? NotFound("Board not found.") : Ok(board);
         }
 
         /// <summary>
         /// Crea un nuevo tablero.
         /// </summary>
+        [Authorize]
         [HttpPost]
-        public async Task<ActionResult<BoardReadDto>> CreateBoard([FromBody] BoardCreateDto createDto)
+        public async Task<IActionResult> CreateBoard([FromBody] BoardCreateDto dto)
         {
-            var newBoard = new Board
-            {
-                Id = Guid.NewGuid(),
-                Name = createDto.Name,
-                OwnerId = createDto.OwnerId,
-                IsPublic = createDto.IsPublic
-            };
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized("No se pudo identificar al usuario.");
 
-            _context.Boards.Add(newBoard);
-            await _context.SaveChangesAsync();
-
-            var readDto = new BoardReadDto
-            {
-                Id = newBoard.Id,
-                Name = newBoard.Name,
-                OwnerId = newBoard.OwnerId,
-                IsPublic = newBoard.IsPublic
-            };
-
-            return CreatedAtAction(nameof(GetBoard), new { id = newBoard.Id }, readDto);
+            var created = await _boardService.CreateAsync(dto, Guid.Parse(userId));
+            return CreatedAtAction(nameof(GetBoard), new { id = created.Id }, created);
         }
 
         /// <summary>
-        /// Actualiza los detalles de un tablero.
+        /// Actualiza un tablero existente.
         /// </summary>
+        [Authorize]
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateBoard(Guid id, [FromBody] BoardUpdateDto updateDto)
+        public async Task<IActionResult> UpdateBoard(Guid id, [FromBody] BoardUpdateDto dto)
         {
-            if (id != updateDto.Id)
+            if (id != dto.Id)
                 return BadRequest("ID mismatch.");
 
-            var existing = await _context.Boards.FindAsync(id);
-            if (existing == null)
-                return NotFound("Board not found.");
+            var hasPermission = await BoardAuthorizationHelper.HasBoardPermissionAsync(
+                User, dto.Id, new[] { "admin" }, _boardMemberRepo);
 
-            existing.Name = updateDto.Name;
-            existing.OwnerId = updateDto.OwnerId;
-            existing.IsPublic = updateDto.IsPublic;
+            if (!hasPermission)
+                return Forbid("No tienes permisos para modificar este tablero.");
 
-            await _context.SaveChangesAsync();
-            return NoContent();
+            var success = await _boardService.UpdateAsync(dto);
+            return success ? NoContent() : NotFound("Board not found.");
         }
 
         /// <summary>
-        /// Elimina un tablero existente.
+        /// Elimina un tablero por ID.
         /// </summary>
+        [Authorize]
         [HttpDelete("{id}")]
-        [Authorize(Roles = "admin")]
         public async Task<IActionResult> DeleteBoard(Guid id)
         {
-            var board = await _context.Boards.FindAsync(id);
-            if (board == null)
-                return NotFound("Board not found.");
+            var hasPermission = await BoardAuthorizationHelper.HasBoardPermissionAsync(
+                User, id, new[] { "admin" }, _boardMemberRepo);
 
-            _context.Boards.Remove(board);
-            await _context.SaveChangesAsync();
-            return NoContent();
+            if (!hasPermission)
+                return Forbid("No tienes permisos para eliminar este tablero.");
+
+            var success = await _boardService.DeleteAsync(id);
+            return success ? NoContent() : NotFound("Board not found.");
         }
     }
 }
-
-
-
