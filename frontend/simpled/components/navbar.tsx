@@ -64,7 +64,7 @@ export default function Navbar() {
             <Menu className="h-5 w-5" />
           </Button>
         </SheetTrigger>
-        
+
         <SheetContent side="right" className="flex flex-col">
           <div className="mt-6"></div>
           {NavItems("flex-col m-4")}

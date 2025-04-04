@@ -13,24 +13,25 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { AtSign, KeyRound } from "lucide-react";
 
 export function RegistroForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const { registrarUsuario } = useAuth();
-  
-    const handleSubmit = async (e: React.FormEvent) => {
-      e.preventDefault();
-      try {
-        await registrarUsuario(email, password);
-      } catch (error) {
-        console.error("Error al iniciar sesión:", error);
-      }
-    };
-  
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const { registrarUsuario } = useAuth();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await registrarUsuario(email, password);
+    } catch (error) {
+      console.error("Error al iniciar sesión:", error);
+    }
+  };
+
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
@@ -41,30 +42,39 @@ export function RegistroForm({
           </CardDescription>
         </CardHeader>
         <CardContent>
-         <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit}>
             <div className="flex flex-col gap-6">
               <div className="grid gap-3">
                 <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="email@dominio.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
+                <div className="relative flex items-center">
+                  <AtSign className="absolute left-3 h-5 w-5 text-muted-foreground" />
+                  <Input
+                    className="pl-10"
+                    id="email"
+                    type="email"
+                    placeholder="email@dominio.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
               </div>
               <div className="grid gap-3">
                 <div className="flex items-center">
                   <Label htmlFor="password">Contraseña</Label>
                 </div>
-                <Input 
-                  id="password" 
-                  type="password" 
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required 
-                />
+                <div className="relative flex items-center">
+                  <KeyRound className="absolute left-3 h-5 w-5 text-muted-foreground" />
+                  <Input
+                    className="pl-10"
+                    id="password"
+                    type="password"
+                    value={password}
+                    placeholder="••••••••"
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                </div>
               </div>
               <div className="flex flex-col gap-3">
                 <Button type="submit" className="w-full">

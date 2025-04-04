@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { AtSign, KeyRound } from "lucide-react";
 
 export function LoginForm({
   className,
@@ -48,26 +49,35 @@ export function LoginForm({
             <div className="flex flex-col gap-6">
               <div className="grid gap-3">
                 <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="email@dominio.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
+                <div className="relative flex items-center">
+                  <AtSign className="absolute left-3 h-5 w-5 text-muted-foreground" />
+                  <Input
+                    className="pl-10"
+                    id="email"
+                    type="email"
+                    placeholder="email@dominio.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
               </div>
               <div className="grid gap-3">
                 <div className="flex items-center">
                   <Label htmlFor="password">Contraseña</Label>
                 </div>
-                <Input 
-                  id="password" 
-                  type="password" 
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required 
-                />
+                <div className="relative flex items-center">
+                  <KeyRound className="absolute left-3 h-5 w-5 text-muted-foreground" />
+                  <Input
+                    className="pl-10"
+                    id="password"
+                    type="password"
+                    value={password}
+                    placeholder="••••••••"
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                </div>
               </div>
               <div className="flex items-center gap-3">
                 <Checkbox
