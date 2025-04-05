@@ -1,22 +1,49 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Home, Settings, Menu, ChevronRight, ChevronDown, RefreshCw } from "lucide-react";
+import { Home, Settings, Menu, ChevronRight, ChevronDown, RefreshCw, Grid2x2 } from "lucide-react";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 import { useBoards } from "@/contexts/BoardsContext";
 
 import { useParams, useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
+
+const API = "https://localhost:7177";
 
 const Sidebar = () => {
+  const { auth } = useAuth();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { boards, fetchBoards } = useBoards();
   const params = useParams();
   const router = useRouter();
   const selectedBoardId = params.id as string;
+  const [columns, setColumns] = useState<any[]>([]);
+  const headers: HeadersInit = {};
+  if (auth.token) headers["Authorization"] = `Bearer ${auth.token}`;
+
+  useEffect(() => {
+    fetchData();
+  }, [])
+
+  const fetchData = async () => {
+    try {
+      const [columnRes] = await Promise.all([
+        fetch(`${API}/api/Columns`, { headers }),
+      ]);
+
+      const columnData = (await columnRes.json());
+
+      console.log("Columnas:", columnData);
+
+      setColumns(columnData);
+    } catch (err) {
+      console.error("Error al cargar el tablero:", err);
+    }
+  };
 
   return (
     <aside
@@ -36,8 +63,6 @@ const Sidebar = () => {
       </Button>
 
       <nav className="space-y-2">
-        <NavItem icon={<Home />} isCollapsed={isCollapsed}>Home</NavItem>
-
         {!isCollapsed &&
           <div className="flex flex-row gap-1">
             <Select defaultValue={selectedBoardId} onValueChange={(value) => router.push(`/tableros/${value}`)}>
@@ -53,7 +78,10 @@ const Sidebar = () => {
                       key={board.id}
                       value={board.id}
                     >
-                      {board.name}
+                      <Grid2x2 />
+                      <div className="pl-1">
+                        {board.name}
+                      </div>
                     </SelectItem>
                   ))}
 
@@ -70,6 +98,7 @@ const Sidebar = () => {
             </Button>
           </div>
         }
+        <NavItem icon={<Home />} isCollapsed={isCollapsed}>Home</NavItem>
 
         <Accordion type="single" collapsible className="w-full">
           <AccordionItem value="settings">

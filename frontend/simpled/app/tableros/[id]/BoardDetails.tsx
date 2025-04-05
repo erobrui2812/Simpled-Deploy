@@ -5,6 +5,7 @@ import ColumnEditModal from "@/components/ColumnEditModal";
 import ItemCreateModal from "@/components/ItemCreateModal";
 import ItemEditModal from "@/components/ItemEditModal";
 import { useAuth } from "@/contexts/AuthContext";
+import { BookUser, Lock, LockOpen, PenLine, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 
 const API = "https://localhost:7177";
@@ -83,25 +84,39 @@ export default function BoardDetails({ boardId }: { boardId: string }) {
     <div className="p-8 max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold">{board.name}</h1>
-        <span className="text-sm px-2 py-1 rounded bg-gray-200 dark:bg-gray-700">
-          {board.isPublic ? "Público" : "Privado"}
+        <span className="text-sm p-2 rounded bg-gray-200 dark:bg-gray-700">
+          {board.isPublic ?
+            <>
+              <div className="inline-flex align-middle items-center gap-1">
+                <LockOpen className="h-5 w-5" /> Público
+              </div>
+            </> :
+            <>
+              <div className="inline-flex align-middle items-center gap-1">
+                <Lock className="h-5 w-5" /> Privado
+              </div>
+            </>}
         </span>
       </div>
 
       {canEdit && (
-        <button
-          onClick={() => setShowCreateColumn(true)}
-          className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700"
-        >
-          ➕ Añadir columna
-        </button>
+        <div className="mb-3">
+          <button
+            onClick={() => setShowCreateColumn(true)}
+            className="bg-blue-600 text-white px-3 p-2 rounded text-sm hover:bg-blue-700"
+          >
+            <div className="inline-flex align-middle items-center gap-1">
+              <Plus className="h-5 w-5" /> Añadir columna
+            </div>
+          </button>
+        </div>
       )}
 
-      <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-        Miembros: {members.length}
+      <p className="text-sm inline-flex align-middle items-center gap-1 text-gray-500 dark:text-gray-400 mb-6">
+        <BookUser className="h-5 w-5" /> Miembros: {members.length}
       </p>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {columns.map((col) => (
           <div
             key={col.id}
@@ -115,13 +130,15 @@ export default function BoardDetails({ boardId }: { boardId: string }) {
                     setEditColumnId(col.id);
                     setEditColumnTitle(col.title);
                   }}
-                  className="text-sm text-blue-500 hover:underline"
+                  className="bg-blue-600 text-white p-1.5 rounded text-sm hover:bg-blue-700"
                 >
-                  ✏️ Editar
+                  <div className="inline-flex align-middle items-center gap-1">
+                    <PenLine className="h-4 w-4" /> Editar
+                  </div>
                 </button>
               )}
             </div>
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2 mb-2.5">
               {items
                 .filter((item) => item.columnId === col.id)
                 .map((item) => (
@@ -142,9 +159,11 @@ export default function BoardDetails({ boardId }: { boardId: string }) {
             {canEdit && (
               <button
                 onClick={() => setCreateItemColumnId(col.id)}
-                className="text-blue-500 text-sm mt-2 hover:underline"
+                className="bg-blue-600 text-white p-1.5 rounded text-sm hover:bg-blue-700"
               >
-                ➕ Añadir tarea
+                <div className="inline-flex align-middle items-center gap-1">
+                  <Plus className="h-5 w-5" /> Añadir tarea
+                </div>
               </button>
             )}
           </div>

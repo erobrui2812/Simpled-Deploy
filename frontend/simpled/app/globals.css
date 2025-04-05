@@ -140,6 +140,11 @@ h1, h2, h3, h4, h5, h6 {
   animation: spin 1s linear infinite;
   background-color: gray;
 }
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  background-color: var(--foreground); 
+  border-radius: 50%;
+}
   
 @keyframes spin {
   0% { transform: rotate(0deg); }
