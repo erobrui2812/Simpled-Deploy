@@ -44,7 +44,7 @@ Registro de tareas realizadas durante el desarrollo del proyecto **Simpled**.
 | 2025-04-04  | Adrián Jiménez   | Verificación de toast en frontend, pruebas de eventos simultáneos en Swagger y conexión entre usuarios |
 | 2025-04-04  | Elías Robles     | Mejoras visuales, mas componetizacion para reusabilidad de los componentes de link en el sidebar de tablero |
 | 2025-04-05  | Elías Robles     | Mejoras visuales de la interfaz, mejoras visuales al Board y intento de Sidebar dinámico, aun queda cosas por implementar  |
-
+| 2025-04-06  | Elías Robles     | Figma y inicio del sistema de gamificacion sin exito  |
 
 ---
 
