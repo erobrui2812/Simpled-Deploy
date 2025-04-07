@@ -222,9 +222,9 @@ export default function AboutPage() {
 }
 
 interface ValueCardProps {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
+  readonly icon: React.ReactNode;
+  readonly title: string;
+  readonly description: string;
 }
 
 function ValueCard({ icon, title, description }: ValueCardProps) {
@@ -240,10 +240,10 @@ function ValueCard({ icon, title, description }: ValueCardProps) {
 }
 
 interface TeamMemberCardProps {
-  name: string;
-  role: string;
-  bio: string;
-  imageUrl: string;
+  readonly name: string;
+  readonly role: string;
+  readonly bio: string;
+  readonly imageUrl: string;
 }
 
 function TeamMemberCard({ name, role, bio, imageUrl }: TeamMemberCardProps) {
@@ -273,7 +273,12 @@ interface TimelineItemProps {
   isLeft: boolean;
 }
 
-function TimelineItem({ year, title, description, isLeft }: TimelineItemProps) {
+function TimelineItem({
+  year,
+  title,
+  description,
+  isLeft,
+}: Readonly<TimelineItemProps>) {
   return (
     <div
       className={`flex flex-col md:flex-row ${
@@ -298,8 +303,8 @@ function TimelineItem({ year, title, description, isLeft }: TimelineItemProps) {
 }
 
 interface StatCardProps {
-  number: string;
-  label: string;
+  readonly number: string;
+  readonly label: string;
 }
 
 function StatCard({ number, label }: StatCardProps) {
