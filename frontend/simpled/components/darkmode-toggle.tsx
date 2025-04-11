@@ -40,7 +40,7 @@ export function DarkModeToggle() {
             darkMode ? "bg-black bg-opacity-50" : "bg-white bg-opacity-50"
           }`}
         >
-          <div className="spinner"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-foreground" />
         </div>
       )}
 

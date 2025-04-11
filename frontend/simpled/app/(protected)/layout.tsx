@@ -11,20 +11,26 @@ export default function Layout({
 }) {
   const { isAuthenticated } = useAuth()
   const router = useRouter()
-  const [checkingAuth, setCheckingAuth] = useState(true)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (isAuthenticated) {
-      setCheckingAuth(false)
-    } else {
-      router.push('/')
+    if (!isAuthenticated) {
+      const timeout = setTimeout(() => {
+        router.push('/')
+      }, 1500)
+
+      return () => clearTimeout(timeout)
     }
+
+    setLoading(false)
   }, [isAuthenticated, router])
 
-  if (checkingAuth) {
+  if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900" />
+      <div className="flex items-center flex-col justify-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-foreground" />
+        <p className="mt-4 text-foreground text-sm">Redirigiendo a inicio...</p>
+
       </div>
     )
   }
