@@ -170,16 +170,16 @@ export default function AboutPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <TeamMemberCard
               name="Adrián Jiménez Santiago"
-              role="CEO & Co-fundadora"
+              role="CEO & Co-fundador"
               bio="Con más de 10 años de experiencia en desarrollo de productos, Adrián lidera la visión estratégica de Simpled."
               imageUrl="/imagen.png"
             />
             <TeamMemberCard
               name="Elías Robles Ruiz"
-              role="CTO & Co-fundador"
+              role="CEO & Co-fundador"
               bio="Ingeniero de software con experiencia en startups tecnológicas, Elías supervisa el desarrollo técnico de la plataforma."
               imageUrl="/imagen.png"
             />
