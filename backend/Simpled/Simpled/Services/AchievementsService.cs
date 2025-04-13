@@ -1,17 +1,21 @@
 ﻿using Newtonsoft.Json;
+using Simpled.Data;
 using Simpled.Models;
 
 public class AchievementsService
 {
     private readonly List<AchievementDefinition> _logros;
+    private readonly SimpledDbContext _context;
 
-    public AchievementsService()
+    public AchievementsService(SimpledDbContext context)
     {
+        _context = context;
+
         var json = File.ReadAllText("Resources/achievements.json");
         _logros = JsonConvert.DeserializeObject<List<AchievementDefinition>>(json)!;
     }
 
-    public List<string> ProcesarAccion(User user, string accion, int nuevoValor)
+    public async Task<List<string>> ProcesarAccionAsync(User user, string accion, int nuevoValor)
     {
         var nuevosLogros = new List<string>();
 
@@ -21,25 +25,33 @@ public class AchievementsService
 
         foreach (var logro in logrosPorAccion)
         {
-            var yaDesbloqueado = user.Logros.Any(x => x.Accion == logro.Action && x.Valor == logro.Value);
+            var yaDesbloqueado = _context.UserAchievements
+                .Any(x => x.UserId == user.Id && x.Accion == logro.Action && x.Valor == logro.Value);
+
             if (!yaDesbloqueado)
             {
-                user.Logros.Add(new UserAchievement
+                var nuevoLogro = new UserAchievement
                 {
                     UserId = user.Id,
                     Accion = logro.Action,
                     Valor = logro.Value,
                     Fecha = DateTime.UtcNow
-                });
+                };
 
+                _context.UserAchievements.Add(nuevoLogro);
                 nuevosLogros.Add(logro.Message);
             }
+        }
+
+        if (nuevosLogros.Any())
+        {
+            await _context.SaveChangesAsync();
         }
 
         return nuevosLogros;
     }
 
-    public class AchievementDefinition
+    private class AchievementDefinition
     {
         public int Value { get; set; }
         public string Action { get; set; } = "";

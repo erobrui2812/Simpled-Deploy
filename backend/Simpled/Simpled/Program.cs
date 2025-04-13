@@ -130,7 +130,8 @@ builder.Services.AddScoped<IColumnRepository, ColumnService>();
 builder.Services.AddScoped<IItemRepository, ItemService>();
 builder.Services.AddScoped<IBoardMemberRepository, BoardMemberService>();
 builder.Services.AddScoped<IBoardInvitationRepository, BoardInvitationService>();
-builder.Services.AddSingleton<AchievementsService>();
+builder.Services.AddScoped<AchievementsService>();
+
 
 
 

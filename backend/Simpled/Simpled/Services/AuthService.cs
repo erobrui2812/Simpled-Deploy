@@ -31,10 +31,10 @@ namespace Simpled.Services
                 return null;
 
             var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Email, user.Email)
-            };
+    {
+        new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+        new Claim(ClaimTypes.Email, user.Email)
+    };
 
             foreach (var role in user.Roles.Select(r => r.Role))
             {
@@ -53,19 +53,27 @@ namespace Simpled.Services
                 signingCredentials: creds
             );
 
-            user.TareasCreadas++;
+            // TESTING: simular logros automáticos al logear
+            user.TablerosCreados = 10;
+            user.TareasCreadas = 50;
+            user.TareasCompletadas = 5;
+            user.EquiposUnidos = 3;
             await _context.SaveChangesAsync();
 
-            var mensajes = _achievementsService.ProcesarAccion(user, "CrearTarea", user.TareasCreadas);
+            var logrosTesting = new List<string>();
 
-            foreach (var mensaje in mensajes)
+            logrosTesting.AddRange(await _achievementsService.ProcesarAccionAsync(user, "CrearTablero", user.TablerosCreados));
+            logrosTesting.AddRange(await _achievementsService.ProcesarAccionAsync(user, "CrearTarea", user.TareasCreadas));
+            logrosTesting.AddRange(await _achievementsService.ProcesarAccionAsync(user, "CompletarTarea", user.TareasCompletadas));
+            logrosTesting.AddRange(await _achievementsService.ProcesarAccionAsync(user, "UnirseEquipo", user.EquiposUnidos));
+
+            foreach (var logro in logrosTesting)
             {
-                Console.WriteLine($"🎉 Logro desbloqueado: {mensaje}");
+                Console.WriteLine($"🎯 Logro desbloqueado al logear: {logro}");
             }
-
-
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
+
     }
 }
