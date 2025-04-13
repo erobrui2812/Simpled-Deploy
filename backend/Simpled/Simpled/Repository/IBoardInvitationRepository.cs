@@ -1,4 +1,5 @@
 ﻿using Simpled.Dtos.BoardInvitations;
+using Simpled.Models;
 
 namespace Simpled.Repository
 {
@@ -6,7 +7,7 @@ namespace Simpled.Repository
     {
         Task<IEnumerable<BoardInvitationReadDto>> GetAllByEmailAsync(string email);
         Task<BoardInvitationReadDto?> GetByTokenAsync(string token);
-        Task CreateAsync(BoardInvitationCreateDto dto);
+        Task<BoardInvitation> CreateAsync(BoardInvitationCreateDto dto); // ← cambiado
         Task<bool> AcceptAsync(string token, Guid userId);
         Task<bool> RejectAsync(string token);
     }

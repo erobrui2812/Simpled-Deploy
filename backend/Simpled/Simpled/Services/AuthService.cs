@@ -26,15 +26,19 @@ namespace Simpled.Services
 
         public async Task<string?> LoginAsync(LoginRequestDto loginDto)
         {
-            var user = await _context.Users.Include(u => u.Roles).FirstOrDefaultAsync(u => u.Email == loginDto.Email);
+            var user = await _context.Users
+                .Include(u => u.Roles)
+                .FirstOrDefaultAsync(u => u.Email == loginDto.Email);
             if (user == null || !BCrypt.Net.BCrypt.Verify(loginDto.Password, user.PasswordHash))
                 return null;
 
+
             var claims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-        new Claim(ClaimTypes.Email, user.Email)
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Email, user.Email),
+                new Claim("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress", user.Email)
+            };
 
             foreach (var role in user.Roles.Select(r => r.Role))
             {
@@ -53,7 +57,7 @@ namespace Simpled.Services
                 signingCredentials: creds
             );
 
-            // TESTING: simular logros automáticos al logear
+            // TESTING: logros automáticos al iniciar sesión
             user.TablerosCreados = 10;
             user.TareasCreadas = 50;
             user.TareasCompletadas = 5;
@@ -61,7 +65,6 @@ namespace Simpled.Services
             await _context.SaveChangesAsync();
 
             var logrosTesting = new List<string>();
-
             logrosTesting.AddRange(await _achievementsService.ProcesarAccionAsync(user, "CrearTablero", user.TablerosCreados));
             logrosTesting.AddRange(await _achievementsService.ProcesarAccionAsync(user, "CrearTarea", user.TareasCreadas));
             logrosTesting.AddRange(await _achievementsService.ProcesarAccionAsync(user, "CompletarTarea", user.TareasCompletadas));
@@ -69,11 +72,10 @@ namespace Simpled.Services
 
             foreach (var logro in logrosTesting)
             {
-                Console.WriteLine($"🎯 Logro desbloqueado al logear: {logro}");
+                Console.WriteLine($" Logro desbloqueado al logear: {logro}");
             }
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
-
     }
 }

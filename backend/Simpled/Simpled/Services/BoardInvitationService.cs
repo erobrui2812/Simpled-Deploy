@@ -51,7 +51,7 @@ namespace Simpled.Services
             };
         }
 
-        public async Task CreateAsync(BoardInvitationCreateDto dto)
+        public async Task<BoardInvitation> CreateAsync(BoardInvitationCreateDto dto)
         {
             var exists = await _context.BoardInvitations.AnyAsync(i =>
                 i.BoardId == dto.BoardId && i.Email == dto.Email && !i.Accepted);
@@ -70,6 +70,8 @@ namespace Simpled.Services
 
             _context.BoardInvitations.Add(invitation);
             await _context.SaveChangesAsync();
+
+            return invitation;
         }
 
         public async Task<bool> AcceptAsync(string token, Guid userId)

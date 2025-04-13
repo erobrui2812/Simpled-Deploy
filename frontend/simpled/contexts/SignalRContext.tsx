@@ -22,7 +22,7 @@ export const SignalRProvider = ({
   const connectionRef = useRef<signalR.HubConnection | null>(null);
 
   useEffect(() => {
-    if (!auth.token) return;
+    if (!auth.token || connectionRef.current) return;
 
     const connect = async () => {
       const connection = new signalR.HubConnectionBuilder()
@@ -32,9 +32,24 @@ export const SignalRProvider = ({
         .withAutomaticReconnect()
         .build();
 
-      connection.on("InvitationReceived", (message: string) => {
-        toast.info(message, { toastId: "invitation-toast" });
-      });
+      connection.on(
+        "InvitationReceived",
+        (data: {
+          boardName: string;
+          role: string;
+          invitationToken: string;
+        }) => {
+          toast.info(
+            `📩 Has sido invitado al tablero "${data.boardName}" como ${data.role}`,
+            {
+              toastId: `invitation-${data.invitationToken}`,
+              onClick: () => {
+                window.location.href = `/invitations/${data.invitationToken}`;
+              },
+            }
+          );
+        }
+      );
 
       connection.on("BoardUpdated", (boardId: string) => {
         console.log("Tablero actualizado:", boardId);

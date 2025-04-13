@@ -1,11 +1,11 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Simpled.Dtos.BoardInvitations;
 using Simpled.Helpers;
+using Simpled.Hubs;
 using Simpled.Repository;
 using System.Security.Claims;
-using Microsoft.AspNetCore.SignalR;
-using Simpled.Hubs;
 
 namespace Simpled.Controllers
 {
@@ -16,15 +16,18 @@ namespace Simpled.Controllers
     {
         private readonly IBoardInvitationRepository _invitationService;
         private readonly IBoardMemberRepository _boardMemberRepo;
+        private readonly IBoardRepository _boardRepo;
         private readonly IHubContext<BoardHub> _hub;
 
         public BoardInvitationsController(
             IBoardInvitationRepository invitationService,
             IBoardMemberRepository boardMemberRepo,
+            IBoardRepository boardRepo,
             IHubContext<BoardHub> hub)
         {
             _invitationService = invitationService;
             _boardMemberRepo = boardMemberRepo;
+            _boardRepo = boardRepo;
             _hub = hub;
         }
 
@@ -54,7 +57,8 @@ namespace Simpled.Controllers
         }
 
         /// <summary>
-        /// Crea una nueva invitación a un tablero (solo admin del board).
+        /// Crea una nueva invitación a un tablero
+        /// Envía una notificación en tiempo real.
         /// </summary>
         /// <param name="dto">Datos de la invitación a crear</param>
         [HttpPost]
@@ -66,16 +70,33 @@ namespace Simpled.Controllers
             if (!hasPermission)
                 return Forbid("No tienes permisos para invitar usuarios a este tablero.");
 
-            await _invitationService.CreateAsync(dto);
-            await _hub.Clients.User(dto.Email).SendAsync(
-                "InvitationReceived",
-                $"Has sido invitado al tablero con rol {dto.Role}");
+            var invitation = await _invitationService.CreateAsync(dto);
+
+            var board = await _boardRepo.GetBoardByIdAsync(dto.BoardId);
+            if (board == null)
+                return NotFound("Tablero no encontrado.");
+
+            
+            await _hub.Clients.User(dto.Email.ToLower()).SendAsync("InvitationReceived", new
+            {
+                boardName = board.Name,
+                role = dto.Role,
+                invitationToken = invitation.Token
+            });
+
+            await _hub.Clients.User(dto.Email.ToLower()).SendAsync("InvitationReceived", new
+            {
+                boardName = board.Name,
+                role = dto.Role,
+                invitationToken = invitation.Token
+            });
 
             return Ok("Invitación enviada.");
         }
 
         /// <summary>
         /// Acepta una invitación usando el token.
+        /// Se notifica a todos los usuarios del tablero sobre la actualización del mismo.
         /// </summary>
         /// <param name="dto">Datos de la invitación a aceptar</param>
         [HttpPost("accept")]

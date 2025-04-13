@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.SignalR;
+using System.Security.Claims;
 
 namespace Simpled.Hubs
 {
@@ -18,10 +19,12 @@ namespace Simpled.Hubs
 
         public override async Task OnConnectedAsync()
         {
-            var userEmail = Context.User?.Identity?.Name;
-            if (!string.IsNullOrEmpty(userEmail))
+            var email = Context.User?.FindFirst(ClaimTypes.Email)?.Value;
+           
+            if (!string.IsNullOrEmpty(email))
             {
-                await Groups.AddToGroupAsync(Context.ConnectionId, userEmail); // para notificar por email
+                await Groups.AddToGroupAsync(Context.ConnectionId, email.ToLower());
+               
             }
 
             await base.OnConnectedAsync();
