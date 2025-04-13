@@ -21,6 +21,8 @@ namespace Simpled.Data
 
         public DbSet<BoardInvitation> BoardInvitations => Set<BoardInvitation>();
 
+        public DbSet<UserAchievement> UserAchievements { get; set; }
+
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -71,6 +73,10 @@ namespace Simpled.Data
                 .WithMany()
                 .HasForeignKey(i => i.BoardId);
 
+            modelBuilder.Entity<UserAchievement>()
+                .HasOne(a => a.User)
+                .WithMany(u => u.Logros)
+                .HasForeignKey(a => a.UserId);
         }
 
     }

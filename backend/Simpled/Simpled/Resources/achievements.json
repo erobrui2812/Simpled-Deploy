@@ -1,0 +1,110 @@
+[
+    {
+        "value": 1,
+        "action": "CrearTablero",
+        "message": "¡Has creado tu primer tablero!"
+    },
+    {
+        "value": 5,
+        "action": "CrearTablero",
+        "message": "¡Has creado 5 tableros!"
+    },
+    {
+        "value": 10,
+        "action": "CrearTablero",
+        "message": "¡Has creado 10 tableros!"
+    },
+    {
+        "value": 20,
+        "action": "CrearTablero",
+        "message": "¡Has creado 20 tableros!"
+    },
+
+    {
+        "value": 1,
+        "action": "CrearTarea",
+        "message": "¡Has creado tu primera tarea!"
+    },
+    {
+        "value": 5,
+        "action": "CrearTarea",
+        "message": "¡Has creado 5 tareas!"
+    },
+    {
+        "value": 10,
+        "action": "CrearTarea",
+        "message": "¡Has creado 10 tareas!"
+    },
+    {
+        "value": 25,
+        "action": "CrearTarea",
+        "message": "¡Has creado 25 tareas!"
+    },
+    {
+        "value": 50,
+        "action": "CrearTarea",
+        "message": "¡Has creado 50 tareas!"
+    },
+    {
+        "value": 100,
+        "action": "CrearTarea",
+        "message": "¡Has creado 100 tareas!"
+    },
+    {
+        "value": 250,
+        "action": "CrearTarea",
+        "message": "¡Has creado 250 tareas!"
+    },
+
+    {
+        "value": 1,
+        "action": "CompletarTarea",
+        "message": "¡Has completado tu primera tarea!"
+    },
+    {
+        "value": 5,
+        "action": "CompletarTarea",
+        "message": "¡Has completado 5 tareas!"
+    },
+    {
+        "value": 10,
+        "action": "CompletarTarea",
+        "message": "¡Has completado 10 tareas!"
+    },
+    {
+        "value": 25,
+        "action": "CompletarTarea",
+        "message": "¡Has completado 25 tareas!"
+    },
+    {
+        "value": 50,
+        "action": "CompletarTarea",
+        "message": "¡Has completado 50 tareas!"
+    },
+    {
+        "value": 100,
+        "action": "CompletarTarea",
+        "message": "¡Has completado 100 tareas!"
+    },
+    {
+        "value": 250,
+        "action": "CompletarTarea",
+        "message": "¡Has completado 250 tareas!"
+    },
+
+    {
+        "value": 1,
+        "action": "UnirseEquipo",
+        "message": "¡Te has unido a tu primer equipo!"
+    },
+    {
+        "value": 5,
+        "action": "UnirseEquipo",
+        "message": "¡Te has unido a 5 equipos!"
+    },
+    {
+        "value": 10,
+        "action": "UnirseEquipo",
+        "message": "¡Te has unido a 10 equipos!"
+    }
+]

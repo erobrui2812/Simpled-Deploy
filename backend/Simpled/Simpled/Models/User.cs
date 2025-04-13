@@ -17,5 +17,13 @@ namespace Simpled.Models
 
         public List<UserRole> Roles { get; set; } = new();
         public List<BoardMember> BoardMembers { get; set; } = new();
+
+        public int TablerosCreados { get; set; }
+        public int TareasCreadas { get; set; }
+        public int TareasCompletadas { get; set; }
+        public int EquiposUnidos { get; set; }
+
+        public ICollection<UserAchievement> Logros { get; set; } = new List<UserAchievement>();
+
     }
 }

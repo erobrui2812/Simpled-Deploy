@@ -14,11 +14,13 @@ namespace Simpled.Services
     public class AuthService : IAuthRepository
     {
         private readonly SimpledDbContext _context;
+        private readonly AchievementsService _achievementsService;
         private readonly IConfiguration _configuration;
 
-        public AuthService(SimpledDbContext context, IConfiguration configuration)
+        public AuthService(SimpledDbContext context, AchievementsService achievementsService, IConfiguration configuration)
         {
             _context = context;
+            _achievementsService = achievementsService;
             _configuration = configuration;
         }
 
@@ -50,6 +52,18 @@ namespace Simpled.Services
                 expires: DateTime.UtcNow.AddHours(2),
                 signingCredentials: creds
             );
+
+            user.TareasCreadas++;
+            await _context.SaveChangesAsync();
+
+            var mensajes = _achievementsService.ProcesarAccion(user, "CrearTarea", user.TareasCreadas);
+
+            foreach (var mensaje in mensajes)
+            {
+                Console.WriteLine($"🎉 Logro desbloqueado: {mensaje}");
+            }
+
+
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
