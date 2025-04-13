@@ -5,7 +5,7 @@ namespace Simpled.Hubs
 {
     public class BoardHub : Hub
     {
-        // Notifica a un usuario específico (por email)
+        // Notifica a un usuario específico 
         public async Task SendInvitationNotification(string email, string message)
         {
             await Clients.User(email).SendAsync("InvitationReceived", message);
@@ -20,11 +20,11 @@ namespace Simpled.Hubs
         public override async Task OnConnectedAsync()
         {
             var email = Context.User?.FindFirst(ClaimTypes.Email)?.Value;
-           
+
             if (!string.IsNullOrEmpty(email))
             {
                 await Groups.AddToGroupAsync(Context.ConnectionId, email.ToLower());
-               
+
             }
 
             await base.OnConnectedAsync();
