@@ -20,15 +20,17 @@ public class AchievementsService
         var nuevosLogros = new List<string>();
 
         var logrosPorAccion = _logros
-            .Where(l => l.Action == accion && l.Value == nuevoValor)
+            .Where(l => l.Action == accion && l.Value <= nuevoValor)
             .ToList();
+
+        var logrosDesbloqueados = _context.UserAchievements
+            .Where(x => x.UserId == user.Id && x.Accion == accion)
+            .Select(x => x.Valor)
+            .ToHashSet();
 
         foreach (var logro in logrosPorAccion)
         {
-            var yaDesbloqueado = _context.UserAchievements
-                .Any(x => x.UserId == user.Id && x.Accion == logro.Action && x.Valor == logro.Value);
-
-            if (!yaDesbloqueado)
+            if (!logrosDesbloqueados.Contains(logro.Value))
             {
                 var nuevoLogro = new UserAchievement
                 {
