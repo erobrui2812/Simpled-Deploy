@@ -49,6 +49,8 @@ Registro de tareas realizadas durante el desarrollo del proyecto **Simpled**.
 | 2025-04-05  | Adrián Jiménez   | Figma: Paleta de colores, tipografia, componentes iniciales, vistas Landing y Registro/Login  |
 | 2025-04-11  | Elías Robles     | Rutas restringidas en el front, reintento del sistema gamificación |
 | 2025-04-13  | Elías Robles     | Continuacion sistema gamificación |
+| 2025-04-20  | Elías Robles     | Continuacion sistema gamificación y preparacion de endpoints, controller y fix de lógica |
+
 
 ---
 
