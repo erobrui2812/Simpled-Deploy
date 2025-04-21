@@ -5,13 +5,29 @@ import { toast } from "react-toastify";
 
 const API_URL = "http://localhost:5193/";
 
+type User = {
+  name: string;
+  email: string;
+  photo: string;
+  isOnline: boolean;
+  achievementsCompleted: number;
+  teams: Team[]
+};
+
+interface Team {
+  id: string
+  name: string
+  role: string
+}
+
 type AuthContextType = {
-  auth: { token: string | null };
+  auth: { token: string | null, id: string | null };
   iniciarSesion: (
     email: string,
     password: string,
     mantenerSesion: boolean
   ) => Promise<void>;
+  userData: User | null;
   registrarUsuario: (email: string, password: string) => Promise<void>;
   cerrarSesion: () => void;
   isAuthenticated: boolean;
@@ -20,21 +36,30 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [auth, setAuth] = useState<{ token: string | null }>({ token: null });
+  const [auth, setAuth] = useState<{ token: string | null, id: string | null }>({ token: null, id: null });
   const [isAuthenticated, setAuthenticated] = useState(false);
   const router = useRouter();
+  const [userData, setUserData] = useState<User | null>(null);
 
   useEffect(() => {
     const token =
       typeof window !== "undefined"
         ? sessionStorage.getItem("token") || localStorage.getItem("token")
         : null;
-    setAuth({ token });
+
+    const id =
+      typeof window !== "undefined"
+        ? sessionStorage.getItem("userId") || localStorage.getItem("userId")
+        : null;
+
+    setAuth({ token, id });
   }, []);
+
 
   useEffect(() => {
     if (auth.token) {
       setAuthenticated(true);
+
     } else {
       setAuthenticated(false);
     }
@@ -56,15 +81,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (!response.ok)
         throw new Error("Credenciales incorrectas o error en el servidor.");
+      
+      console.log("response", response);
+      const { token, id } = await response.json();
+      setAuth({ token, id });
 
-      const { token } = await response.json();
-      setAuth({ token });
 
       if (mantenerSesion) {
         localStorage.setItem("token", token);
+        localStorage.setItem("userId", id);
       } else {
         sessionStorage.setItem("token", token);
+        sessionStorage.setItem("userId", id);
       }
+
       toast.success("Sesión iniciada correctamente.");
       router.push("/");
       setAuthenticated(true);
@@ -97,10 +127,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const cerrarSesion = () => {
-    setAuth({ token: null });
+    setAuth({ token: null, id: null });
+
+    setUserData(null);
+    
+    sessionStorage.removeItem("userId");
+    localStorage.removeItem("userId");
+    
     localStorage.removeItem("token");
     sessionStorage.removeItem("token");
+    
     setAuthenticated(false);
+    
     router.push("/login");
     toast.info("Sesión cerrada.");
   };
@@ -113,6 +151,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         registrarUsuario,
         cerrarSesion,
         isAuthenticated,
+        userData
       }}
     >
       {children}

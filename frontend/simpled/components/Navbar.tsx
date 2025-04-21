@@ -1,6 +1,6 @@
 "use client";
 
-import { DarkModeToggle } from "@/components/darkmode-toggle";
+import { DarkModeToggle } from "@/components/DarkModeToggle";
 import { useAuth } from "@/contexts/AuthContext";
 import React, { useEffect, useState } from "react";
 import IconLink from "@/components/IconLink";
