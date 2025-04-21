@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Simpled.Models
 {
@@ -6,12 +7,16 @@ namespace Simpled.Models
     {
         public Guid Id { get; set; }
 
+        public string Name { get; set; } = "Dummy";
+
         [Required]
         [EmailAddress]
         public string Email { get; set; } = default!;
 
         [Required]
         public string PasswordHash { get; set; } = default!;
+
+        public string urlImagen { get; set; } = "placeholder";
 
         public DateTime CreatedAt { get; set; }
 
@@ -24,6 +29,5 @@ namespace Simpled.Models
         public int EquiposUnidos { get; set; }
 
         public ICollection<UserAchievement> Logros { get; set; } = new List<UserAchievement>();
-
     }
 }

@@ -11,13 +11,13 @@ type User = {
   photo: string;
   isOnline: boolean;
   achievementsCompleted: number;
-  teams: Team[]
+  teams: Team[];
 };
 
 interface Team {
-  id: string
-  name: string
-  role: string
+  id: string;
+  name: string;
+  role: string;
 }
 
 type AuthContextType = {
@@ -31,6 +31,7 @@ type AuthContextType = {
   registrarUsuario: (email: string, password: string) => Promise<void>;
   cerrarSesion: () => void;
   isAuthenticated: boolean;
+  fetchUserProfile: (userId: string) => Promise<User | null>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -52,7 +53,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         ? sessionStorage.getItem("userId") || localStorage.getItem("userId")
         : null;
 
-    setAuth({ token, id });
+    if (token && id) {
+      setAuth({ token, id });
+    }
   }, []);
 
 
@@ -64,6 +67,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setAuthenticated(false);
     }
   }, [auth.token]);
+
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      const response = await fetch(`${API_URL}api/Users/${userId}`);
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error al obtener el perfil del usuario:', error);
+      return null;
+    }
+  };
 
   const iniciarSesion = async (
     email: string,
@@ -81,7 +95,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (!response.ok)
         throw new Error("Credenciales incorrectas o error en el servidor.");
-      
+
       console.log("response", response);
       const { token, id } = await response.json();
       setAuth({ token, id });
@@ -130,15 +144,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setAuth({ token: null, id: null });
 
     setUserData(null);
-    
+
     sessionStorage.removeItem("userId");
     localStorage.removeItem("userId");
-    
+
     localStorage.removeItem("token");
     sessionStorage.removeItem("token");
-    
+
     setAuthenticated(false);
-    
+
     router.push("/login");
     toast.info("Sesión cerrada.");
   };
@@ -151,7 +165,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         registrarUsuario,
         cerrarSesion,
         isAuthenticated,
-        userData
+        userData,
+        fetchUserProfile
       }}
     >
       {children}

@@ -4,6 +4,7 @@ using Simpled.Dtos.Users;
 using Simpled.Models;
 using Simpled.Repository;
 using Simpled.Exception;
+using Simpled.Dtos.Teams;
 
 namespace Simpled.Services
 {
@@ -30,14 +31,27 @@ namespace Simpled.Services
 
         public async Task<UserReadDto?> GetUserByIdAsync(Guid id)
         {
-            var user = await _context.Users.Include(u => u.Roles).FirstOrDefaultAsync(u => u.Id == id);
+            var user = await _context.Users
+                .Include(u => u.Roles)
+                .Include(u => u.Logros)
+                .FirstOrDefaultAsync(u => u.Id == id);
+
             if (user == null)
                 throw new NotFoundException("Usuario no encontrado.");
 
+            Console.WriteLine(user.Logros);
             return new UserReadDto
             {
                 Id = user.Id,
+                Name = user.Name,
                 Email = user.Email,
+                urlImagen = user.urlImagen,
+                achievementsCompleted = user.Logros.Count,
+                teams = new List<TeamDto>
+    {
+                    new TeamDto { Name = "Equipo Alpha", Role = "Admin" },
+                    new TeamDto { Name = "Equipo Beta", Role = "Miembro" }
+                },
                 CreatedAt = user.CreatedAt,
                 Roles = user.Roles.Select(r => r.Role).ToList()
             };
