@@ -5,6 +5,6 @@ namespace Simpled.Repository
 {
     public interface IAuthRepository
     {
-        Task<string?> LoginAsync(LoginRequestDto loginDto);
+        Task<LoginResultDto?> LoginAsync(LoginRequestDto loginDto);
     }
 }

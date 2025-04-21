@@ -24,7 +24,8 @@ namespace Simpled.Services
             _configuration = configuration;
         }
 
-        public async Task<string?> LoginAsync(LoginRequestDto loginDto)
+        public async Task<LoginResultDto?> LoginAsync(LoginRequestDto loginDto)
+
         {
             var user = await _context.Users
                 .Include(u => u.Roles)
@@ -75,7 +76,13 @@ namespace Simpled.Services
                 Console.WriteLine($" Logro desbloqueado al logear: {logro}");
             }
 
-            return new JwtSecurityTokenHandler().WriteToken(token);
+            string tokenString = new JwtSecurityTokenHandler().WriteToken(token);
+
+            return new LoginResultDto
+            {
+                Token = tokenString,
+                UserId = user.Id.ToString()
+            };
         }
     }
 }
