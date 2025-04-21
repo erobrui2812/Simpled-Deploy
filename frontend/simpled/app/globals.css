@@ -137,7 +137,6 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   border-radius: 50%;
 }
 
-/* Add these styles to your globals.css file */
 .gantt-container {
   overflow-x: auto;
   max-width: 100%;
