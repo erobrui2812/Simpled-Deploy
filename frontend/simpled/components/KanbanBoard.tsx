@@ -15,6 +15,8 @@ import {
   type DragStartEvent,
 } from "@dnd-kit/core";
 import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
+import { Calendar } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import ColumnCreateModal from "./ColumnCreateModal";
@@ -185,11 +187,19 @@ export default function KanbanBoard({ boardId }: { boardId: string }) {
             {members.length}
           </p>
         </div>
-        {canEdit && (
-          <Button onClick={() => setShowCreateColumn(true)}>
-            Añadir columna
-          </Button>
-        )}
+        <div className="flex gap-2">
+          {canEdit && (
+            <Button onClick={() => setShowCreateColumn(true)}>
+              Añadir columna
+            </Button>
+          )}
+          <Link href={`/tableros/${boardId}/gantt`}>
+            <Button variant="outline">
+              <Calendar className="mr-2 h-4 w-4" />
+              Vista Gantt
+            </Button>
+          </Link>
+        </div>
       </div>
 
       <DndContext
