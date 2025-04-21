@@ -240,6 +240,7 @@ export default function BoardDetails({
         <ColumnEditModal
           columnId={editColumnId}
           currentTitle={editColumnTitle}
+          boardId={boardId}
           onClose={() => setEditColumnId(null)}
           onUpdated={fetchData}
           token={auth.token!}
