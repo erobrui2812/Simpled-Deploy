@@ -58,7 +58,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, []);
 
-
   useEffect(() => {
     if (auth.token) {
       setAuthenticated(true);
@@ -78,6 +77,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       return null;
     }
   };
+
+  useEffect(() => {
+    const getUserData = async () => {
+      if (auth.id && !userData) {
+        const profile = await fetchUserProfile(auth.id);
+        setUserData(profile);
+      }
+    };
+    getUserData();
+  }, [auth.id, userData]);  
 
   const iniciarSesion = async (
     email: string,
