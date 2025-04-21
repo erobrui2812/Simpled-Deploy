@@ -15,7 +15,7 @@ import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { AtSign, KeyRound } from "lucide-react";
 
-export function RegistroForm({
+export function RegisterForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {

@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 
 export default function Navbar() {
   const [mostrarLogin, setMostrarLogin] = useState(true);
-  const { isAuthenticated, cerrarSesion } = useAuth();
+  const { isAuthenticated, cerrarSesion, auth } = useAuth();
   useEffect(() => {
     if (isAuthenticated) {
       setMostrarLogin(false);
@@ -33,7 +33,7 @@ export default function Navbar() {
           <IconLink href="/login" icon={<LogIn className="size-4" />}>Login</IconLink>
         ) : (
           <>
-            <IconLink href="/perfil" icon={<User className="size-4" />}>
+            <IconLink href={`/perfil/${auth.id}`} icon={<User className="size-4" />}>
               Perfil
             </IconLink>
             <button
