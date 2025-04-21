@@ -33,7 +33,6 @@ import type React from "react";
 import { useEffect, useMemo, useState } from "react";
 import { TaskDialog } from "./task-dialog";
 
-// Types
 export interface Task {
   id: string;
   title: string;
@@ -49,8 +48,8 @@ export interface Task {
 }
 
 interface GanttChartProps {
-  boardId: string;
-  className?: string;
+  readonly boardId: string;
+  readonly className?: string;
 }
 
 const API_URL = "http://localhost:5193";
@@ -70,7 +69,7 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [showCompleted, setShowCompleted] = useState(true);
 
-  // Calculate the number of days to display based on view mode
+  // Calcular el número de días
   const daysToShow = useMemo(() => {
     switch (viewMode) {
       case "day":
@@ -84,12 +83,12 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
     }
   }, [viewMode]);
 
-  // Generate dates for the timeline
+  // Fechas para la línea
   const timelineDates = useMemo(() => {
     return Array.from({ length: daysToShow }, (_, i) => addDays(startDate, i));
   }, [startDate, daysToShow]);
 
-  // Headers for the timeline based on view mode
+  // Headers para la línea de tiempo
   const timelineHeaders = useMemo(() => {
     if (viewMode === "day") {
       return timelineDates.map((date) => format(date, "EEE d", { locale: es }));
@@ -124,7 +123,6 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
     }
   }, [timelineDates, viewMode]);
 
-  // Fetch tasks from API
   const fetchTasks = async () => {
     setLoading(true);
     setError(null);
@@ -137,13 +135,13 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
         headers["Authorization"] = `Bearer ${auth.token}`;
       }
 
-      // First, get all items
+      // Tareas de la API
       const itemsResponse = await fetch(`${API_URL}/api/Items`, { headers });
       if (!itemsResponse.ok) throw new Error("Error fetching tasks");
 
       const items = await itemsResponse.json();
 
-      // Get columns to filter by boardId
+      // Columnas de la API
       const columnsResponse = await fetch(`${API_URL}/api/Columns`, {
         headers,
       });
@@ -155,22 +153,22 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
       );
       const boardColumnIds = boardColumns.map((col: any) => col.id);
 
-      // Filter items by column IDs
+      // Filtrado de tareas por columnas del tablero
       const boardTasks = items.filter((item: any) =>
         boardColumnIds.includes(item.columnId)
       );
 
-      // Transform to Gantt tasks
+      // Transformar tareas a formato Gantt
       const ganttTasks = boardTasks.map((item: any) => ({
         id: item.id,
         title: item.title,
-        description: item.description || "",
-        startDate: item.startDate || new Date().toISOString(),
-        endDate: item.dueDate || addDays(new Date(), 3).toISOString(),
-        progress: item.status === "completed" ? 100 : item.progress || 0,
+        description: item.description ?? "",
+        startDate: item.startDate ?? new Date().toISOString(),
+        endDate: item.dueDate ?? addDays(new Date(), 3).toISOString(),
+        progress: item.status === "completed" ? 100 : item.progress ?? 0,
         columnId: item.columnId,
         boardId,
-        status: item.status || "pending",
+        status: item.status ?? "pending",
       }));
 
       setTasks(ganttTasks);
@@ -182,7 +180,7 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
     }
   };
 
-  // Update task dates when dragged
+  // Actualizar fechas de tareas
   const updateTaskDates = async (
     taskId: string,
     newStartDate: Date,
@@ -218,7 +216,7 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
 
       if (!response.ok) throw new Error("Error updating task");
 
-      // Update local state
+      // Update local
       setTasks(tasks.map((t) => (t.id === taskId ? updatedTask : t)));
     } catch (err) {
       console.error("Error updating task:", err);
@@ -226,13 +224,11 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
     }
   };
 
-  // Handle task selection
   const handleTaskClick = (task: Task) => {
     setSelectedTask(task);
     setIsDialogOpen(true);
   };
 
-  // Handle task update from dialog
   const handleTaskUpdate = async (updatedTask: Task) => {
     try {
       const headers: HeadersInit = {
@@ -255,7 +251,7 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
 
       if (!response.ok) throw new Error("Error updating task");
 
-      // Update local state
+      // Update local
       setTasks(tasks.map((t) => (t.id === updatedTask.id ? updatedTask : t)));
       setIsDialogOpen(false);
     } catch (err) {
@@ -264,13 +260,12 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
     }
   };
 
-  // Navigate timeline
   const navigateTimeline = (direction: "prev" | "next") => {
     const days = direction === "prev" ? -daysToShow / 2 : daysToShow / 2;
     setStartDate(addDays(startDate, days));
   };
 
-  // Filter tasks based on showCompleted
+  // Filtrar por tareas completadas
   const filteredTasks = useMemo(() => {
     return showCompleted
       ? tasks
@@ -279,12 +274,12 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
         );
   }, [tasks, showCompleted]);
 
-  // Calculate task position and width
+  // Calcular el estilo de la tarea
   const getTaskStyle = (task: Task) => {
     const taskStart = new Date(task.startDate);
     const taskEnd = new Date(task.endDate);
 
-    // Check if task is in view
+    // Revisar si la tarea está dentro del rango
     const isInView = timelineDates.some((date) =>
       isWithinInterval(date, {
         start: startOfDay(taskStart),
@@ -294,11 +289,11 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
 
     if (!isInView) return { display: "none" };
 
-    // Calculate position
+    // Posición
     const startDiff = Math.max(0, differenceInDays(taskStart, startDate));
     const duration = Math.max(1, differenceInDays(taskEnd, taskStart) + 1);
 
-    // Limit width to visible area
+    // Limitar el ancho a la parte visible
     const visibleDuration = Math.min(duration, daysToShow - startDiff);
 
     return {
@@ -307,7 +302,7 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
     };
   };
 
-  // Status color mapping
+  // Colores Status
   const getStatusColor = (status?: string, progress?: number) => {
     if (progress === 100 || status === "completed") return "bg-green-500";
     if (status === "delayed") return "bg-red-500";
@@ -315,14 +310,12 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
     return "bg-yellow-500"; // pending
   };
 
-  // Load tasks on mount and when boardId changes
   useEffect(() => {
     if (boardId) {
       fetchTasks();
     }
   }, [boardId]);
 
-  // Drag and drop functionality
   const [draggedTask, setDraggedTask] = useState<string | null>(null);
   const [dragStartX, setDragStartX] = useState(0);
   const [dragType, setDragType] = useState<
@@ -350,7 +343,6 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
       end: new Date(task.endDate),
     });
 
-    // Add event listeners for drag
     document.addEventListener("mousemove", handleDragMove);
     document.addEventListener("mouseup", handleDragEnd);
   };
@@ -358,7 +350,7 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
   const handleDragMove = (e: MouseEvent) => {
     if (!draggedTask || !originalDates || !dragType) return;
 
-    const dayWidth = document.querySelector(".gantt-day")?.clientWidth || 40;
+    const dayWidth = document.querySelector(".gantt-day")?.clientWidth ?? 40;
     const daysDiff = Math.round((e.clientX - dragStartX) / dayWidth);
 
     if (daysDiff === 0) return;
@@ -370,7 +362,6 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
     const taskIndex = newTasks.findIndex((t) => t.id === draggedTask);
 
     if (dragType === "move") {
-      // Move entire task
       const newStartDate = addDays(originalDates.start, daysDiff);
       const newEndDate = addDays(originalDates.end, daysDiff);
 
@@ -380,9 +371,7 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
         endDate: newEndDate.toISOString(),
       };
     } else if (dragType === "resize-start") {
-      // Resize from start
       const newStartDate = addDays(originalDates.start, daysDiff);
-      // Ensure start date is not after end date
       if (newStartDate < new Date(task.endDate)) {
         newTasks[taskIndex] = {
           ...task,
@@ -390,9 +379,7 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
         };
       }
     } else if (dragType === "resize-end") {
-      // Resize from end
       const newEndDate = addDays(originalDates.end, daysDiff);
-      // Ensure end date is not before start date
       if (newEndDate > new Date(task.startDate)) {
         newTasks[taskIndex] = {
           ...task,
@@ -408,7 +395,6 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
     if (draggedTask && originalDates) {
       const task = tasks.find((t) => t.id === draggedTask);
       if (task) {
-        // Save changes to server
         updateTaskDates(
           draggedTask,
           new Date(task.startDate),
@@ -417,13 +403,12 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
       }
     }
 
-    // Clean up
+    // Limpieza
     setDraggedTask(null);
     setDragStartX(0);
     setDragType(null);
     setOriginalDates(null);
 
-    // Remove event listeners
     document.removeEventListener("mousemove", handleDragMove);
     document.removeEventListener("mouseup", handleDragEnd);
   };
@@ -491,7 +476,6 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
         ) : (
           <div className="gantt-container overflow-x-auto">
             <div className="gantt-chart min-w-[800px]">
-              {/* Timeline headers */}
               <div
                 className="gantt-timeline-header grid"
                 style={{
@@ -502,8 +486,7 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
                   Tarea
                 </div>
                 {viewMode === "day"
-                  ? // Daily view
-                    timelineDates.map((date, i) => (
+                  ? timelineDates.map((date, i) => (
                       <div
                         key={i}
                         className={cn(
@@ -517,8 +500,7 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
                         {format(date, "EEE d", { locale: es })}
                       </div>
                     ))
-                  : // Week or Month view
-                    timelineHeaders.map((header: any, i) => (
+                  : timelineHeaders.map((header: any, i) => (
                       <div
                         key={i}
                         className="gantt-header-cell border-r border-b p-2 text-center text-xs bg-muted/50"
@@ -529,7 +511,6 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
                     ))}
               </div>
 
-              {/* Days subheader for week/month views */}
               {viewMode !== "day" && (
                 <div
                   className="gantt-timeline-subheader grid"
@@ -555,7 +536,6 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
                 </div>
               )}
 
-              {/* Tasks */}
               <div className="gantt-body">
                 {filteredTasks.length === 0 ? (
                   <div className="col-span-full text-center py-8 border-b">
@@ -574,7 +554,6 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
                         <div className="font-medium truncate">{task.title}</div>
                       </div>
 
-                      {/* Timeline cells */}
                       {Array.from({ length: daysToShow }).map((_, i) => (
                         <div
                           key={i}
@@ -588,7 +567,6 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
                         ></div>
                       ))}
 
-                      {/* Task bar */}
                       <div
                         className={cn(
                           "gantt-task-bar absolute rounded-md cursor-pointer flex items-center px-2 text-white text-xs",
@@ -625,7 +603,6 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
                           }
                         ></div>
 
-                        {/* Progress bar */}
                         {task.progress > 0 && (
                           <div
                             className="absolute left-0 top-0 bottom-0 bg-white/20"
@@ -642,7 +619,6 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
         )}
       </CardContent>
 
-      {/* Task dialog */}
       {selectedTask && (
         <TaskDialog
           task={selectedTask}

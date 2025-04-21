@@ -18,7 +18,9 @@ import { toast } from "react-toastify";
 
 const API = "http://localhost:5193";
 
-export default function BoardDetails({ boardId }: { boardId: string }) {
+export default function BoardDetails({
+  boardId,
+}: Readonly<{ boardId: string }>) {
   const { auth } = useAuth();
 
   const [board, setBoard] = useState<any>(null);
@@ -238,6 +240,7 @@ export default function BoardDetails({ boardId }: { boardId: string }) {
         <ColumnEditModal
           columnId={editColumnId}
           currentTitle={editColumnTitle}
+          boardId={boardId}
           onClose={() => setEditColumnId(null)}
           onUpdated={fetchData}
           token={auth.token!}
@@ -252,7 +255,6 @@ export default function BoardDetails({ boardId }: { boardId: string }) {
         />
       )}
 
-      {/* Modal de invitación */}
       {showInviteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm flex justify-center items-center z-50">
           <div className="bg-white dark:bg-neutral-800 rounded p-6 w-full max-w-md shadow-lg">

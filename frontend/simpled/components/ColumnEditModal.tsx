@@ -11,14 +11,14 @@ export default function ColumnEditModal({
   token,
   onClose,
   onUpdated,
-}: {
+}: Readonly<{
   columnId: string;
   currentTitle: string;
   boardId: string;
   token: string;
   onClose: () => void;
   onUpdated: () => void;
-}) {
+}>) {
   const [title, setTitle] = useState(currentTitle);
   const [loading, setLoading] = useState(false);
 
