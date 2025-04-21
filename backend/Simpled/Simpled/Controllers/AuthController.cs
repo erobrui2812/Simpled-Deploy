@@ -23,8 +23,16 @@ namespace Simpled.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequestDto loginDto)
         {
-            var token = await _authService.LoginAsync(loginDto);
-            return token == null ? Unauthorized("Credenciales inválidas") : Ok(new { token });
+            var result = await _authService.LoginAsync(loginDto);
+
+            if (result == null)
+                return Unauthorized("Credenciales inválidas");
+
+            return Ok(new
+            {
+                token = result.Token,
+                id = result.UserId
+            });
         }
     }
 }
