@@ -50,6 +50,7 @@ Registro de tareas realizadas durante el desarrollo del proyecto **Simpled**.
 | 2025-04-11  | Elías Robles     | Rutas restringidas en el front, reintento del sistema gamificación |
 | 2025-04-13  | Elías Robles     | Continuacion sistema gamificación |
 | 2025-04-20  | Elías Robles     | Continuacion sistema gamificación y preparacion de endpoints, controller y fix de lógica |
+| 2025-04-21 | Adrián Jiménez    | Implementación completa de funcionalidad Drag & Drop para tareas entre columnas utilizando @dnd-kit/core |
 
 
 ---
