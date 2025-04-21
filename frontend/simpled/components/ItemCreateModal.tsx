@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
 import { toast } from "react-toastify";
 
-const API = "https://localhost:7177";
+const API = "http://localhost:5193";
 
 type Props = {
   readonly columnId: string;
@@ -30,6 +30,7 @@ export default function ItemCreateModal({
     }
 
     setLoading(true);
+
     try {
       const response = await fetch(`${API}/api/Items`, {
         method: "POST",
@@ -38,10 +39,10 @@ export default function ItemCreateModal({
           Authorization: `Bearer ${auth.token}`,
         },
         body: JSON.stringify({
-          title,
-          description: description || null,
+          title: title.trim(),
+          description: description?.trim() || null,
           dueDate: dueDate ? new Date(dueDate).toISOString() : null,
-          columnId,
+          columnId: columnId,
         }),
       });
 

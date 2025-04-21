@@ -1,13 +1,17 @@
 "use client";
-import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import React, { createContext, useContext, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
-const API_URL = "https://localhost:7177/";
+const API_URL = "http://localhost:5193/";
 
 type AuthContextType = {
   auth: { token: string | null };
-  iniciarSesion: (email: string, password: string, mantenerSesion: boolean) => Promise<void>;
+  iniciarSesion: (
+    email: string,
+    password: string,
+    mantenerSesion: boolean
+  ) => Promise<void>;
   registrarUsuario: (email: string, password: string) => Promise<void>;
   cerrarSesion: () => void;
   isAuthenticated: boolean;
@@ -36,7 +40,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [auth.token]);
 
-  const iniciarSesion = async (email: string, password: string, mantenerSesion: boolean) => {
+  const iniciarSesion = async (
+    email: string,
+    password: string,
+    mantenerSesion: boolean
+  ) => {
     try {
       const response = await fetch(`${API_URL}api/Auth/login`, {
         method: "POST",
@@ -46,7 +54,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         body: JSON.stringify({ email, password }),
       });
 
-      if (!response.ok) throw new Error("Credenciales incorrectas o error en el servidor.");
+      if (!response.ok)
+        throw new Error("Credenciales incorrectas o error en el servidor.");
 
       const { token } = await response.json();
       setAuth({ token });
@@ -77,7 +86,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (!response.ok) throw new Error("Error al registrar usuario.");
 
-      toast.success("Usuario registrado correctamente. Ahora puedes iniciar sesión.");
+      toast.success(
+        "Usuario registrado correctamente. Ahora puedes iniciar sesión."
+      );
       router.push("/login");
     } catch (error) {
       console.error("Error registrando usuario:", error);
@@ -96,7 +107,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <AuthContext.Provider
-      value={{ auth, iniciarSesion, registrarUsuario, cerrarSesion, isAuthenticated }}
+      value={{
+        auth,
+        iniciarSesion,
+        registrarUsuario,
+        cerrarSesion,
+        isAuthenticated,
+      }}
     >
       {children}
     </AuthContext.Provider>

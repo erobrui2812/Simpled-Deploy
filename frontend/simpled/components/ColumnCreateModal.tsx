@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
 import { toast } from "react-toastify";
 
-const API = "https://localhost:7177";
+const API = "http://localhost:5193";
 
 type Props = {
   boardId: string;

@@ -3,7 +3,9 @@
 import dynamic from "next/dynamic";
 import { useParams } from "next/navigation";
 
-const BoardDetails = dynamic(() => import("./BoardDetails"), { ssr: false });
+const KanbanBoard = dynamic(() => import("@/components/KanbanBoard"), {
+  ssr: false,
+});
 
 export default function BoardPage() {
   const params = useParams();
@@ -11,5 +13,5 @@ export default function BoardPage() {
 
   if (!boardId) return <p>Error: ID no válido</p>;
 
-  return <BoardDetails boardId={boardId} />;
+  return <KanbanBoard boardId={boardId} />;
 }

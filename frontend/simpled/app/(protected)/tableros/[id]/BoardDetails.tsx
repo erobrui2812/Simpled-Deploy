@@ -16,7 +16,7 @@ import {
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
-const API = "https://localhost:7177";
+const API = "http://localhost:5193";
 
 export default function BoardDetails({ boardId }: { boardId: string }) {
   const { auth } = useAuth();

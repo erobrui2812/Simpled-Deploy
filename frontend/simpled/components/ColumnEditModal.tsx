@@ -2,17 +2,19 @@
 import { useState } from "react";
 import { toast } from "react-toastify";
 
-const API = "https://localhost:7177";
+const API = "http://localhost:5193";
 
 export default function ColumnEditModal({
   columnId,
   currentTitle,
+  boardId,
+  token,
   onClose,
   onUpdated,
-  token,
 }: {
   columnId: string;
   currentTitle: string;
+  boardId: string;
   token: string;
   onClose: () => void;
   onUpdated: () => void;
@@ -25,13 +27,17 @@ export default function ColumnEditModal({
     setLoading(true);
 
     try {
-      const res = await fetch(`${API}/api/Columns`, {
+      const res = await fetch(`${API}/api/Columns/${columnId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ id: columnId, title }),
+        body: JSON.stringify({
+          id: columnId,
+          title,
+          boardId, // 👈 requerido por el backend
+        }),
       });
 
       if (!res.ok) throw new Error("Error al actualizar la columna.");

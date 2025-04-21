@@ -3,7 +3,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { useAuth } from "./AuthContext";
 
-const API_URL = "https://localhost:7177/";
+const API_URL = "http://localhost:5193";
 
 export type Board = {
   id: string;
@@ -36,12 +36,12 @@ export const BoardsProvider = ({ children }: { children: React.ReactNode }) => {
     setLoading(true);
     try {
       const headers: HeadersInit = {};
-
       if (auth.token) {
         headers["Authorization"] = `Bearer ${auth.token}`;
       }
 
-      const res = await fetch(`${API_URL}api/Boards`, {
+      const res = await fetch(`${API_URL}/api/Boards`, {
+        method: "GET",
         headers,
       });
 
@@ -59,16 +59,13 @@ export const BoardsProvider = ({ children }: { children: React.ReactNode }) => {
 
   const createBoard = async (name: string, isPublic = false) => {
     try {
-      const res = await fetch(`${API_URL}api/Boards`, {
+      const res = await fetch(`${API_URL}/api/Boards`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${auth.token}`,
         },
-        body: JSON.stringify({
-          name,
-          isPublic,
-        }),
+        body: JSON.stringify({ name, isPublic }),
       });
 
       if (!res.ok) throw new Error("No se pudo crear el tablero.");
@@ -86,7 +83,7 @@ export const BoardsProvider = ({ children }: { children: React.ReactNode }) => {
     data: { name: string; isPublic: boolean }
   ) => {
     try {
-      const res = await fetch(`${API_URL}api/Boards/${id}`, {
+      const res = await fetch(`${API_URL}/api/Boards/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -107,7 +104,7 @@ export const BoardsProvider = ({ children }: { children: React.ReactNode }) => {
 
   const deleteBoard = async (id: string) => {
     try {
-      const res = await fetch(`${API_URL}api/Boards/${id}`, {
+      const res = await fetch(`${API_URL}/api/Boards/${id}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${auth.token}`,
@@ -125,7 +122,7 @@ export const BoardsProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   useEffect(() => {
-    fetchBoards(); // Cargar siempre, y dentro se añade o no el header
+    fetchBoards();
   }, [auth.token]);
 
   return (

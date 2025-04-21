@@ -26,7 +26,7 @@ export const SignalRProvider = ({
 
     const connect = async () => {
       const connection = new signalR.HubConnectionBuilder()
-        .withUrl("https://localhost:7177/hubs/board", {
+        .withUrl("http://localhost:5193/hubs/board", {
           accessTokenFactory: () => auth.token!,
         })
         .withAutomaticReconnect()

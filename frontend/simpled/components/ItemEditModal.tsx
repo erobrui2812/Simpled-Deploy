@@ -25,7 +25,7 @@ export default function ItemEditModal({ item, onClose, onUpdated }: Props) {
     e.preventDefault();
     try {
       const response = await fetch(
-        `https://localhost:7177/api/Items/${item.id}`,
+        `http://localhost:5193/api/Items/${item.id}`,
         {
           method: "PUT",
           headers: {
