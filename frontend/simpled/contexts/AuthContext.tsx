@@ -6,13 +6,21 @@ import { toast } from "react-toastify";
 const API_URL = "http://localhost:5193/";
 
 type User = {
+  id: string | null;
   name: string;
   email: string;
   photo: string;
   isOnline: boolean;
   achievementsCompleted: number;
+  achievements: Achievement[];
   teams: Team[];
 };
+
+interface Achievement {
+  id: string;
+  title: string;
+  description?: string;
+}
 
 interface Team {
   id: string;
