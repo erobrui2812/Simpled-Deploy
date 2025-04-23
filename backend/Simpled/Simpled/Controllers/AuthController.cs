@@ -16,7 +16,7 @@ namespace Simpled.Controllers
         }
 
         /// <summary>
-        /// Inicia sesión y devuelve un token JWT válido si las credenciales son correctas.
+        /// Inicia sesión y devuelve un token JWT
         /// </summary>
         /// <param name="loginDto">Datos de acceso del usuario</param>
         /// <returns>Token JWT</returns>

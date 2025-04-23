@@ -2,6 +2,9 @@
 using Simpled.Data;
 using Simpled.Models;
 
+
+namespace Simpled.Services
+{
 public class AchievementsService
 {
     private readonly List<AchievementDefinition> _logros;
@@ -59,4 +62,6 @@ public class AchievementsService
         public string Action { get; set; } = "";
         public string Message { get; set; } = "";
     }
+ }
+
 }

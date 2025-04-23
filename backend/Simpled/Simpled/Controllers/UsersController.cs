@@ -27,7 +27,7 @@ namespace Simpled.Controllers
         }
 
         /// <summary>
-        /// Obtiene un usuario específico por su ID.
+        /// Obtiene un usuario específico por su GUID.
         /// </summary>
         /// <param name="id">ID del usuario</param>
         [HttpGet("{id}")]
@@ -38,7 +38,7 @@ namespace Simpled.Controllers
         }
 
         /// <summary>
-        /// Registra un nuevo usuario en la plataforma.
+        /// Registra un nuevo usuario.
         /// </summary>
         [AllowAnonymous]
         [HttpPost("register")]

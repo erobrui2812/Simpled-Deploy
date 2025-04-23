@@ -7,7 +7,7 @@ namespace Simpled.Repository
     {
         Task<IEnumerable<BoardInvitationReadDto>> GetAllByEmailAsync(string email);
         Task<BoardInvitationReadDto?> GetByTokenAsync(string token);
-        Task<BoardInvitation> CreateAsync(BoardInvitationCreateDto dto); // ← cambiado
+        Task<BoardInvitation> CreateAsync(BoardInvitationCreateDto dto); 
         Task<bool> AcceptAsync(string token, Guid userId);
         Task<bool> RejectAsync(string token);
     }

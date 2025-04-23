@@ -58,7 +58,7 @@ namespace Simpled.Controllers
 
         /// <summary>
         /// Crea una nueva invitación a un tablero
-        /// Envía una notificación en tiempo real.
+        /// Envía una notificación en tiempo real con WS.
         /// </summary>
         /// <param name="dto">Datos de la invitación a crear</param>
         [HttpPost]

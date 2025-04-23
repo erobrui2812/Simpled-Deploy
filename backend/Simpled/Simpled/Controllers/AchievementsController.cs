@@ -17,7 +17,7 @@ namespace Simpled.Controllers
         }
 
         /// <summary>
-        /// Obtiene todos los logros de un usuario en específico.
+        /// Obtiene todos los logros de un usuario.
         /// </summary>
         /// <param name="userId">ID del usuario</param>
         [HttpGet("{userId}")]
