@@ -52,6 +52,10 @@ Registro de tareas realizadas durante el desarrollo del proyecto **Simpled**.
 | 2025-04-20  | Elías Robles     | Continuacion sistema gamificación y preparacion de endpoints, controller y fix de lógica |
 | 2025-04-21 | Adrián Jiménez    | Implementación completa de funcionalidad Drag & Drop para tareas entre columnas utilizando @dnd-kit/core |
 | 2025-04-21  | Elías Robles     | Vista perfil, logica de authcontext para perfil y inicio vista logros |
+| 2025-04-23  | Elías Robles     | Vista perfil tweaks, vista logros y modal de editar en front, endpoints de logros en back |
+| 2025-04-23  | Elías Robles     | Instalación y ejecucion de prettier en el front |
+| 2025-04-23  | Elías Robles     | Refactorización de variables, atributos y metodos de español a inglés |
+
 
 ---
 
