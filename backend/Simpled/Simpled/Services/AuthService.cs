@@ -59,17 +59,17 @@ namespace Simpled.Services
             );
 
             // TESTING: logros automáticos al iniciar sesión
-            user.TablerosCreados = 10;
-            user.TareasCreadas = 50;
-            user.TareasCompletadas = 5;
-            user.EquiposUnidos = 3;
+            user.createdBoardsCount = 10;
+            user.createdTasksCount = 50;
+            user.completedTasksCount = 5;
+            user.teamsCount = 3;
             await _context.SaveChangesAsync();
 
             var logrosTesting = new List<string>();
-            logrosTesting.AddRange(await _achievementsService.ProcessActionAsync(user, "CrearTablero", user.TablerosCreados));
-            logrosTesting.AddRange(await _achievementsService.ProcessActionAsync(user, "CrearTarea", user.TareasCreadas));
-            logrosTesting.AddRange(await _achievementsService.ProcessActionAsync(user, "CompletarTarea", user.TareasCompletadas));
-            logrosTesting.AddRange(await _achievementsService.ProcessActionAsync(user, "UnirseEquipo", user.EquiposUnidos));
+            logrosTesting.AddRange(await _achievementsService.ProcessActionAsync(user, "CrearTablero", user.createdBoardsCount));
+            logrosTesting.AddRange(await _achievementsService.ProcessActionAsync(user, "CrearTarea", user.createdTasksCount));
+            logrosTesting.AddRange(await _achievementsService.ProcessActionAsync(user, "CompletarTarea", user.completedTasksCount));
+            logrosTesting.AddRange(await _achievementsService.ProcessActionAsync(user, "UnirseEquipo", user.teamsCount));
 
             foreach (var logro in logrosTesting)
             {

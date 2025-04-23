@@ -16,18 +16,18 @@ namespace Simpled.Models
         [Required]
         public string PasswordHash { get; set; } = default!;
 
-        public string urlImagen { get; set; } = "placeholder";
+        public string imageUrl { get; set; } = "placeholder";
 
         public DateTime CreatedAt { get; set; }
 
         public List<UserRole> Roles { get; set; } = new();
         public List<BoardMember> BoardMembers { get; set; } = new();
 
-        public int TablerosCreados { get; set; }
-        public int TareasCreadas { get; set; }
-        public int TareasCompletadas { get; set; }
-        public int EquiposUnidos { get; set; }
+        public int createdBoardsCount { get; set; }
+        public int createdTasksCount { get; set; }
+        public int completedTasksCount { get; set; }
+        public int teamsCount { get; set; }
 
-        public ICollection<UserAchievement> Logros { get; set; } = new List<UserAchievement>();
+        public ICollection<UserAchievement> Achievements { get; set; } = new List<UserAchievement>();
     }
 }

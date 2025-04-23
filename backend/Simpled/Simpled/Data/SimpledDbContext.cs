@@ -75,7 +75,7 @@ namespace Simpled.Data
 
             modelBuilder.Entity<UserAchievement>()
                 .HasOne(a => a.User)
-                .WithMany(u => u.Logros)
+                .WithMany(u => u.Achievements)
                 .HasForeignKey(a => a.UserId);
         }
 

@@ -33,20 +33,20 @@ namespace Simpled.Services
         {
             var user = await _context.Users
                 .Include(u => u.Roles)
-                .Include(u => u.Logros)
+                .Include(u => u.Achievements)
                 .FirstOrDefaultAsync(u => u.Id == id);
 
             if (user == null)
                 throw new NotFoundException("Usuario no encontrado.");
 
-            Console.WriteLine(user.Logros);
+            Console.WriteLine(user.Achievements);
             return new UserReadDto
             {
                 Id = user.Id,
                 Name = user.Name,
                 Email = user.Email,
-                urlImagen = user.urlImagen,
-                achievementsCompleted = user.Logros.Count,
+                imageUrl = user.imageUrl,
+                achievementsCompleted = user.Achievements.Count,
                 teams = new List<TeamDto>
     {
                     new TeamDto { Name = "Equipo Alpha", Role = "Admin" },
