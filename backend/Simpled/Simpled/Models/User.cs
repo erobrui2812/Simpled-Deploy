@@ -16,17 +16,17 @@ namespace Simpled.Models
         [Required]
         public string PasswordHash { get; set; } = default!;
 
-        public string imageUrl { get; set; } = "placeholder";
+        public string ImageUrl { get; set; } = "placeholder";
 
         public DateTime CreatedAt { get; set; }
 
         public List<UserRole> Roles { get; set; } = new();
         public List<BoardMember> BoardMembers { get; set; } = new();
 
-        public int createdBoardsCount { get; set; }
-        public int createdTasksCount { get; set; }
-        public int completedTasksCount { get; set; }
-        public int teamsCount { get; set; }
+        public int CreatedBoardsCount { get; set; }
+        public int CreatedTasksCount { get; set; }
+        public int CompletedTasksCount { get; set; }
+        public int TeamsCount { get; set; }
 
         public ICollection<UserAchievement> Achievements { get; set; } = new List<UserAchievement>();
     }

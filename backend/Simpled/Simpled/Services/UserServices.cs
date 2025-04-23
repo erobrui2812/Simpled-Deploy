@@ -45,9 +45,9 @@ namespace Simpled.Services
                 Id = user.Id,
                 Name = user.Name,
                 Email = user.Email,
-                imageUrl = user.imageUrl,
+                ImageUrl = user.ImageUrl,
                 achievementsCompleted = user.Achievements.Count,
-                teams = new List<TeamDto>
+                Teams = new List<TeamDto>
     {
                     new TeamDto { Name = "Equipo Alpha", Role = "Admin" },
                     new TeamDto { Name = "Equipo Beta", Role = "Miembro" }
