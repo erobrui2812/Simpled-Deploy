@@ -1,92 +1,67 @@
-import Banner from "@/components/Banner";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import {
-  ArrowRight,
-  CheckCircle2,
-  Heart,
-  Lightbulb,
-  Users,
-  Zap,
-} from "lucide-react";
-import Image from "next/image";
-import type React from "react";
+import Banner from '@/components/Banner';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { ArrowRight, CheckCircle2, Heart, Lightbulb, Users, Zap } from 'lucide-react';
+import Image from 'next/image';
+import type React from 'react';
 
 export default function AboutPage() {
   return (
-    <main className="flex flex-col min-h-screen">
+    <main className="flex min-h-screen flex-col">
       <Banner className="bg-gradient-to-r from-indigo-600 to-purple-600">
-        <h1 className="text-4xl md:text-5xl font-bold mb-6">
-          Conoce a Simpled
-        </h1>
-        <p className="text-lg md:text-xl mb-8 max-w-3xl mx-auto">
-          Descubre nuestra historia, misión y el equipo detrás de la plataforma
-          que está transformando la gestión de proyectos colaborativos.
+        <h1 className="mb-6 text-4xl font-bold md:text-5xl">Conoce a Simpled</h1>
+        <p className="mx-auto mb-8 max-w-3xl text-lg md:text-xl">
+          Descubre nuestra historia, misión y el equipo detrás de la plataforma que está
+          transformando la gestión de proyectos colaborativos.
         </p>
       </Banner>
 
-      <section className="py-20 px-4 bg-background">
+      <section className="bg-background px-4 py-20">
         <div className="container mx-auto max-w-6xl">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
+          <div className="grid items-center gap-12 md:grid-cols-2">
             <div>
               <Badge className="mb-4">Nuestra Misión</Badge>
-              <h2 className="text-3xl font-bold mb-6">
-                Simplificando la colaboración en equipos
-              </h2>
-              <p className="text-lg mb-6 text-muted-foreground">
-                En Simpled, creemos que la colaboración efectiva no debería ser
-                complicada. Nuestra misión es proporcionar herramientas
-                intuitivas que permitan a los equipos organizarse, comunicarse y
-                alcanzar sus objetivos sin obstáculos tecnológicos.
+              <h2 className="mb-6 text-3xl font-bold">Simplificando la colaboración en equipos</h2>
+              <p className="text-muted-foreground mb-6 text-lg">
+                En Simpled, creemos que la colaboración efectiva no debería ser complicada. Nuestra
+                misión es proporcionar herramientas intuitivas que permitan a los equipos
+                organizarse, comunicarse y alcanzar sus objetivos sin obstáculos tecnológicos.
               </p>
               <div className="space-y-4">
                 <div className="flex items-start">
-                  <CheckCircle2 className="h-6 w-6 text-indigo-500 mr-3 shrink-0 mt-0.5" />
-                  <p>
-                    Facilitar la gestión de proyectos para equipos de cualquier
-                    tamaño
-                  </p>
+                  <CheckCircle2 className="mt-0.5 mr-3 h-6 w-6 shrink-0 text-indigo-500" />
+                  <p>Facilitar la gestión de proyectos para equipos de cualquier tamaño</p>
                 </div>
                 <div className="flex items-start">
-                  <CheckCircle2 className="h-6 w-6 text-indigo-500 mr-3 shrink-0 mt-0.5" />
+                  <CheckCircle2 className="mt-0.5 mr-3 h-6 w-6 shrink-0 text-indigo-500" />
                   <p>Promover la transparencia y comunicación efectiva</p>
                 </div>
                 <div className="flex items-start">
-                  <CheckCircle2 className="h-6 w-6 text-indigo-500 mr-3 shrink-0 mt-0.5" />
-                  <p>
-                    Crear tecnología accesible que se adapte a diferentes flujos
-                    de trabajo
-                  </p>
+                  <CheckCircle2 className="mt-0.5 mr-3 h-6 w-6 shrink-0 text-indigo-500" />
+                  <p>Crear tecnología accesible que se adapte a diferentes flujos de trabajo</p>
                 </div>
               </div>
             </div>
-            <div className="relative h-[400px] rounded-xl overflow-hidden shadow-xl">
-              <Image
-                src="/imagen.png"
-                alt="Equipo colaborando"
-                fill
-                className="object-cover"
-              />
+            <div className="relative h-[400px] overflow-hidden rounded-xl shadow-xl">
+              <Image src="/imagen.png" alt="Equipo colaborando" fill className="object-cover" />
             </div>
           </div>
         </div>
       </section>
 
-      <section className="py-20 px-4 bg-muted/30">
+      <section className="bg-muted/30 px-4 py-20">
         <div className="container mx-auto max-w-6xl">
-          <div className="text-center mb-16">
+          <div className="mb-16 text-center">
             <Badge className="mb-4">Nuestros Valores</Badge>
-            <h2 className="text-3xl font-bold mb-4">
-              Los principios que nos guían
-            </h2>
-            <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-              Estos valores fundamentales definen nuestra cultura y cómo
-              desarrollamos nuestros productos.
+            <h2 className="mb-4 text-3xl font-bold">Los principios que nos guían</h2>
+            <p className="text-muted-foreground mx-auto max-w-3xl text-lg">
+              Estos valores fundamentales definen nuestra cultura y cómo desarrollamos nuestros
+              productos.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
             <ValueCard
               icon={<Lightbulb className="h-10 w-10 text-indigo-500" />}
               title="Innovación"
@@ -111,14 +86,14 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <section className="py-20 px-4 bg-background">
+      <section className="bg-background px-4 py-20">
         <div className="container mx-auto max-w-6xl">
-          <div className="text-center mb-16">
+          <div className="mb-16 text-center">
             <Badge className="mb-4">Nuestra Historia</Badge>
-            <h2 className="text-3xl font-bold mb-4">El camino hasta aquí</h2>
-            <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-              Desde nuestra fundación, hemos estado comprometidos con la
-              creación de herramientas que faciliten el trabajo colaborativo.
+            <h2 className="mb-4 text-3xl font-bold">El camino hasta aquí</h2>
+            <p className="text-muted-foreground mx-auto max-w-3xl text-lg">
+              Desde nuestra fundación, hemos estado comprometidos con la creación de herramientas
+              que faciliten el trabajo colaborativo.
             </p>
           </div>
 
@@ -157,20 +132,18 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <section className="py-20 px-4 bg-muted/30">
+      <section className="bg-muted/30 px-4 py-20">
         <div className="container mx-auto max-w-6xl">
-          <div className="text-center mb-16">
+          <div className="mb-16 text-center">
             <Badge className="mb-4">Nuestro Equipo</Badge>
-            <h2 className="text-3xl font-bold mb-4">
-              Las personas detrás de Simpled
-            </h2>
-            <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-              Un grupo diverso de profesionales apasionados por crear
-              herramientas que mejoren la forma en que trabajamos.
+            <h2 className="mb-4 text-3xl font-bold">Las personas detrás de Simpled</h2>
+            <p className="text-muted-foreground mx-auto max-w-3xl text-lg">
+              Un grupo diverso de profesionales apasionados por crear herramientas que mejoren la
+              forma en que trabajamos.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
             <TeamMemberCard
               name="Adrián Jiménez Santiago"
               role="CEO & Co-fundador"
@@ -187,9 +160,9 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <section className="py-20 px-4 bg-background">
+      <section className="bg-background px-4 py-20">
         <div className="container mx-auto max-w-6xl">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
             <StatCard number="10K+" label="Usuarios activos" />
             <StatCard number="500+" label="Empresas" />
             <StatCard number="1M+" label="Tareas completadas" />
@@ -199,18 +172,11 @@ export default function AboutPage() {
       </section>
 
       <Banner className="bg-gradient-to-r from-indigo-600 to-purple-600">
-        <h2 className="text-3xl font-bold mb-4">
-          ¿Listo para simplificar tu trabajo en equipo?
-        </h2>
-        <p className="text-xl mb-8">
-          Únete a miles de equipos que ya están mejorando su productividad con
-          Simpled.
+        <h2 className="mb-4 text-3xl font-bold">¿Listo para simplificar tu trabajo en equipo?</h2>
+        <p className="mb-8 text-xl">
+          Únete a miles de equipos que ya están mejorando su productividad con Simpled.
         </p>
-        <Button
-          asChild
-          size="lg"
-          className="bg-white text-indigo-600 hover:bg-white/90"
-        >
+        <Button asChild size="lg" className="bg-white text-indigo-600 hover:bg-white/90">
           <a href="/registro">
             Comenzar gratis
             <ArrowRight className="ml-2 h-4 w-4" />
@@ -232,7 +198,7 @@ function ValueCard({ icon, title, description }: ValueCardProps) {
     <Card className="border-none shadow-md">
       <CardContent className="pt-6">
         <div className="mb-4">{icon}</div>
-        <h3 className="text-xl font-semibold mb-2">{title}</h3>
+        <h3 className="mb-2 text-xl font-semibold">{title}</h3>
         <p className="text-muted-foreground">{description}</p>
       </CardContent>
     </Card>
@@ -249,17 +215,12 @@ interface TeamMemberCardProps {
 function TeamMemberCard({ name, role, bio, imageUrl }: TeamMemberCardProps) {
   return (
     <Card className="overflow-hidden border-none shadow-md">
-      <div className="aspect-square relative">
-        <Image
-          src={imageUrl || "/placeholder.svg"}
-          alt={name}
-          fill
-          className="object-cover"
-        />
+      <div className="relative aspect-square">
+        <Image src={imageUrl || '/placeholder.svg'} alt={name} fill className="object-cover" />
       </div>
       <CardContent className="p-6">
-        <h3 className="text-xl font-semibold mb-1">{name}</h3>
-        <p className="text-indigo-500 font-medium mb-3">{role}</p>
+        <h3 className="mb-1 text-xl font-semibold">{name}</h3>
+        <p className="mb-3 font-medium text-indigo-500">{role}</p>
         <p className="text-muted-foreground">{bio}</p>
       </CardContent>
     </Card>
@@ -273,27 +234,22 @@ interface TimelineItemProps {
   isLeft: boolean;
 }
 
-function TimelineItem({
-  year,
-  title,
-  description,
-  isLeft,
-}: Readonly<TimelineItemProps>) {
+function TimelineItem({ year, title, description, isLeft }: Readonly<TimelineItemProps>) {
   return (
     <div
       className={`flex flex-col md:flex-row ${
-        isLeft ? "md:flex-row" : "md:flex-row-reverse"
+        isLeft ? 'md:flex-row' : 'md:flex-row-reverse'
       } items-center`}
     >
-      <div className="md:w-1/2 p-4 flex justify-center">
-        <div className="bg-indigo-500 text-white text-2xl font-bold py-3 px-6 rounded-lg shadow-lg">
+      <div className="flex justify-center p-4 md:w-1/2">
+        <div className="rounded-lg bg-indigo-500 px-6 py-3 text-2xl font-bold text-white shadow-lg">
           {year}
         </div>
       </div>
-      <div className="md:w-1/2 p-4">
+      <div className="p-4 md:w-1/2">
         <Card className="border-none shadow-md">
           <CardContent className="p-6">
-            <h3 className="text-xl font-semibold mb-2">{title}</h3>
+            <h3 className="mb-2 text-xl font-semibold">{title}</h3>
             <p className="text-muted-foreground">{description}</p>
           </CardContent>
         </Card>
@@ -309,10 +265,10 @@ interface StatCardProps {
 
 function StatCard({ number, label }: StatCardProps) {
   return (
-    <Card className="border-none shadow-md text-center">
+    <Card className="border-none text-center shadow-md">
       <CardContent className="p-6">
-        <p className="text-4xl font-bold text-indigo-500 mb-2">{number}</p>
-        <p className="text-lg text-muted-foreground">{label}</p>
+        <p className="mb-2 text-4xl font-bold text-indigo-500">{number}</p>
+        <p className="text-muted-foreground text-lg">{label}</p>
       </CardContent>
     </Card>
   );

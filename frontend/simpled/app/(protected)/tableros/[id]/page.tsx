@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import dynamic from "next/dynamic";
-import { useParams } from "next/navigation";
+import dynamic from 'next/dynamic';
+import { useParams } from 'next/navigation';
 
-const KanbanBoard = dynamic(() => import("@/components/KanbanBoard"), {
+const KanbanBoard = dynamic(() => import('@/components/KanbanBoard'), {
   ssr: false,
 });
 

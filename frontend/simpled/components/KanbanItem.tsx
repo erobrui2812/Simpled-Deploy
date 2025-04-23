@@ -1,17 +1,12 @@
-"use client";
+'use client';
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardTitle,
-} from "@/components/ui/card";
-import { cn } from "@/lib/utils";
-import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
-import { CalendarIcon } from "lucide-react";
+import { Card, CardContent, CardDescription, CardTitle } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
+import { CalendarIcon } from 'lucide-react';
 
 interface KanbanItemProps {
   item: {
@@ -24,22 +19,11 @@ interface KanbanItemProps {
   isOverlay?: boolean;
 }
 
-export default function KanbanItem({
-  item,
-  onClick,
-  isOverlay = false,
-}: KanbanItemProps) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({
+export default function KanbanItem({ item, onClick, isOverlay = false }: KanbanItemProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: item.id,
     data: {
-      type: "item",
+      type: 'item',
       item,
     },
   });
@@ -50,7 +34,7 @@ export default function KanbanItem({
   };
 
   const formattedDate = item.dueDate
-    ? format(new Date(item.dueDate), "d MMM yyyy", { locale: es })
+    ? format(new Date(item.dueDate), 'd MMM yyyy', { locale: es })
     : null;
 
   return (
@@ -61,25 +45,23 @@ export default function KanbanItem({
       {...listeners}
       onClick={onClick}
       className={cn(
-        "cursor-pointer border shadow-sm hover:shadow-md transition-shadow",
-        isDragging && "opacity-50",
-        isOverlay && "shadow-lg rotate-3"
+        'cursor-pointer border shadow-sm transition-shadow hover:shadow-md',
+        isDragging && 'opacity-50',
+        isOverlay && 'rotate-3 shadow-lg',
       )}
     >
       <CardContent className="p-3">
-        <CardTitle className="text-base font-medium mb-1">
-          {item.title}
-        </CardTitle>
+        <CardTitle className="mb-1 text-base font-medium">{item.title}</CardTitle>
 
         {item.description && (
-          <CardDescription className="text-sm line-clamp-2 mb-2">
+          <CardDescription className="mb-2 line-clamp-2 text-sm">
             {item.description}
           </CardDescription>
         )}
 
         {formattedDate && (
-          <div className="flex items-center text-xs text-muted-foreground">
-            <CalendarIcon className="h-3 w-3 mr-1" />
+          <div className="text-muted-foreground flex items-center text-xs">
+            <CalendarIcon className="mr-1 h-3 w-3" />
             {formattedDate}
           </div>
         )}

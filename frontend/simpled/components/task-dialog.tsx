@@ -1,15 +1,15 @@
-"use client";
+'use client';
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select';
 import {
   Sheet,
   SheetContent,
@@ -17,10 +17,10 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet";
-import { format } from "date-fns";
-import React from "react";
-import type { Task } from "./gantt-chart";
+} from '@/components/ui/sheet';
+import { format } from 'date-fns';
+import React from 'react';
+import type { Task } from './gantt-chart';
 
 interface TaskDialogProps {
   task: Task;
@@ -29,12 +29,7 @@ interface TaskDialogProps {
   onUpdate: (task: Task) => void;
 }
 
-export function TaskDialog({
-  task,
-  open,
-  onOpenChange,
-  onUpdate,
-}: TaskDialogProps) {
+export function TaskDialog({ task, open, onOpenChange, onUpdate }: TaskDialogProps) {
   const [editedTask, setEditedTask] = React.useState<Task>(task);
 
   React.useEffect(() => {
@@ -56,9 +51,7 @@ export function TaskDialog({
         <form onSubmit={handleSubmit}>
           <SheetHeader>
             <SheetTitle>Detalles de la tarea</SheetTitle>
-            <SheetDescription>
-              Ver y editar los detalles de la tarea
-            </SheetDescription>
+            <SheetDescription>Ver y editar los detalles de la tarea</SheetDescription>
           </SheetHeader>
 
           <div className="grid gap-4 py-4">
@@ -67,7 +60,7 @@ export function TaskDialog({
               <Input
                 id="title"
                 value={editedTask.title}
-                onChange={(e) => handleChange("title", e.target.value)}
+                onChange={(e) => handleChange('title', e.target.value)}
                 required
               />
             </div>
@@ -76,8 +69,8 @@ export function TaskDialog({
               <Label htmlFor="description">Descripción</Label>
               <Input
                 id="description"
-                value={editedTask.description || ""}
-                onChange={(e) => handleChange("description", e.target.value)}
+                value={editedTask.description || ''}
+                onChange={(e) => handleChange('description', e.target.value)}
               />
             </div>
 
@@ -87,12 +80,9 @@ export function TaskDialog({
                 <Input
                   id="startDate"
                   type="date"
-                  value={format(new Date(editedTask.startDate), "yyyy-MM-dd")}
+                  value={format(new Date(editedTask.startDate), 'yyyy-MM-dd')}
                   onChange={(e) =>
-                    handleChange(
-                      "startDate",
-                      new Date(e.target.value).toISOString()
-                    )
+                    handleChange('startDate', new Date(e.target.value).toISOString())
                   }
                   required
                 />
@@ -103,13 +93,8 @@ export function TaskDialog({
                 <Input
                   id="endDate"
                   type="date"
-                  value={format(new Date(editedTask.endDate), "yyyy-MM-dd")}
-                  onChange={(e) =>
-                    handleChange(
-                      "endDate",
-                      new Date(e.target.value).toISOString()
-                    )
-                  }
+                  value={format(new Date(editedTask.endDate), 'yyyy-MM-dd')}
+                  onChange={(e) => handleChange('endDate', new Date(e.target.value).toISOString())}
                   required
                 />
               </div>
@@ -123,9 +108,7 @@ export function TaskDialog({
                 min="0"
                 max="100"
                 value={editedTask.progress}
-                onChange={(e) =>
-                  handleChange("progress", Number.parseInt(e.target.value))
-                }
+                onChange={(e) => handleChange('progress', Number.parseInt(e.target.value))}
               />
             </div>
 
@@ -133,7 +116,7 @@ export function TaskDialog({
               <Label htmlFor="status">Estado</Label>
               <Select
                 value={editedTask.status}
-                onValueChange={(value) => handleChange("status", value)}
+                onValueChange={(value) => handleChange('status', value)}
               >
                 <SelectTrigger id="status">
                   <SelectValue placeholder="Seleccionar estado" />

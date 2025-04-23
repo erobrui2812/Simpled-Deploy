@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { Button } from "@/components/ui/button";
-import { useAuth } from "@/contexts/AuthContext";
+import { Button } from '@/components/ui/button';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   closestCorners,
   DndContext,
@@ -13,20 +13,20 @@ import {
   type DragEndEvent,
   type DragOverEvent,
   type DragStartEvent,
-} from "@dnd-kit/core";
-import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
-import { Calendar } from "lucide-react";
-import Link from "next/link";
-import { useEffect, useState } from "react";
-import { toast } from "react-toastify";
-import ColumnCreateModal from "./ColumnCreateModal";
-import ColumnEditModal from "./ColumnEditModal";
-import ItemCreateModal from "./ItemCreateModal";
-import ItemEditModal from "./ItemEditModal";
-import KanbanColumn from "./KanbanColumn";
-import KanbanItem from "./KanbanItem";
+} from '@dnd-kit/core';
+import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
+import { Calendar } from 'lucide-react';
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
+import ColumnCreateModal from './ColumnCreateModal';
+import ColumnEditModal from './ColumnEditModal';
+import ItemCreateModal from './ItemCreateModal';
+import ItemEditModal from './ItemEditModal';
+import KanbanColumn from './KanbanColumn';
+import KanbanItem from './KanbanItem';
 
-const API = "http://localhost:5193";
+const API = 'http://localhost:5193';
 
 export default function KanbanBoard({ boardId }: { boardId: string }) {
   const { auth } = useAuth();
@@ -39,26 +39,22 @@ export default function KanbanBoard({ boardId }: { boardId: string }) {
   const [activeItem, setActiveItem] = useState<any>(null);
 
   const [showCreateColumn, setShowCreateColumn] = useState(false);
-  const [createItemColumnId, setCreateItemColumnId] = useState<string | null>(
-    null
-  );
+  const [createItemColumnId, setCreateItemColumnId] = useState<string | null>(null);
   const [editColumnId, setEditColumnId] = useState<string | null>(null);
-  const [editColumnTitle, setEditColumnTitle] = useState<string>("");
+  const [editColumnTitle, setEditColumnTitle] = useState<string>('');
   const [editItem, setEditItem] = useState<any>(null);
 
   const userId = getUserIdFromToken(auth.token);
-  const userMember = Array.isArray(members)
-    ? members.find((m) => m.userId === userId)
-    : null;
+  const userMember = Array.isArray(members) ? members.find((m) => m.userId === userId) : null;
   const userRole = userMember?.role;
-  const canEdit = userRole === "admin" || userRole === "editor";
+  const canEdit = userRole === 'admin' || userRole === 'editor';
 
   const headers: HeadersInit = {};
-  if (auth.token) headers["Authorization"] = `Bearer ${auth.token}`;
+  if (auth.token) headers['Authorization'] = `Bearer ${auth.token}`;
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
   const fetchData = async () => {
@@ -70,12 +66,10 @@ export default function KanbanBoard({ boardId }: { boardId: string }) {
         fetch(`${API}/api/BoardMembers/board/${boardId}`, { headers }),
       ]);
 
-      if (!boardRes.ok) throw new Error("Error al cargar el tablero.");
+      if (!boardRes.ok) throw new Error('Error al cargar el tablero.');
 
       const boardData = await boardRes.json();
-      const columnData = (await columnRes.json()).filter(
-        (c: any) => c.boardId === boardId
-      );
+      const columnData = (await columnRes.json()).filter((c: any) => c.boardId === boardId);
       const itemData = await itemRes.json();
 
       const membersRaw = await membersRes.text();
@@ -86,8 +80,8 @@ export default function KanbanBoard({ boardId }: { boardId: string }) {
       setItems(itemData);
       setMembers(membersData);
     } catch (err) {
-      console.error("Error al cargar el tablero:", err);
-      toast.error("Error al cargar el tablero");
+      console.error('Error al cargar el tablero:', err);
+      toast.error('Error al cargar el tablero');
     } finally {
       setLoading(false);
     }
@@ -117,11 +111,7 @@ export default function KanbanBoard({ boardId }: { boardId: string }) {
 
     const isOverColumn = columns.some((col) => col.id === overId);
     if (isOverColumn) {
-      setItems(
-        items.map((item) =>
-          item.id === activeId ? { ...item, columnId: overId } : item
-        )
-      );
+      setItems(items.map((item) => (item.id === activeId ? { ...item, columnId: overId } : item)));
     }
   };
 
@@ -138,9 +128,9 @@ export default function KanbanBoard({ boardId }: { boardId: string }) {
     if (isOverColumn && activeItem.columnId !== overId) {
       try {
         const response = await fetch(`${API}/api/Items/${activeId}`, {
-          method: "PUT",
+          method: 'PUT',
           headers: {
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
             Authorization: `Bearer ${auth.token}`,
           },
           body: JSON.stringify({ ...activeItem, columnId: overId }),
@@ -148,13 +138,11 @@ export default function KanbanBoard({ boardId }: { boardId: string }) {
 
         if (!response.ok) throw new Error();
         setItems(
-          items.map((item) =>
-            item.id === activeId ? { ...item, columnId: overId } : item
-          )
+          items.map((item) => (item.id === activeId ? { ...item, columnId: overId } : item)),
         );
-        toast.success("Tarea movida correctamente");
+        toast.success('Tarea movida correctamente');
       } catch {
-        toast.error("Error al mover la tarea");
+        toast.error('Error al mover la tarea');
         fetchData();
       }
     }
@@ -169,30 +157,24 @@ export default function KanbanBoard({ boardId }: { boardId: string }) {
 
   if (loading)
     return (
-      <div className="p-8 flex justify-center items-center">
+      <div className="flex items-center justify-center p-8">
         <div className="spinner" />
       </div>
     );
 
-  if (!board)
-    return <div className="p-8 text-red-600">Tablero no encontrado</div>;
+  if (!board) return <div className="p-8 text-red-600">Tablero no encontrado</div>;
 
   return (
-    <div className="p-4 max-w-full mx-auto">
-      <div className="flex items-center justify-between mb-6">
+    <div className="mx-auto max-w-full p-4">
+      <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">{board.name}</h1>
-          <p className="text-sm text-muted-foreground">
-            {board.isPublic ? "Público" : "Privado"} • Miembros:{" "}
-            {members.length}
+          <p className="text-muted-foreground text-sm">
+            {board.isPublic ? 'Público' : 'Privado'} • Miembros: {members.length}
           </p>
         </div>
         <div className="flex gap-2">
-          {canEdit && (
-            <Button onClick={() => setShowCreateColumn(true)}>
-              Añadir columna
-            </Button>
-          )}
+          {canEdit && <Button onClick={() => setShowCreateColumn(true)}>Añadir columna</Button>}
           <Link href={`/tableros/${boardId}/gantt`}>
             <Button variant="outline">
               <Calendar className="mr-2 h-4 w-4" />
@@ -209,7 +191,7 @@ export default function KanbanBoard({ boardId }: { boardId: string }) {
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
       >
-        <div className="flex gap-6 overflow-x-auto pb-4 min-h-[calc(100vh-220px)]">
+        <div className="flex min-h-[calc(100vh-220px)] gap-6 overflow-x-auto pb-4">
           {columns.map((column) => (
             <KanbanColumn
               key={column.id}
@@ -256,11 +238,7 @@ export default function KanbanBoard({ boardId }: { boardId: string }) {
       )}
 
       {editItem && (
-        <ItemEditModal
-          item={editItem}
-          onClose={() => setEditItem(null)}
-          onUpdated={fetchData}
-        />
+        <ItemEditModal item={editItem} onClose={() => setEditItem(null)} onUpdated={fetchData} />
       )}
     </div>
   );
@@ -268,10 +246,8 @@ export default function KanbanBoard({ boardId }: { boardId: string }) {
   function getUserIdFromToken(token: string | null): string | null {
     if (!token) return null;
     try {
-      const payload = JSON.parse(atob(token.split(".")[1]));
-      return payload[
-        "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"
-      ];
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'];
     } catch {
       return null;
     }

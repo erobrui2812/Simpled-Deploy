@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import { useAuth } from "@/contexts/AuthContext";
-import { useState } from "react";
-import { toast } from "react-toastify";
+import { useAuth } from '@/contexts/AuthContext';
+import { useState } from 'react';
+import { toast } from 'react-toastify';
 
-const API = "http://localhost:5193";
+const API = 'http://localhost:5193';
 
 type Props = {
   readonly columnId: string;
@@ -12,20 +12,16 @@ type Props = {
   readonly onClose: () => void;
 };
 
-export default function ItemCreateModal({
-  columnId,
-  onClose,
-  onCreated,
-}: Props) {
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [dueDate, setDueDate] = useState<string>("");
+export default function ItemCreateModal({ columnId, onClose, onCreated }: Props) {
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [dueDate, setDueDate] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const { auth } = useAuth();
 
   const handleCreate = async () => {
     if (!title.trim()) {
-      toast.warning("El título es obligatorio.");
+      toast.warning('El título es obligatorio.');
       return;
     }
 
@@ -33,9 +29,9 @@ export default function ItemCreateModal({
 
     try {
       const response = await fetch(`${API}/api/Items`, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${auth.token}`,
         },
         body: JSON.stringify({
@@ -46,41 +42,41 @@ export default function ItemCreateModal({
         }),
       });
 
-      if (!response.ok) throw new Error("No se pudo crear la tarea.");
+      if (!response.ok) throw new Error('No se pudo crear la tarea.');
 
-      toast.success("Tarea creada correctamente.");
+      toast.success('Tarea creada correctamente.');
       onCreated();
       onClose();
     } catch (err) {
       console.error(err);
-      toast.error("Error al crear tarea.");
+      toast.error('Error al crear tarea.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-      <div className="bg-white dark:bg-neutral-900 p-6 rounded shadow max-w-sm w-full">
-        <h2 className="text-xl font-semibold mb-4">Nueva tarea</h2>
+    <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black">
+      <div className="w-full max-w-sm rounded bg-white p-6 shadow dark:bg-neutral-900">
+        <h2 className="mb-4 text-xl font-semibold">Nueva tarea</h2>
 
         <input
           type="text"
           placeholder="Título"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="w-full border rounded px-3 py-2 mb-3"
+          className="mb-3 w-full rounded border px-3 py-2"
         />
 
         <textarea
           placeholder="Descripción (opcional)"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="w-full border rounded px-3 py-2 mb-3"
+          className="mb-3 w-full rounded border px-3 py-2"
           rows={3}
         />
 
-        <label htmlFor="dueDate" className="block text-sm font-medium mb-1">
+        <label htmlFor="dueDate" className="mb-1 block text-sm font-medium">
           Fecha de vencimiento
         </label>
         <input
@@ -88,23 +84,20 @@ export default function ItemCreateModal({
           type="date"
           value={dueDate}
           onChange={(e) => setDueDate(e.target.value)}
-          className="w-full border rounded px-3 py-2 mb-4"
+          className="mb-4 w-full rounded border px-3 py-2"
           title="Selecciona una fecha de vencimiento"
         />
 
         <div className="flex justify-end gap-2">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 bg-gray-300 dark:bg-gray-700 rounded"
-          >
+          <button onClick={onClose} className="rounded bg-gray-300 px-4 py-2 dark:bg-gray-700">
             Cancelar
           </button>
           <button
             onClick={handleCreate}
             disabled={loading}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
           >
-            {loading ? "Creando..." : "Crear"}
+            {loading ? 'Creando...' : 'Crear'}
           </button>
         </div>
       </div>

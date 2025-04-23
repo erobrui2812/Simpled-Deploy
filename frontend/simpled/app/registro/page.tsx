@@ -1,9 +1,9 @@
-import { RegisterForm } from "@/components/RegisterForm";
+import { RegisterForm } from '@/components/RegisterForm';
 
 export default function Login() {
   return (
-    <div className="flex items-center justify-center w-full h-screen">
-        <RegisterForm className="w-full max-w-md p-4" />
+    <div className="flex h-screen w-full items-center justify-center">
+      <RegisterForm className="w-full max-w-md p-4" />
     </div>
   );
 }

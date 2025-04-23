@@ -2,7 +2,7 @@
 {
     public class UnlockedAchievementDto
     {
-        public string Clave { get; set; } = "";
-        public DateTime FechaDesbloqueo { get; set; }
+        public string Key { get; set; } = "";
+        public DateTime unlockedDate { get; set; }
     }
 }

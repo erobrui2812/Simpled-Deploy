@@ -66,10 +66,10 @@ namespace Simpled.Services
             await _context.SaveChangesAsync();
 
             var logrosTesting = new List<string>();
-            logrosTesting.AddRange(await _achievementsService.ProcesarAccionAsync(user, "CrearTablero", user.TablerosCreados));
-            logrosTesting.AddRange(await _achievementsService.ProcesarAccionAsync(user, "CrearTarea", user.TareasCreadas));
-            logrosTesting.AddRange(await _achievementsService.ProcesarAccionAsync(user, "CompletarTarea", user.TareasCompletadas));
-            logrosTesting.AddRange(await _achievementsService.ProcesarAccionAsync(user, "UnirseEquipo", user.EquiposUnidos));
+            logrosTesting.AddRange(await _achievementsService.ProcessActionAsync(user, "CrearTablero", user.TablerosCreados));
+            logrosTesting.AddRange(await _achievementsService.ProcessActionAsync(user, "CrearTarea", user.TareasCreadas));
+            logrosTesting.AddRange(await _achievementsService.ProcessActionAsync(user, "CompletarTarea", user.TareasCompletadas));
+            logrosTesting.AddRange(await _achievementsService.ProcessActionAsync(user, "UnirseEquipo", user.EquiposUnidos));
 
             foreach (var logro in logrosTesting)
             {

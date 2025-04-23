@@ -1,28 +1,28 @@
-import { Users } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import { Users } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 interface Team {
-  id: string
-  name: string
-  role: string
+  id: string;
+  name: string;
+  role: string;
 }
 
 interface TeamsListProps {
-  teams: Team[]
+  teams: Team[];
 }
 
 export default function TeamsList({ teams }: TeamsListProps) {
   const getRoleBadgeColor = (role: string) => {
     switch (role.toLowerCase()) {
-      case "admin":
-        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
-      case "leader":
-        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300"
+      case 'admin':
+        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
+      case 'leader':
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
       default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
     }
-  }
+  };
 
   return (
     <Card className="h-full">
@@ -36,7 +36,7 @@ export default function TeamsList({ teams }: TeamsListProps) {
         <ul className="space-y-3">
           {teams.map((team) => (
             <Card key={team.id}>
-              <CardContent className="flex justify-between items-center">
+              <CardContent className="flex items-center justify-between">
                 <span className="font-medium">{team.name}</span>
                 <Badge className={`${getRoleBadgeColor(team.role)}`}>{team.role}</Badge>
               </CardContent>
@@ -45,5 +45,5 @@ export default function TeamsList({ teams }: TeamsListProps) {
         </ul>
       </CardContent>
     </Card>
-  )
+  );
 }

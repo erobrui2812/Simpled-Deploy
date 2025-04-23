@@ -2,109 +2,148 @@
     {
         "value": 1,
         "action": "CrearTablero",
-        "message": "¡Has creado tu primer tablero!"
+        "message": "¡Has creado tu primer tablero!",
+        "description": "Este logro se desbloquea cuando un usuario crea su primer tablero.",
+        "title": "Crear un tablero"
     },
     {
         "value": 5,
         "action": "CrearTablero",
-        "message": "¡Has creado 5 tableros!"
+        "message": "¡Has creado 5 tableros!",
+        "description": "Este logro se desbloquea cuando un usuario crea 5 tableros.",
+        "title": "Crear varios tableros"
     },
     {
         "value": 10,
         "action": "CrearTablero",
-        "message": "¡Has creado 10 tableros!"
+        "message": "¡Has creado 10 tableros!",
+        "description": "Este logro se desbloquea cuando un usuario crea 10 tableros.",
+        "title": "Crear muchos tableros"
     },
     {
         "value": 20,
         "action": "CrearTablero",
-        "message": "¡Has creado 20 tableros!"
+        "message": "¡Has creado 20 tableros!",
+        "description": "Este logro se desbloquea cuando un usuario crea 20 tableros.",
+        "title": "Ser creador de tableros"
     },
-
     {
         "value": 1,
         "action": "CrearTarea",
-        "message": "¡Has creado tu primera tarea!"
+        "message": "¡Has creado tu primera tarea!",
+        "description": "Este logro se desbloquea cuando un usuario crea su primera tarea.",
+        "title": "Crear una tarea"
     },
     {
         "value": 5,
         "action": "CrearTarea",
-        "message": "¡Has creado 5 tareas!"
+        "message": "¡Has creado 5 tareas!",
+        "description": "Este logro se desbloquea cuando un usuario crea 5 tareas.",
+        "title": "Crear algunas tareas"
     },
     {
         "value": 10,
         "action": "CrearTarea",
-        "message": "¡Has creado 10 tareas!"
+        "message": "¡Has creado 10 tareas!",
+        "description": "Este logro se desbloquea cuando un usuario crea 10 tareas.",
+        "title": "Crear varias tareas"
     },
     {
         "value": 25,
         "action": "CrearTarea",
-        "message": "¡Has creado 25 tareas!"
+        "message": "¡Has creado 25 tareas!",
+        "description": "Este logro se desbloquea cuando un usuario crea 25 tareas.",
+        "title": "Ser creador de tareas"
     },
     {
         "value": 50,
         "action": "CrearTarea",
-        "message": "¡Has creado 50 tareas!"
+        "message": "¡Has creado 50 tareas!",
+        "description": "Este logro se desbloquea cuando un usuario crea 50 tareas.",
+        "title": "Crear muchísimas tareas"
     },
     {
         "value": 100,
         "action": "CrearTarea",
-        "message": "¡Has creado 100 tareas!"
+        "message": "¡Has creado 100 tareas!",
+        "description": "Este logro se desbloquea cuando un usuario crea 100 tareas.",
+        "title": "Maestro en crear tareas"
     },
     {
         "value": 250,
         "action": "CrearTarea",
-        "message": "¡Has creado 250 tareas!"
+        "message": "¡Has creado 250 tareas!",
+        "description": "Este logro se desbloquea cuando un usuario crea 250 tareas.",
+        "title": "Imparable creando tareas"
     },
-
     {
         "value": 1,
         "action": "CompletarTarea",
-        "message": "¡Has completado tu primera tarea!"
+        "message": "¡Has completado tu primera tarea!",
+        "description": "Este logro se desbloquea cuando un usuario completa su primera tarea.",
+        "title": "Completar una tarea"
     },
     {
         "value": 5,
         "action": "CompletarTarea",
-        "message": "¡Has completado 5 tareas!"
+        "message": "¡Has completado 5 tareas!",
+        "description": "Este logro se desbloquea cuando un usuario completa 5 tareas.",
+        "title": "Completar algunas tareas"
     },
     {
         "value": 10,
         "action": "CompletarTarea",
-        "message": "¡Has completado 10 tareas!"
+        "message": "¡Has completado 10 tareas!",
+        "description": "Este logro se desbloquea cuando un usuario completa 10 tareas.",
+        "title": "Completar varias tareas"
     },
     {
         "value": 25,
         "action": "CompletarTarea",
-        "message": "¡Has completado 25 tareas!"
+        "message": "¡Has completado 25 tareas!",
+        "description": "Este logro se desbloquea cuando un usuario completa 25 tareas.",
+        "title": "Ser cumplidor de tareas"
     },
     {
         "value": 50,
         "action": "CompletarTarea",
-        "message": "¡Has completado 50 tareas!"
+        "message": "¡Has completado 50 tareas!",
+        "description": "Este logro se desbloquea cuando un usuario completa 50 tareas.",
+        "title": "Cumplidor experto"
     },
     {
         "value": 100,
         "action": "CompletarTarea",
-        "message": "¡Has completado 100 tareas!"
+        "message": "¡Has completado 100 tareas!",
+        "description": "Este logro se desbloquea cuando un usuario completa 100 tareas.",
+        "title": "Productividad extrema"
     },
     {
         "value": 250,
         "action": "CompletarTarea",
-        "message": "¡Has completado 250 tareas!"
+        "message": "¡Has completado 250 tareas!",
+        "description": "Este logro se desbloquea cuando un usuario completa 250 tareas.",
+        "title": "Leyenda de la productividad"
     },
-
     {
         "value": 1,
         "action": "UnirseEquipo",
-        "message": "¡Te has unido a tu primer equipo!"
+        "message": "¡Te has unido a tu primer equipo!",
+        "description": "Este logro se desbloquea cuando un usuario se une a su primer equipo.",
+        "title": "Unirse a un equipo"
     },
     {
         "value": 5,
         "action": "UnirseEquipo",
-        "message": "¡Te has unido a 5 equipos!"
+        "message": "¡Te has unido a 5 equipos!",
+        "description": "Este logro se desbloquea cuando un usuario se une a 5 equipos.",
+        "title": "Participar en varios equipos"
     },
     {
         "value": 10,
         "action": "UnirseEquipo",
-        "message": "¡Te has unido a 10 equipos!"
+        "message": "¡Te has unido a 10 equipos!",
+        "description": "Este logro se desbloquea cuando un usuario se une a 10 equipos.",
+        "title": "Colaborador en múltiples equipos"
     }
 ]

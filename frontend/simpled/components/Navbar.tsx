@@ -1,16 +1,16 @@
-"use client";
+'use client';
 
-import { DarkModeToggle } from "@/components/DarkModeToggle";
-import { useAuth } from "@/contexts/AuthContext";
-import React, { useEffect, useState } from "react";
-import IconLink from "@/components/IconLink";
-import { Home, Info, Layers, LogIn, LogOut, Menu, User, X } from "lucide-react";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
+import { DarkModeToggle } from '@/components/DarkModeToggle';
+import { useAuth } from '@/contexts/AuthContext';
+import React, { useEffect, useState } from 'react';
+import IconLink from '@/components/IconLink';
+import { Home, Info, Layers, LogIn, LogOut, Menu, User, X } from 'lucide-react';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
 
 export default function Navbar() {
   const [mostrarLogin, setMostrarLogin] = useState(true);
-  const { isAuthenticated, cerrarSesion, auth } = useAuth();
+  const { isAuthenticated, logout, auth } = useAuth();
   useEffect(() => {
     if (isAuthenticated) {
       setMostrarLogin(false);
@@ -30,15 +30,17 @@ export default function Navbar() {
           Tableros
         </IconLink>
         {mostrarLogin ? (
-          <IconLink href="/login" icon={<LogIn className="size-4" />}>Login</IconLink>
+          <IconLink href="/login" icon={<LogIn className="size-4" />}>
+            Login
+          </IconLink>
         ) : (
           <>
             <IconLink href={`/perfil/${auth.id}`} icon={<User className="size-4" />}>
               Perfil
             </IconLink>
             <button
-              onClick={cerrarSesion}
-              className="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md hover:bg-accent"
+              onClick={logout}
+              className="hover:bg-accent flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium"
             >
               <LogOut className="size-4" />
               <span>Cerrar sesión</span>
@@ -47,14 +49,14 @@ export default function Navbar() {
         )}
       </nav>
     );
-  }
+  };
 
   return (
-    <div className="flex justify-between items-center p-4 border-b-[0.5]">
-      <h1 className="font-bold text-4xl">Simpled.</h1>
+    <div className="flex items-center justify-between border-b-[0.5] p-4">
+      <h1 className="text-4xl font-bold">Simpled.</h1>
 
-      <div className="hidden md:flex items-center gap-4 font-semibold">
-        {NavItems("items-center")}
+      <div className="hidden items-center gap-4 font-semibold md:flex">
+        {NavItems('items-center')}
         <DarkModeToggle />
       </div>
 
@@ -67,7 +69,7 @@ export default function Navbar() {
 
         <SheetContent side="right" className="flex flex-col">
           <div className="mt-6"></div>
-          {NavItems("flex-col m-4")}
+          {NavItems('flex-col m-4')}
           <div className="mt-auto flex items-center justify-between pt-4">
             <DarkModeToggle />
           </div>

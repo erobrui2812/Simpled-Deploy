@@ -1,26 +1,25 @@
-import type { Metadata } from "next";
-import { Figtree } from "next/font/google";
-import "./globals.css";
+import type { Metadata } from 'next';
+import { Figtree } from 'next/font/google';
+import './globals.css';
 
-import Footer from "@/components/Footer";
-import Navbar from "@/components/Navbar";
+import Footer from '@/components/Footer';
+import Navbar from '@/components/Navbar';
 
-import { AuthProvider } from "@/contexts/AuthContext";
-import { BoardsProvider } from "@/contexts/BoardsContext";
-import { SignalRProvider } from "@/contexts/SignalRContext";
-import { Slide, ToastContainer } from "react-toastify";
+import { AuthProvider } from '@/contexts/AuthContext';
+import { BoardsProvider } from '@/contexts/BoardsContext';
+import { SignalRProvider } from '@/contexts/SignalRContext';
+import { Slide, ToastContainer } from 'react-toastify';
 
 const figtree = Figtree({
-  variable: "--font-figtree",
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700", "800", "900"],
-  style: ["normal", "italic"],
+  variable: '--font-figtree',
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700', '800', '900'],
+  style: ['normal', 'italic'],
 });
 
 export const metadata: Metadata = {
-  title: "Simpled - Organización Colaborativa",
-  description:
-    "Plataforma estilo Trello/Notion para gestionar tareas en equipo.",
+  title: 'Simpled - Organización Colaborativa',
+  description: 'Plataforma estilo Trello/Notion para gestionar tareas en equipo.',
 };
 
 export default function RootLayout({

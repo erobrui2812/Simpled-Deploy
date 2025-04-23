@@ -1,14 +1,11 @@
-"use client";
+'use client';
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useDroppable } from "@dnd-kit/core";
-import {
-  SortableContext,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import { PencilIcon, PlusIcon } from "lucide-react";
-import KanbanItem from "./KanbanItem";
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useDroppable } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { PencilIcon, PlusIcon } from 'lucide-react';
+import KanbanItem from './KanbanItem';
 
 interface KanbanColumnProps {
   column: {
@@ -35,36 +32,24 @@ export default function KanbanColumn({
   });
 
   return (
-    <Card
-      ref={setNodeRef}
-      className="w-[300px] min-w-[300px] flex flex-col bg-card shadow-md"
-    >
-      <CardHeader className="p-3 pb-2 flex flex-row items-center justify-between">
+    <Card ref={setNodeRef} className="bg-card flex w-[300px] min-w-[300px] flex-col shadow-md">
+      <CardHeader className="flex flex-row items-center justify-between p-3 pb-2">
         <CardTitle className="text-lg font-medium">{column.title}</CardTitle>
         {canEdit && (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onEditColumn}
-            className="h-8 w-8"
-          >
+          <Button variant="ghost" size="icon" onClick={onEditColumn} className="h-8 w-8">
             <PencilIcon className="h-4 w-4" />
             <span className="sr-only">Editar columna</span>
           </Button>
         )}
       </CardHeader>
-      <CardContent className="p-3 pt-0 flex-grow overflow-y-auto">
+      <CardContent className="flex-grow overflow-y-auto p-3 pt-0">
         <div className="flex flex-col gap-2">
           <SortableContext
             items={items.map((item) => item.id)}
             strategy={verticalListSortingStrategy}
           >
             {items.map((item) => (
-              <KanbanItem
-                key={item.id}
-                item={item}
-                onClick={() => canEdit && onEditItem(item)}
-              />
+              <KanbanItem key={item.id} item={item} onClick={() => canEdit && onEditItem(item)} />
             ))}
           </SortableContext>
         </div>
@@ -74,9 +59,9 @@ export default function KanbanColumn({
             variant="ghost"
             size="sm"
             onClick={onAddItem}
-            className="w-full mt-2 text-muted-foreground hover:text-foreground"
+            className="text-muted-foreground hover:text-foreground mt-2 w-full"
           >
-            <PlusIcon className="h-4 w-4 mr-1" />
+            <PlusIcon className="mr-1 h-4 w-4" />
             Añadir tarea
           </Button>
         )}
