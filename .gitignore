@@ -399,3 +399,4 @@ FodyWeavers.xsd
 backend/Simpled/Simpled/SimpledDb.sqlite
 backend/Simpled/Simpled/SimpledDb.sqlite-shm
 backend/Simpled/Simpled/SimpledDb.sqlite-wal
+/backend/Simpled/Simpled/wwwroot/images
