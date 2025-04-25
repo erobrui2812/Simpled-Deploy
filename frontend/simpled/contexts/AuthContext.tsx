@@ -9,7 +9,7 @@ type User = {
   id: string | null;
   name: string;
   email: string;
-  photo: string;
+  imageUrl: string;
   isOnline: boolean;
   achievementsCompleted: number;
   achievements: Achievement[];
@@ -23,7 +23,7 @@ interface Achievement {
 }
 
 interface Team {
-  id: string;
+  key: string;
   name: string;
   role: string;
 }
@@ -32,7 +32,12 @@ type AuthContextType = {
   auth: { token: string | null; id: string | null };
   loginUser: (email: string, password: string, keepUserLoggedIn: boolean) => Promise<void>;
   userData: User | null;
-  registerUser: (email: string, password: string) => Promise<void>;
+  registerUser: (
+    name: string,
+    email: string,
+    password: string,
+    image: File | null,
+  ) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
   fetchUserProfile: (userId: string) => Promise<User | null>;
@@ -127,14 +132,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const registerUser = async (email: string, password: string) => {
+  const registerUser = async (
+    name: string,
+    email: string,
+    password: string,
+    image: File | null,
+  ) => {
     try {
+      const formData = new FormData();
+      formData.append('name', name);
+      formData.append('email', email);
+      formData.append('password', password);
+      if (image) {
+        formData.append('image', image);
+      }
+
       const response = await fetch(`${API_URL}api/Users/register`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
+
+        body: formData,
       });
 
       if (!response.ok) throw new Error('Error al registrar usuario.');

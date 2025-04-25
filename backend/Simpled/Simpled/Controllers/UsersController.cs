@@ -40,11 +40,13 @@ namespace Simpled.Controllers
         /// <summary>
         /// Registra un nuevo usuario.
         /// </summary>
+        /// <param name="dto">Datos del usuario</param>
+        /// <param name="image">Foto del usuario</param>
         [AllowAnonymous]
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] UserRegisterDto dto)
+        public async Task<IActionResult> Register([FromForm] UserRegisterDto dto, IFormFile ?image)
         {
-            var createdUser = await _userService.RegisterAsync(dto);
+            var createdUser = await _userService.RegisterAsync(dto, image);
             return CreatedAtAction(nameof(GetUser), new { id = createdUser.Id }, createdUser);
         }
 
@@ -52,6 +54,7 @@ namespace Simpled.Controllers
         /// Actualiza la información de un usuario existente.
         /// </summary>
         /// <param name="id">ID del usuario</param>
+        /// <param name="dto">Datos del usuario</param>
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateUser(Guid id, [FromBody] UserUpdateDto dto)
         {

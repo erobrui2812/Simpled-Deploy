@@ -16,7 +16,7 @@ namespace Simpled.Models
         [Required]
         public string PasswordHash { get; set; } = default!;
 
-        public string ImageUrl { get; set; } = "placeholder";
+        public string ImageUrl { get; set; } = "/images/default/avatar-default.jpg";
 
         public DateTime CreatedAt { get; set; }
 

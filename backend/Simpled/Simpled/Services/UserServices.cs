@@ -23,7 +23,10 @@ namespace Simpled.Services
             return users.Select(u => new UserReadDto
             {
                 Id = u.Id,
+                Name = u.Name,
                 Email = u.Email,
+                ImageUrl = u.ImageUrl,
+                achievementsCompleted = u.Achievements.Count,
                 CreatedAt = u.CreatedAt,
                 Roles = u.Roles.Select(r => r.Role).ToList()
             });
@@ -49,23 +52,25 @@ namespace Simpled.Services
                 achievementsCompleted = user.Achievements.Count,
                 Teams = new List<TeamDto>
     {
-                    new TeamDto { Name = "Equipo Alpha", Role = "Admin" },
-                    new TeamDto { Name = "Equipo Beta", Role = "Miembro" }
+                    new TeamDto { Key = "1" ,Name = "Equipo Alpha", Role = "Admin" },
+                    new TeamDto { Key = "2" ,Name = "Equipo Beta", Role = "Miembro" }
                 },
                 CreatedAt = user.CreatedAt,
                 Roles = user.Roles.Select(r => r.Role).ToList()
             };
         }
 
-        public async Task<UserReadDto> RegisterAsync(UserRegisterDto userDto)
+        public async Task<UserReadDto> RegisterAsync(UserRegisterDto userDto, IFormFile ?image)
         {
             var user = new User
             {
                 Id = Guid.NewGuid(),
+                Name = userDto.Name,
                 Email = userDto.Email,
                 CreatedAt = DateTime.UtcNow,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(userDto.Password),
-                Roles = new List<UserRole>()
+                Roles = new List<UserRole>(),
+                ImageUrl = "/images/default/avatar-default.jpg"
             };
 
             user.Roles.Add(new UserRole
@@ -77,12 +82,41 @@ namespace Simpled.Services
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
+            if (image != null)
+            {
+                string uploadsFolder = Path.Combine("wwwroot", "images", user.Id.ToString());
+
+                if (!Directory.Exists(uploadsFolder))
+                {
+                    Directory.CreateDirectory(uploadsFolder);
+                    Console.WriteLine($"Carpeta creada: {uploadsFolder}");
+                }
+
+                string filePath = Path.Combine(uploadsFolder, "image.jpg");
+
+                if (File.Exists(filePath))
+                {
+                    File.Delete(filePath);
+                }
+
+                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    await image.CopyToAsync(fileStream);
+                }
+
+                user.ImageUrl = $"/images/{user.Id.ToString()}/image.jpg";
+                _context.Users.Update(user);
+                await _context.SaveChangesAsync();
+            }
+
             return new UserReadDto
             {
                 Id = user.Id,
+                Name = user.Name,
                 Email = user.Email,
                 CreatedAt = user.CreatedAt,
-                Roles = user.Roles.Select(r => r.Role).ToList()
+                Roles = user.Roles.Select(r => r.Role).ToList(),
+                ImageUrl = user.ImageUrl,
             };
         }
 

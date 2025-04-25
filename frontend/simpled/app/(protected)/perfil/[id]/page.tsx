@@ -11,7 +11,7 @@ type User = {
   id: string | null;
   name: string;
   email: string;
-  photo: string;
+  imageUrl: string;
   isOnline: boolean;
   achievementsCompleted: number;
   achievements: Achievement[];
@@ -25,12 +25,12 @@ interface Achievement {
 }
 
 interface Team {
-  id: string;
+  key: string;
   name: string;
   role: string;
 }
 
-export default function PerfilPage({ params }: { params: Promise<{ id: string }> }) {
+export default function ProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const { fetchUserProfile, auth } = useAuth();
   const [user, setUser] = useState<User | null>(null);

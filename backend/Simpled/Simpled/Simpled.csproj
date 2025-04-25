@@ -22,6 +22,10 @@
 
 
 	<ItemGroup>
+	  <Content Remove="wwwroot\images\default\avatar-default.jpg" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
 		<PackageReference Include="FluentValidation.AspNetCore" Version="11.3.0" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.14" />
@@ -39,7 +43,10 @@
 
 	<ItemGroup>
 		<Folder Include="Resources\" />
-		<Folder Include="wwwroot\" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Include="wwwroot\images\default\avatar-default.jpg" />
 	</ItemGroup>
 
 </Project>

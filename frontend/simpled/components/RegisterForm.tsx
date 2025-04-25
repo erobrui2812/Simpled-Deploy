@@ -7,19 +7,33 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { AtSign, KeyRound } from 'lucide-react';
+import { AtSign, KeyRound, Image, IdCard } from 'lucide-react';
+import { toast } from 'react-toastify';
 
 export function RegisterForm({ className, ...props }: React.ComponentProps<'div'>) {
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [image, setImage] = useState<File | null>(null);
   const { registerUser } = useAuth();
+
+  function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
+    if (e.target.files) {
+      const image = e.target.files[0];
+      if (image.size > 2 * 1024 * 1024) {
+        toast.error('El archivo es demasiado grande (máximo 2MB)');
+        return;
+      }
+      setImage(image);
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await registerUser(email, password);
+      await registerUser(name, email, password, image);
     } catch (error) {
-      console.error('Error al iniciar sesión:', error);
+      toast.error('Error al registrarse. Intenta nuevamente.');
     }
   };
 
@@ -35,6 +49,21 @@ export function RegisterForm({ className, ...props }: React.ComponentProps<'div'
         <CardContent>
           <form onSubmit={handleSubmit}>
             <div className="flex flex-col gap-6">
+              <div className="grid gap-3">
+                <Label htmlFor="name">Name</Label>
+                <div className="relative flex items-center">
+                  <IdCard className="text-muted-foreground absolute left-3 h-5 w-5" />
+                  <Input
+                    className="pl-10"
+                    id="name"
+                    type="name"
+                    placeholder="Tu nombre y apellidos."
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
               <div className="grid gap-3">
                 <Label htmlFor="email">Email</Label>
                 <div className="relative flex items-center">
@@ -64,6 +93,22 @@ export function RegisterForm({ className, ...props }: React.ComponentProps<'div'
                     placeholder="••••••••"
                     onChange={(e) => setPassword(e.target.value)}
                     required
+                  />
+                </div>
+              </div>
+              <div className="grid gap-3">
+                <div className="flex items-center">
+                  <Label htmlFor="image">Foto de Perfil</Label>
+                </div>
+                <div className="relative flex items-center">
+                  <Image className="text-muted-foreground absolute left-3 h-5 w-5" />
+                  <Input
+                    className="pl-10"
+                    id="image"
+                    name="image"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
                   />
                 </div>
               </div>

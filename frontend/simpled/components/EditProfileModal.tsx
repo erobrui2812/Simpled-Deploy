@@ -21,7 +21,7 @@ interface User {
   id: string;
   name: string;
   email: string;
-  photo: string;
+  imageUrl: string;
 }
 
 interface EditProfileModalProps {
@@ -74,10 +74,10 @@ export default function EditProfileModal({ isOpen, onClose, user }: EditProfileM
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="photo">Foto de Perfil</Label>
+            <Label htmlFor="imageUrl">Foto de Perfil</Label>
             <div className="flex items-center gap-4">
               <Image className="h-16 w-16" />
-              <Input id="photo" name="photo" type="file" accept="image/*" />
+              <Input id="imageUrl" name="imageUrl" type="file" accept="image/*" />
             </div>
           </div>
 
