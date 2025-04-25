@@ -1,14 +1,8 @@
-"use client";
-import { Board, useBoards } from "@/contexts/BoardsContext";
-import { useState } from "react";
+'use client';
+import { Board, useBoards } from '@/contexts/BoardsContext';
+import { useState } from 'react';
 
-export default function BoardEditModal({
-  board,
-  onClose,
-}: {
-  board: Board;
-  onClose: () => void;
-}) {
+export default function BoardEditModal({ board, onClose }: { board: Board; onClose: () => void }) {
   const [name, setName] = useState(board.name);
   const [isPublic, setIsPublic] = useState(board.isPublic);
   const { updateBoard } = useBoards();
@@ -20,15 +14,15 @@ export default function BoardEditModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-neutral-900 p-6 rounded shadow-md max-w-sm w-full">
-        <h2 className="text-lg font-semibold mb-4">Editar tablero</h2>
+    <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black">
+      <div className="w-full max-w-sm rounded bg-white p-6 shadow-md dark:bg-neutral-900">
+        <h2 className="mb-4 text-lg font-semibold">Editar tablero</h2>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="border rounded px-3 py-2"
+            className="rounded border px-3 py-2"
             required
           />
 
@@ -41,17 +35,13 @@ export default function BoardEditModal({
             Hacer público
           </label>
 
-          <div className="flex justify-end gap-2 mt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="text-gray-600 hover:underline"
-            >
+          <div className="mt-4 flex justify-end gap-2">
+            <button type="button" onClick={onClose} className="text-gray-600 hover:underline">
               Cancelar
             </button>
             <button
               type="submit"
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
             >
               Guardar
             </button>

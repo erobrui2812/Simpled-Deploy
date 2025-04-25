@@ -40,7 +40,7 @@ namespace Simpled.Controllers
         public async Task<IActionResult> GetBoard(Guid id)
         {
             var board = await _boardService.GetByIdAsync(id);
-            return board == null ? NotFound("Board not found.") : Ok(board);
+            return board == null ? NotFound("No se ha encontrado el tablero.") : Ok(board);
         }
 
         /// <summary>

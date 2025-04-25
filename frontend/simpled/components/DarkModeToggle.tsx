@@ -1,24 +1,24 @@
-"use client";
-import { useEffect, useState } from "react";
+'use client';
+import { useEffect, useState } from 'react';
 
 export function DarkModeToggle() {
   const [darkMode, setDarkMode] = useState<boolean | null>(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
   useEffect(() => {
-    const stored = localStorage.getItem("darkMode");
+    const stored = localStorage.getItem('darkMode');
     const prefersDark =
       stored === null
-        ? window.matchMedia("(prefers-color-scheme: dark)").matches
-        : stored === "true";
+        ? window.matchMedia('(prefers-color-scheme: dark)').matches
+        : stored === 'true';
 
     setDarkMode(prefersDark);
   }, []);
 
   useEffect(() => {
     if (darkMode !== null) {
-      document.documentElement.classList.toggle("dark", darkMode);
-      localStorage.setItem("darkMode", darkMode.toString());
+      document.documentElement.classList.toggle('dark', darkMode);
+      localStorage.setItem('darkMode', darkMode.toString());
     }
   }, [darkMode]);
 
@@ -36,17 +36,17 @@ export function DarkModeToggle() {
     <>
       {isTransitioning && (
         <div
-          className={`fixed inset-0 flex items-center justify-center z-50 transition-opacity duration-500 ${
-            darkMode ? "bg-black bg-opacity-50" : "bg-white bg-opacity-50"
+          className={`fixed inset-0 z-50 flex items-center justify-center transition-opacity duration-500 ${
+            darkMode ? 'bg-opacity-50 bg-black' : 'bg-opacity-50 bg-white'
           }`}
         >
-          <div className="spinner"></div>
+          <div className="border-foreground h-12 w-12 animate-spin rounded-full border-b-2" />
         </div>
       )}
 
       <button
         onClick={toggleDarkMode}
-        className="p-2 rounded-full border bg-background text-foreground hover:bg-foreground hover:text-background"
+        className="bg-background text-foreground hover:bg-foreground hover:text-background rounded-full border p-2"
       >
         {darkMode ? (
           <svg

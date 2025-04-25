@@ -11,7 +11,7 @@ namespace Simpled.Helpers
         /// </summary>
         /// <param name="user">ClaimsPrincipal del usuario autenticado</param>
         /// <param name="boardId">ID del tablero</param>
-        /// <param name="allowedRoles">Lista de roles válidos ("admin", "editor", etc.)</param>
+        /// <param name="allowedRoles">Lista de roles válidos ("admin", "editor", "viewer")</param>
         /// <param name="boardMemberRepo">Repositorio de miembros de tableros</param>
         /// <returns>True si el usuario tiene permiso, False si no</returns>
         public static async Task<bool> HasBoardPermissionAsync(

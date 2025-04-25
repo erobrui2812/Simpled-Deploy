@@ -1,38 +1,34 @@
-"use client";
+'use client';
 
-import { useAuth } from "@/contexts/AuthContext";
-import { useState } from "react";
-import { toast } from "react-toastify";
+import { useAuth } from '@/contexts/AuthContext';
+import { useState } from 'react';
+import { toast } from 'react-toastify';
 
-const API = "https://localhost:7177";
+const API = 'http://localhost:5193';
 
 type Props = {
-  boardId: string;
-  onClose: () => void;
-  onCreated: () => void;
+  readonly boardId: string;
+  readonly onClose: () => void;
+  readonly onCreated: () => void;
 };
 
-export default function ColumnCreateModal({
-  boardId,
-  onClose,
-  onCreated,
-}: Props) {
+export default function ColumnCreateModal({ boardId, onClose, onCreated }: Props) {
   const { auth } = useAuth();
-  const [title, setTitle] = useState("");
+  const [title, setTitle] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleCreate = async () => {
     if (!title.trim()) {
-      toast.warning("El título es obligatorio.");
+      toast.warning('El título es obligatorio.');
       return;
     }
 
     setLoading(true);
     try {
       const res = await fetch(`${API}/api/Columns`, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${auth.token}`,
         },
         body: JSON.stringify({
@@ -42,45 +38,42 @@ export default function ColumnCreateModal({
         }),
       });
 
-      if (!res.ok) throw new Error("Error al crear la columna.");
+      if (!res.ok) throw new Error('Error al crear la columna.');
 
-      toast.success("Columna creada correctamente.");
+      toast.success('Columna creada correctamente.');
       onCreated();
       onClose();
     } catch (err) {
       console.error(err);
-      toast.error("No se pudo crear la columna.");
+      toast.error('No se pudo crear la columna.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-      <div className="bg-white dark:bg-neutral-900 p-6 rounded shadow max-w-sm w-full">
-        <h2 className="text-xl font-semibold mb-4">Nueva columna</h2>
+    <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black">
+      <div className="w-full max-w-sm rounded bg-white p-6 shadow dark:bg-neutral-900">
+        <h2 className="mb-4 text-xl font-semibold">Nueva columna</h2>
 
         <input
           type="text"
           placeholder="Título"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="w-full border rounded px-3 py-2 mb-4"
+          className="mb-4 w-full rounded border px-3 py-2"
         />
 
         <div className="flex justify-end gap-2">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 bg-gray-300 dark:bg-gray-700 rounded"
-          >
+          <button onClick={onClose} className="rounded bg-gray-300 px-4 py-2 dark:bg-gray-700">
             Cancelar
           </button>
           <button
             onClick={handleCreate}
             disabled={loading}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
           >
-            {loading ? "Creando..." : "Crear"}
+            {loading ? 'Creando...' : 'Crear'}
           </button>
         </div>
       </div>

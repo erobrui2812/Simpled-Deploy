@@ -14,24 +14,31 @@ namespace Simpled.Services
     public class AuthService : IAuthRepository
     {
         private readonly SimpledDbContext _context;
+        private readonly AchievementsService _achievementsService;
         private readonly IConfiguration _configuration;
 
-        public AuthService(SimpledDbContext context, IConfiguration configuration)
+        public AuthService(SimpledDbContext context, AchievementsService achievementsService, IConfiguration configuration)
         {
             _context = context;
+            _achievementsService = achievementsService;
             _configuration = configuration;
         }
 
-        public async Task<string?> LoginAsync(LoginRequestDto loginDto)
+        public async Task<LoginResultDto?> LoginAsync(LoginRequestDto loginDto)
+
         {
-            var user = await _context.Users.Include(u => u.Roles).FirstOrDefaultAsync(u => u.Email == loginDto.Email);
+            var user = await _context.Users
+                .Include(u => u.Roles)
+                .FirstOrDefaultAsync(u => u.Email == loginDto.Email);
             if (user == null || !BCrypt.Net.BCrypt.Verify(loginDto.Password, user.PasswordHash))
                 return null;
+
 
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Email, user.Email)
+                new Claim(ClaimTypes.Email, user.Email),
+                new Claim("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress", user.Email)
             };
 
             foreach (var role in user.Roles.Select(r => r.Role))
@@ -51,7 +58,31 @@ namespace Simpled.Services
                 signingCredentials: creds
             );
 
-            return new JwtSecurityTokenHandler().WriteToken(token);
+            // TESTING: logros automáticos al iniciar sesión
+            user.CreatedBoardsCount = 10;
+            user.CreatedTasksCount = 50;
+            user.CompletedTasksCount = 5;
+            user.TeamsCount = 3;
+            await _context.SaveChangesAsync();
+
+            var logrosTesting = new List<string>();
+            logrosTesting.AddRange(await _achievementsService.ProcessActionAsync(user, "CrearTablero", user.CreatedBoardsCount));
+            logrosTesting.AddRange(await _achievementsService.ProcessActionAsync(user, "CrearTarea", user.CreatedTasksCount));
+            logrosTesting.AddRange(await _achievementsService.ProcessActionAsync(user, "CompletarTarea", user.CompletedTasksCount));
+            logrosTesting.AddRange(await _achievementsService.ProcessActionAsync(user, "UnirseEquipo", user.TeamsCount));
+
+            foreach (var logro in logrosTesting)
+            {
+                Console.WriteLine($" Logro desbloqueado al logear: {logro}");
+            }
+
+            string tokenString = new JwtSecurityTokenHandler().WriteToken(token);
+
+            return new LoginResultDto
+            {
+                Token = tokenString,
+                UserId = user.Id.ToString()
+            };
         }
     }
 }

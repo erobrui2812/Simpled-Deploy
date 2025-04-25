@@ -1,5 +1,5 @@
-@import "tailwindcss";
-@import "tw-animate-css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -45,7 +45,12 @@ body {
   font-family: var(--font-figtree), sans-serif;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: var(--font-figtree), sans-serif;
 }
 
@@ -82,7 +87,6 @@ h1, h2, h3, h4, h5, h6 {
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
-
 }
 
 .dark {
@@ -117,31 +121,46 @@ h1, h2, h3, h4, h5, h6 {
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
-
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
-
   }
   body {
     @apply bg-background text-foreground;
-
   }
 }
 
-.spinner {
-  border: 4px solid rgba(255, 255, 255, 0.7);
+input[type='date']::-webkit-calendar-picker-indicator {
+  background-color: var(--foreground);
   border-radius: 50%;
-  border-top: 4px solid white;
-  width: 40px;
-  height: 40px;
-  animation: spin 1s linear infinite;
-  background-color: gray;
 }
-  
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+
+.gantt-container {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.gantt-task-bar {
+  transition: all 0.2s ease;
+}
+
+.gantt-task-bar:hover {
+  filter: brightness(1.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  z-index: 10;
+}
+
+.gantt-task-handle {
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.gantt-task-bar:hover .gantt-task-handle {
+  opacity: 1;
+}
+
+.gantt-task-handle:hover {
+  background-color: rgba(255, 255, 255, 0.3);
 }

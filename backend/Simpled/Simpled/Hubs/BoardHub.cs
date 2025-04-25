@@ -1,10 +1,11 @@
 ﻿using Microsoft.AspNetCore.SignalR;
+using System.Security.Claims;
 
 namespace Simpled.Hubs
 {
     public class BoardHub : Hub
     {
-        // Notifica a un usuario específico (por email)
+        // Notifica a un usuario específico 
         public async Task SendInvitationNotification(string email, string message)
         {
             await Clients.User(email).SendAsync("InvitationReceived", message);
@@ -18,10 +19,12 @@ namespace Simpled.Hubs
 
         public override async Task OnConnectedAsync()
         {
-            var userEmail = Context.User?.Identity?.Name;
-            if (!string.IsNullOrEmpty(userEmail))
+            var email = Context.User?.FindFirst(ClaimTypes.Email)?.Value;
+
+            if (!string.IsNullOrEmpty(email))
             {
-                await Groups.AddToGroupAsync(Context.ConnectionId, userEmail); // para notificar por email
+                await Groups.AddToGroupAsync(Context.ConnectionId, email.ToLower());
+
             }
 
             await base.OnConnectedAsync();

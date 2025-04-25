@@ -11,6 +11,8 @@ using Simpled.Repository;
 using Simpled.Services;
 using System.Reflection;
 using Simpled.Exception;
+using Microsoft.AspNetCore.SignalR;
+using Simpled.Helpers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -50,7 +52,22 @@ builder.Services.AddAuthentication(options =>
         ValidAudience = audience,
         ClockSkew = TimeSpan.Zero
     };
+
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            var accessToken = context.Request.Query["access_token"].FirstOrDefault();
+            var path = context.HttpContext.Request.Path;
+            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs/board"))
+            {
+                context.Token = accessToken;
+            }
+            return Task.CompletedTask;
+        }
+    };
 });
+
 
 // --------------------------------------------------
 //  CORS
@@ -69,8 +86,10 @@ builder.Services.AddCors(options =>
 // --------------------------------------------------
 //  Controladores + FluentValidation
 // --------------------------------------------------
-builder.Services.AddControllers()
-    .AddFluentValidation();
+
+builder.Services.AddControllers();
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddFluentValidationClientsideAdapters();
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 // --------------------------------------------------
@@ -86,7 +105,7 @@ builder.Services.AddSwaggerGen(options =>
         Scheme = "bearer",
         BearerFormat = "JWT",
         In = ParameterLocation.Header,
-        Description = "JWT Authorization header usando el esquema Bearer. \r\n\r\nIntroduce 'Bearer <TOKEN>' para autenticarte."
+        Description = "JWT Authorization header usando el esquema Bearer. \r\n\r\nIntroduce 'un <TOKEN>' para autenticarte."
     });
 
     options.AddSecurityRequirement(new OpenApiSecurityRequirement
@@ -130,9 +149,8 @@ builder.Services.AddScoped<IColumnRepository, ColumnService>();
 builder.Services.AddScoped<IItemRepository, ItemService>();
 builder.Services.AddScoped<IBoardMemberRepository, BoardMemberService>();
 builder.Services.AddScoped<IBoardInvitationRepository, BoardInvitationService>();
-
-
-
+builder.Services.AddScoped<AchievementsService>();
+builder.Services.AddSingleton<IUserIdProvider, EmailBasedUserIdHelper>();
 
 
 var app = builder.Build();
