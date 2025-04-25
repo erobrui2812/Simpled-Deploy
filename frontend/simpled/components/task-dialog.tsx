@@ -48,7 +48,7 @@ export function TaskDialog({ task, open, onOpenChange, onUpdate }: TaskDialogPro
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="sm:max-w-md">
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} className="px-4">
           <SheetHeader>
             <SheetTitle>Detalles de la tarea</SheetTitle>
             <SheetDescription>Ver y editar los detalles de la tarea</SheetDescription>

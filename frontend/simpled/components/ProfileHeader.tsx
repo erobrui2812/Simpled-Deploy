@@ -6,11 +6,13 @@ import { useState } from 'react';
 import EditProfileModal from '@/components/EditProfileModal';
 import { Card, CardContent } from '@/components/ui/card';
 
+const API_URL = 'http://localhost:5193';
+
 interface User {
   id: string;
   name: string;
   email: string;
-  photo: string;
+  imageUrl: string;
   isOnline: boolean;
 }
 
@@ -33,7 +35,10 @@ export default function ProfileHeader({ user, isOwner }: ProfileHeaderProps) {
             className={`relative h-32 w-32 overflow-hidden rounded-full ${user.isOnline ? 'border-green-500' : 'border-gray-400'} border-2`}
           >
             <Image
-              src={user.photo || 'https://s3.amazonaws.com/comicgeeks/characters/avatars/23353.jpg'}
+              src={
+                `${API_URL}${user.imageUrl}` ||
+                'https://s3.amazonaws.com/comicgeeks/characters/avatars/23353.jpg'
+              }
               alt={user.name}
               fill
               className="object-cover"

@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
 interface Team {
-  id: string;
+  key: string;
   name: string;
   role: string;
 }
@@ -35,7 +35,7 @@ export default function TeamsList({ teams }: TeamsListProps) {
       <CardContent>
         <ul className="space-y-3">
           {teams.map((team) => (
-            <Card key={team.id}>
+            <Card key={team.key}>
               <CardContent className="flex items-center justify-between">
                 <span className="font-medium">{team.name}</span>
                 <Badge className={`${getRoleBadgeColor(team.role)}`}>{team.role}</Badge>
