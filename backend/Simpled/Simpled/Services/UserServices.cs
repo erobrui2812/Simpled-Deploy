@@ -122,13 +122,14 @@ namespace Simpled.Services
 
 
 
-        public async Task<bool> UpdateAsync(UserUpdateDto updatedDto)
+        public async Task<bool> UpdateAsync(UserUpdateDto updatedDto, IFormFile? image)
         {
             var existing = await _context.Users.Include(u => u.Roles).FirstOrDefaultAsync(u => u.Id == updatedDto.Id);
             if (existing == null)
                 throw new NotFoundException("Usuario no encontrado.");
 
             existing.Email = updatedDto.Email;
+            existing.Name = updatedDto.Name;
 
             if (!string.IsNullOrWhiteSpace(updatedDto.Password))
             {
@@ -137,6 +138,33 @@ namespace Simpled.Services
                 {
                     existing.PasswordHash = BCrypt.Net.BCrypt.HashPassword(updatedDto.Password);
                 }
+            }
+
+            if (image != null)
+            {
+                string uploadsFolder = Path.Combine("wwwroot", "images", existing.Id.ToString());
+
+                if (!Directory.Exists(uploadsFolder))
+                {
+                    Directory.CreateDirectory(uploadsFolder);
+                    Console.WriteLine($"Carpeta creada: {uploadsFolder}");
+                }
+
+                string filePath = Path.Combine(uploadsFolder, "image.jpg");
+
+                if (File.Exists(filePath))
+                {
+                    File.Delete(filePath);
+                }
+
+                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    await image.CopyToAsync(fileStream);
+                }
+
+                existing.ImageUrl = $"/images/{existing.Id.ToString()}/image.jpg";
+                _context.Users.Update(existing);
+                await _context.SaveChangesAsync();
             }
 
             await _context.SaveChangesAsync();

@@ -55,13 +55,14 @@ namespace Simpled.Controllers
         /// </summary>
         /// <param name="id">ID del usuario</param>
         /// <param name="dto">Datos del usuario</param>
+        /// <param name="image">Foto del usuario</param>
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateUser(Guid id, [FromBody] UserUpdateDto dto)
+        public async Task<IActionResult> UpdateUser(Guid id, [FromForm] UserUpdateDto dto, IFormFile? image)
         {
             if (id != dto.Id)
                 return BadRequest("ID mismatch.");
 
-            var success = await _userService.UpdateAsync(dto);
+            var success = await _userService.UpdateAsync(dto, image);
             return success ? NoContent() : NotFound("User not found.");
         }
 

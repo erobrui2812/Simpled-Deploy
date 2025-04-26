@@ -38,6 +38,7 @@ type AuthContextType = {
     password: string,
     image: File | null,
   ) => Promise<void>;
+  updateUser: (id: string, name: string, email: string, image: File | null) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
   fetchUserProfile: (userId: string) => Promise<User | null>;
@@ -163,6 +164,30 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const updateUser = async (id: string, name: string, email: string, image: File | null) => {
+    try {
+      const formData = new FormData();
+      formData.append('id', id); // importante!
+      formData.append('name', name);
+      formData.append('email', email);
+      if (image) {
+        formData.append('image', image);
+      }
+
+      const response = await fetch(`${API_URL}api/Users/${id}`, {
+        method: 'PUT',
+        body: formData,
+      });
+
+      if (!response.ok) throw new Error('Error al actualizar usuario.');
+
+      toast.success('Perfil actualizado correctamente.');
+    } catch (error) {
+      console.error('Error actualizando usuario:', error);
+      toast.error('Error al actualizar usuario. Intenta nuevamente.');
+    }
+  };
+
   const logout = () => {
     setAuth({ token: null, id: null });
 
@@ -186,6 +211,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         auth,
         loginUser,
         registerUser,
+        updateUser,
         logout,
         isAuthenticated,
         userData,

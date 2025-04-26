@@ -7,6 +7,7 @@ import IconLink from '@/components/IconLink';
 import { Home, Info, Layers, LogIn, LogOut, Menu, User, X } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 export default function Navbar() {
   const [mostrarLogin, setMostrarLogin] = useState(true);
@@ -53,7 +54,9 @@ export default function Navbar() {
 
   return (
     <div className="flex items-center justify-between border-b-[0.5] p-4">
-      <h1 className="text-4xl font-bold">Simpled.</h1>
+      <h1 className="text-4xl font-bold transition-transform duration-300 hover:scale-105 hover:rotate-5">
+        <Link href={'/'}>Simpled.</Link>
+      </h1>
 
       <div className="hidden items-center gap-4 font-semibold md:flex">
         {NavItems('items-center')}
