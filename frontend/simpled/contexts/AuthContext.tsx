@@ -1,6 +1,8 @@
 'use client';
+
 import { useRouter } from 'next/navigation';
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import type React from 'react';
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 
 const API_URL = 'http://localhost:5193/';
@@ -31,7 +33,6 @@ interface Team {
 type AuthContextType = {
   auth: { token: string | null; id: string | null };
   loginUser: (email: string, password: string, keepUserLoggedIn: boolean) => Promise<void>;
-  userData: User | null;
   registerUser: (
     name: string,
     email: string,
@@ -40,7 +41,9 @@ type AuthContextType = {
   ) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
+  userData: User | null;
   fetchUserProfile: (userId: string) => Promise<User | null>;
+  loginWithGoogle: (idToken: string) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -51,18 +54,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     id: null,
   });
   const [isAuthenticated, setAuthenticated] = useState(false);
-  const router = useRouter();
   const [userData, setUserData] = useState<User | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     const token =
       typeof window !== 'undefined'
-        ? sessionStorage.getItem('token') || localStorage.getItem('token')
+        ? (sessionStorage.getItem('token') ?? localStorage.getItem('token'))
         : null;
-
     const id =
       typeof window !== 'undefined'
-        ? sessionStorage.getItem('userId') || localStorage.getItem('userId')
+        ? (sessionStorage.getItem('userId') ?? localStorage.getItem('userId'))
         : null;
 
     if (token && id) {
@@ -71,11 +73,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   useEffect(() => {
-    if (auth.token) {
-      setAuthenticated(true);
-    } else {
-      setAuthenticated(false);
-    }
+    setAuthenticated(!!auth.token);
   }, [auth.token]);
 
   const fetchUserProfile = async (userId: string) => {
@@ -103,15 +101,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       const response = await fetch(`${API_URL}api/Auth/login`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
 
       if (!response.ok) throw new Error('Credenciales incorrectas o error en el servidor.');
 
-      console.log('response', response);
       const { token, id } = await response.json();
       setAuth({ token, id });
 
@@ -149,7 +144,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       const response = await fetch(`${API_URL}api/Users/register`, {
         method: 'POST',
-
         body: formData,
       });
 
@@ -163,38 +157,65 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const loginWithGoogle = async (idToken: string) => {
+    try {
+      const response = await fetch(`${API_URL}api/Auth/google-login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken }),
+      });
+
+      if (!response.ok) throw new Error('Error al iniciar sesión con Google.');
+
+      const { token: authToken, id, needsVerification, email } = await response.json();
+
+      if (needsVerification) {
+        toast.info('Por favor, verifica tu correo electrónico para continuar.');
+        router.push(`/verify-code${email ? `?email=${encodeURIComponent(email)}` : ''}`);
+        return;
+      }
+
+      setAuth({ token: authToken, id });
+
+      localStorage.setItem('token', authToken);
+      localStorage.setItem('userId', id);
+
+      toast.success('Sesión iniciada con Google correctamente.');
+      router.push('/');
+      setAuthenticated(true);
+    } catch (error) {
+      console.error('Error al iniciar sesión con Google:', error);
+      toast.error('Error al iniciar sesión con Google.');
+    }
+  };
+
   const logout = () => {
     setAuth({ token: null, id: null });
-
     setUserData(null);
-
-    sessionStorage.removeItem('userId');
-    localStorage.removeItem('userId');
-
-    localStorage.removeItem('token');
     sessionStorage.removeItem('token');
-
+    sessionStorage.removeItem('userId');
+    localStorage.removeItem('token');
+    localStorage.removeItem('userId');
     setAuthenticated(false);
-
     router.push('/login');
     toast.info('Sesión cerrada.');
   };
 
-  return (
-    <AuthContext.Provider
-      value={{
-        auth,
-        loginUser,
-        registerUser,
-        logout,
-        isAuthenticated,
-        userData,
-        fetchUserProfile,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
+  const contextValue = useMemo(
+    () => ({
+      auth,
+      loginUser,
+      registerUser,
+      logout,
+      isAuthenticated,
+      userData,
+      fetchUserProfile,
+      loginWithGoogle,
+    }),
+    [auth, isAuthenticated, userData],
   );
+
+  return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = (): AuthContextType => {

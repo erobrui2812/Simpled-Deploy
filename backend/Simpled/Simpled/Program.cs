@@ -10,7 +10,7 @@ using Microsoft.OpenApi.Models;
 using Simpled.Repository;
 using Simpled.Services;
 using System.Reflection;
-using Simpled.Exception;
+using Simpled.Exceptions;
 using Microsoft.AspNetCore.SignalR;
 using Simpled.Helpers;
 
@@ -76,10 +76,11 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:3000") // o el dominio de Vercel
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials();
+        policy
+            .AllowAnyOrigin()
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+
     });
 });
 

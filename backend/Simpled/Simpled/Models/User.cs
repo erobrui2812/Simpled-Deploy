@@ -28,6 +28,10 @@ namespace Simpled.Models
         public int CompletedTasksCount { get; set; }
         public int TeamsCount { get; set; }
 
+        public bool IsEmailConfirmed { get; set; } = false;
+        public string ConfirmationCode { get; set; }
+
+
         public ICollection<UserAchievement> Achievements { get; set; } = new List<UserAchievement>();
     }
 }

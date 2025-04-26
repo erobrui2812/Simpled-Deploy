@@ -4,7 +4,7 @@ using Simpled.Data;
 using Simpled.Dtos.Items;
 using Simpled.Models;
 using Simpled.Repository;
-using Simpled.Exception;
+using Simpled.Exceptions;
 
 namespace Simpled.Services
 {

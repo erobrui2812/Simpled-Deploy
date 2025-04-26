@@ -1,20 +1,23 @@
 'use client';
 
-import { cn } from '@/lib/utils';
+import type React from 'react';
+
+import GoogleLoginButton from '@/components/GoogleLoginButton';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { cn } from '@/lib/utils';
 import { AtSign, KeyRound } from 'lucide-react';
+import { useState } from 'react';
 
 export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [keepUserLoggedIn, setKeepUserLoggedIn] = useState(false);
-  const { loginUser } = useAuth();
+  const { loginUser, loginWithGoogle } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,13 +84,26 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
                 </Button>
               </div>
             </div>
-            <div className="mt-4 text-center text-sm">
-              ¿No tienes cuenta?{' '}
-              <a href="/registro" className="underline underline-offset-4">
-                Regístrate ya
-              </a>
-            </div>
           </form>
+          <div className="mt-4 text-center text-sm">
+            ¿No tienes cuenta?{' '}
+            <a href="/registro" className="underline underline-offset-4">
+              Regístrate ya
+            </a>
+          </div>
+          <div className="mt-6 flex flex-col gap-3">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t"></span>
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background text-muted-foreground px-2">O continúa con</span>
+              </div>
+            </div>
+            <div className="flex justify-center">
+              <GoogleLoginButton text="signin_with" />
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>

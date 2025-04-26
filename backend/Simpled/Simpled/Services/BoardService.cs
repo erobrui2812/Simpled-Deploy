@@ -3,7 +3,7 @@ using Simpled.Data;
 using Simpled.Dtos.Boards;
 using Simpled.Models;
 using Simpled.Repository;
-using Simpled.Exception;
+using Simpled.Exceptions;
 
 namespace Simpled.Services
 {

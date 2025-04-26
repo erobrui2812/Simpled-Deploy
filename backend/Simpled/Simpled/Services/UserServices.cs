@@ -3,7 +3,7 @@ using Simpled.Data;
 using Simpled.Dtos.Users;
 using Simpled.Models;
 using Simpled.Repository;
-using Simpled.Exception;
+using Simpled.Exceptions;
 using Simpled.Dtos.Teams;
 
 namespace Simpled.Services
@@ -60,7 +60,7 @@ namespace Simpled.Services
             };
         }
 
-        public async Task<UserReadDto> RegisterAsync(UserRegisterDto userDto, IFormFile ?image)
+        public async Task<UserReadDto> RegisterAsync(UserRegisterDto userDto, IFormFile? image)
         {
             var user = new User
             {

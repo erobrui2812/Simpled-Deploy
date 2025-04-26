@@ -1,20 +1,22 @@
 'use client';
+import type React from 'react';
 import { useState } from 'react';
+
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { toast } from 'react-toastify';
 
-const API = 'http://localhost:5193';
+const API = 'https://localhost:7177';
 
 export default function ColumnEditModal({
   columnId,
   currentTitle,
-  boardId,
-  token,
   onClose,
   onUpdated,
+  token,
 }: Readonly<{
   columnId: string;
   currentTitle: string;
-  boardId: string;
   token: string;
   onClose: () => void;
   onUpdated: () => void;
@@ -33,11 +35,7 @@ export default function ColumnEditModal({
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          id: columnId,
-          title,
-          boardId, // 👈 requerido por el backend
-        }),
+        body: JSON.stringify({ id: columnId, title }),
       });
 
       if (!res.ok) throw new Error('Error al actualizar la columna.');
@@ -54,32 +52,24 @@ export default function ColumnEditModal({
   };
 
   return (
-    <div className="bg-opacity-40 fixed inset-0 z-50 flex items-center justify-center bg-black">
+    <div className="bg-opacity-40 fixed inset-0 z-50 flex items-center justify-center bg-black p-4">
       <div className="w-full max-w-md rounded bg-white p-6 shadow-lg dark:bg-neutral-900">
         <h2 className="mb-4 text-lg font-semibold">Editar columna</h2>
         <form onSubmit={handleUpdate} className="flex flex-col gap-4">
-          <input
+          <Input
             type="text"
             placeholder="Nuevo título"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="rounded border px-3 py-2"
+            className="mb-4"
           />
           <div className="flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded border px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-neutral-800"
-            >
+            <Button type="button" onClick={onClose} variant="outline">
               Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="rounded bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700"
-            >
+            </Button>
+            <Button type="submit" disabled={loading}>
               {loading ? 'Guardando...' : 'Guardar cambios'}
-            </button>
+            </Button>
           </div>
         </form>
       </div>

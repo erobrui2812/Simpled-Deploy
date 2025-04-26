@@ -1,4 +1,4 @@
-﻿namespace Simpled.Exception
+﻿namespace Simpled.Exceptions
 {
     public class ApiException : System.Exception
     {
