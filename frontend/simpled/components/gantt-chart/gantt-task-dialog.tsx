@@ -19,20 +19,30 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import { differenceInDays, format } from 'date-fns';
-import React from 'react';
-import type { Task } from './gantt-chart';
+import { X } from 'lucide-react';
+import type React from 'react';
+import { useEffect, useState } from 'react';
+import type { Task } from './index';
 
-interface TaskDialogProps {
+interface GanttTaskDialogProps {
   task: Task;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onUpdate: (task: Task) => void;
+  allTasks?: Task[];
 }
 
-export function TaskDialog({ task, open, onOpenChange, onUpdate }: TaskDialogProps) {
-  const [editedTask, setEditedTask] = React.useState<Task>(task);
+export function GanttTaskDialog({
+  task,
+  open,
+  onOpenChange,
+  onUpdate,
+  allTasks = [],
+}: GanttTaskDialogProps) {
+  const [editedTask, setEditedTask] = useState<Task>(task);
+  const [selectedDependency, setSelectedDependency] = useState<string>('');
 
-  React.useEffect(() => {
+  useEffect(() => {
     setEditedTask(task);
   }, [task]);
 
@@ -178,6 +188,69 @@ export function TaskDialog({ task, open, onOpenChange, onUpdate }: TaskDialogPro
                   </SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="dependencies">Dependencias</Label>
+              <Select
+                value={selectedDependency}
+                onValueChange={(value) => {
+                  if (!value) return;
+
+                  const newDeps = [...(editedTask.dependencies || [])];
+                  if (!newDeps.includes(value)) {
+                    newDeps.push(value);
+                    handleChange('dependencies', newDeps);
+                  }
+                  setSelectedDependency('');
+                }}
+              >
+                <SelectTrigger id="dependencies">
+                  <SelectValue placeholder="Añadir dependencia" />
+                </SelectTrigger>
+                <SelectContent>
+                  {allTasks
+                    .filter(
+                      (t) => t.id !== task.id && !(editedTask.dependencies || []).includes(t.id),
+                    )
+                    .map((t) => (
+                      <SelectItem key={t.id} value={t.id}>
+                        {t.title}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+
+              {(editedTask.dependencies || []).length > 0 && (
+                <div className="mt-2">
+                  <Label>Dependencias actuales:</Label>
+                  <div className="mt-1 space-y-1">
+                    {(editedTask.dependencies || []).map((depId) => {
+                      const depTask = allTasks.find((t) => t.id === depId);
+                      return (
+                        <div
+                          key={depId}
+                          className="bg-muted flex items-center justify-between rounded p-2 text-sm"
+                        >
+                          <span>{depTask?.title || 'Tarea desconocida'}</span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              const newDeps = (editedTask.dependencies || []).filter(
+                                (id) => id !== depId,
+                              );
+                              handleChange('dependencies', newDeps);
+                            }}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="mt-2">
