@@ -1,18 +1,13 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using Simpled.Data;
 using Simpled.Dtos.Auth;
+using Simpled.Models;
 using Simpled.Repository;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using Google.Apis.Auth;
-using Simpled.Models;
-using System;
-
-
-
-
 
 namespace Simpled.Services
 {
@@ -88,150 +83,6 @@ namespace Simpled.Services
                 Token = tokenString,
                 UserId = user.Id.ToString()
             };
-        }
-
-        private string GenerateConfirmationCode()
-        {
-            var random = new Random();
-            return random.Next(100000, 999999).ToString();
-        }
-
-
-        public async Task<ConfirmEmailResultDto> ConfirmEmailAsync(ConfirmEmailDto confirmDto)
-        {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == confirmDto.Email);
-
-            if (user == null)
-            {
-                return new ConfirmEmailResultDto
-                {
-                    Success = false,
-                    ErrorMessage = "Usuario no encontrado."
-                };
-            }
-
-            if (user.IsEmailConfirmed)
-            {
-                return new ConfirmEmailResultDto
-                {
-                    Success = false,
-                    ErrorMessage = "El correo ya fue confirmado anteriormente."
-                };
-            }
-
-            if (user.ConfirmationCode != confirmDto.Code)
-            {
-                return new ConfirmEmailResultDto
-                {
-                    Success = false,
-                    ErrorMessage = "Código de confirmación incorrecto."
-                };
-            }
-
-            user.IsEmailConfirmed = true;
-            user.ConfirmationCode = null; // Limpia el código después de confirmar
-
-            await _context.SaveChangesAsync();
-
-            return new ConfirmEmailResultDto
-            {
-                Success = true
-            };
-        }
-
-
-
-        private Task SendConfirmationEmail(string email, string confirmationCode)
-        {
-            Console.WriteLine($"Enviar email a {email} con el código de verificación: {confirmationCode}");
-            return Task.CompletedTask;
-        }
-
-
-        public async Task<GoogleLoginResultDto> LoginWithGoogleAsync(GoogleLoginDto googleLoginDto)
-        {
-            try
-            {
-                var payload = await GoogleJsonWebSignature.ValidateAsync(googleLoginDto.IdToken);
-
-                var user = await _context.Users
-                    .Include(u => u.Roles)
-                    .FirstOrDefaultAsync(u => u.Email == payload.Email);
-
-                if (user == null)
-                {
-                    // Usuario nuevo
-                    user = new User
-                    {
-                        Id = Guid.NewGuid(),
-                        Name = payload.Name,
-                        Email = payload.Email,
-                        CreatedAt = DateTime.UtcNow,
-                        PasswordHash = "", // No tiene contraseña
-                        ImageUrl = payload.Picture ?? "/images/default/avatar-default.jpg",
-                        Roles = new List<UserRole> { new UserRole { Role = "viewer" } },
-                        IsEmailConfirmed = false,
-                        ConfirmationCode = GenerateConfirmationCode()
-                    };
-
-                    _context.Users.Add(user);
-                    await _context.SaveChangesAsync();
-
-                    await SendConfirmationEmail(user.Email, user.ConfirmationCode);
-                }
-
-                if (!user.IsEmailConfirmed)
-                {
-                    return new GoogleLoginResultDto
-                    {
-                        Success = true,
-                        NeedsVerification = true,
-                        UserId = user.Id.ToString(),
-                        Token = ""
-                    };
-                }
-
-                var claims = new List<Claim>
-        {
-            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new Claim(ClaimTypes.Email, user.Email),
-        };
-
-                foreach (var role in user.Roles.Select(r => r.Role))
-                {
-                    claims.Add(new Claim(ClaimTypes.Role, role));
-                }
-
-                var jwtSettings = _configuration.GetSection("JwtSettings");
-                var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"]!));
-                var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-                var token = new JwtSecurityToken(
-                    issuer: jwtSettings["Issuer"],
-                    audience: jwtSettings["Audience"],
-                    claims: claims,
-                    expires: DateTime.UtcNow.AddHours(2),
-                    signingCredentials: creds
-                );
-
-                string tokenString = new JwtSecurityTokenHandler().WriteToken(token);
-
-                return new GoogleLoginResultDto
-                {
-                    Success = true,
-                    Token = tokenString,
-                    UserId = user.Id.ToString(),
-                    NeedsVerification = false
-                };
-            }
-            catch (Exception ex)
-            {
-                return new GoogleLoginResultDto
-                {
-                    Success = false,
-                    ErrorMessage = $"Error validando token de Google: {ex.Message}"
-                };
-            }
         }
     }
 }

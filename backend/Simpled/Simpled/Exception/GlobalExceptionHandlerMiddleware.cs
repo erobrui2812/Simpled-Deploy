@@ -1,7 +1,7 @@
 ﻿using System.Text.Json;
 using Microsoft.AspNetCore.Http;
 
-namespace Simpled.Exceptions
+namespace Simpled.Exception
 {
     public class GlobalExceptionHandlerMiddleware
     {

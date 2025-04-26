@@ -6,9 +6,5 @@ namespace Simpled.Repository
     public interface IAuthRepository
     {
         Task<LoginResultDto?> LoginAsync(LoginRequestDto loginDto);
-
-        Task<ConfirmEmailResultDto> ConfirmEmailAsync(ConfirmEmailDto confirmDto);
-
-        Task<GoogleLoginResultDto> LoginWithGoogleAsync(GoogleLoginDto googleLoginDto);
     }
 }

@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Simpled.Dtos.Auth;
 using Simpled.Repository;
 
@@ -35,48 +34,5 @@ namespace Simpled.Controllers
                 id = result.UserId
             });
         }
-
-        /// <summary>
-        /// Inicia sesión con Google y devuelve un token JWT
-        /// </summary>
-        /// <param name="googleLoginDto">Token de Google</param>
-        /// <returns>Token JWT o solicitud de verificación</returns>
-        [HttpPost("google-login")]
-        public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginDto googleLoginDto)
-        {
-            var result = await _authService.LoginWithGoogleAsync(googleLoginDto);
-
-            if (!result.Success)
-                return Unauthorized(result.ErrorMessage);
-
-            return Ok(new
-            {
-                token = result.Token,
-                id = result.UserId,
-                needsVerification = result.NeedsVerification
-            });
-        }
-
-        /// <summary>
-        /// Confirma el correo electrónico usando un código enviado.
-        /// </summary>
-        /// <param name="confirmDto">Datos de confirmación</param>
-        /// <returns>Éxito o error</returns>
-        [HttpPost("confirm-code")]
-        [AllowAnonymous]
-        public async Task<IActionResult> ConfirmEmail([FromBody] ConfirmEmailDto confirmDto)
-        {
-            var result = await _authService.ConfirmEmailAsync(confirmDto);
-
-            if (!result.Success)
-                return BadRequest(result.ErrorMessage);
-
-            return Ok(new
-            {
-                message = "Email confirmado exitosamente."
-            });
-        }
-
-
     }
 }

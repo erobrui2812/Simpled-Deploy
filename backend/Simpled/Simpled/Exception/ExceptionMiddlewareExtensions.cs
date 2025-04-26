@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Builder;
 
-namespace Simpled.Exceptions
+namespace Simpled.Exception
 {
     public static class ExceptionMiddlewareExtensions
     {

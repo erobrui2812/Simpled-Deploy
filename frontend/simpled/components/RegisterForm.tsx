@@ -1,16 +1,13 @@
 'use client';
 
-import type React from 'react';
-
-import GoogleLoginButton from '@/components/GoogleLoginButton';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useAuth } from '@/contexts/AuthContext';
-import { cn } from '@/lib/utils';
-import { AtSign, BadgeIcon as IdCard, ImageIcon as Image, KeyRound } from 'lucide-react';
 import { useState } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { AtSign, KeyRound, Image, IdCard } from 'lucide-react';
 import { toast } from 'react-toastify';
 
 export function RegisterForm({ className, ...props }: React.ComponentProps<'div'>) {
@@ -119,19 +116,6 @@ export function RegisterForm({ className, ...props }: React.ComponentProps<'div'
                 <Button type="submit" className="w-full">
                   Registrarse
                 </Button>
-              </div>
-            </div>
-            <div className="mt-6 flex flex-col gap-3">
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t"></span>
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background text-muted-foreground px-2">O regístrate con</span>
-                </div>
-              </div>
-              <div className="flex justify-center">
-                <GoogleLoginButton text="signup_with" />
               </div>
             </div>
             <div className="mt-4 text-center text-sm">

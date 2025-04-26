@@ -18,7 +18,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
-import { differenceInDays, format } from 'date-fns';
+import { format } from 'date-fns';
 import React from 'react';
 import type { Task } from './gantt-chart';
 
@@ -43,32 +43,6 @@ export function TaskDialog({ task, open, onOpenChange, onUpdate }: TaskDialogPro
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onUpdate(editedTask);
-  };
-
-  const getStatusBadgeColor = (status?: string) => {
-    switch (status) {
-      case 'completed':
-        return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-300';
-      case 'delayed':
-        return 'bg-rose-100 text-rose-800 dark:bg-rose-900/20 dark:text-rose-300';
-      case 'in-progress':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300';
-      default:
-        return 'bg-amber-100 text-amber-800 dark:bg-amber-900/20 dark:text-amber-300';
-    }
-  };
-
-  const getStatusLabel = (status?: string) => {
-    switch (status) {
-      case 'completed':
-        return 'Completada';
-      case 'delayed':
-        return 'Retrasada';
-      case 'in-progress':
-        return 'En progreso';
-      default:
-        return 'Pendiente';
-    }
   };
 
   return (
@@ -128,18 +102,14 @@ export function TaskDialog({ task, open, onOpenChange, onUpdate }: TaskDialogPro
 
             <div className="grid gap-2">
               <Label htmlFor="progress">Progreso (%)</Label>
-              <div className="flex items-center gap-4">
-                <Input
-                  id="progress"
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={editedTask.progress}
-                  onChange={(e) => handleChange('progress', Number.parseInt(e.target.value))}
-                  className="flex-1"
-                />
-                <span className="w-12 text-center">{editedTask.progress}%</span>
-              </div>
+              <Input
+                id="progress"
+                type="number"
+                min="0"
+                max="100"
+                value={editedTask.progress}
+                onChange={(e) => handleChange('progress', Number.parseInt(e.target.value))}
+              />
             </div>
 
             <div className="grid gap-2">
@@ -152,51 +122,12 @@ export function TaskDialog({ task, open, onOpenChange, onUpdate }: TaskDialogPro
                   <SelectValue placeholder="Seleccionar estado" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="pending">
-                    <div className="flex items-center">
-                      <div className="mr-2 h-2 w-2 rounded-full bg-amber-500"></div>
-                      Pendiente
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="in-progress">
-                    <div className="flex items-center">
-                      <div className="mr-2 h-2 w-2 rounded-full bg-blue-500"></div>
-                      En progreso
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="completed">
-                    <div className="flex items-center">
-                      <div className="mr-2 h-2 w-2 rounded-full bg-emerald-500"></div>
-                      Completada
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="delayed">
-                    <div className="flex items-center">
-                      <div className="mr-2 h-2 w-2 rounded-full bg-rose-500"></div>
-                      Retrasada
-                    </div>
-                  </SelectItem>
+                  <SelectItem value="pending">Pendiente</SelectItem>
+                  <SelectItem value="in-progress">En progreso</SelectItem>
+                  <SelectItem value="completed">Completada</SelectItem>
+                  <SelectItem value="delayed">Retrasada</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-
-            <div className="mt-2">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Estado actual:</span>
-                <span
-                  className={`rounded-full px-2 py-1 text-xs ${getStatusBadgeColor(editedTask.status)}`}
-                >
-                  {getStatusLabel(editedTask.status)}
-                </span>
-              </div>
-              <div className="mt-2 flex items-center justify-between">
-                <span className="text-sm font-medium">Duración:</span>
-                <span className="text-sm">
-                  {differenceInDays(new Date(editedTask.endDate), new Date(editedTask.startDate)) +
-                    1}{' '}
-                  días
-                </span>
-              </div>
             </div>
           </div>
 

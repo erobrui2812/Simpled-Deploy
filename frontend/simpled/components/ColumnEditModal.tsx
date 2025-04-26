@@ -1,22 +1,20 @@
 'use client';
-import type React from 'react';
 import { useState } from 'react';
-
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { toast } from 'react-toastify';
 
-const API = 'https://localhost:7177';
+const API = 'http://localhost:5193';
 
 export default function ColumnEditModal({
   columnId,
   currentTitle,
+  boardId,
+  token,
   onClose,
   onUpdated,
-  token,
 }: Readonly<{
   columnId: string;
   currentTitle: string;
+  boardId: string;
   token: string;
   onClose: () => void;
   onUpdated: () => void;
@@ -35,7 +33,11 @@ export default function ColumnEditModal({
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ id: columnId, title }),
+        body: JSON.stringify({
+          id: columnId,
+          title,
+          boardId, // 👈 requerido por el backend
+        }),
       });
 
       if (!res.ok) throw new Error('Error al actualizar la columna.');
@@ -52,24 +54,32 @@ export default function ColumnEditModal({
   };
 
   return (
-    <div className="bg-opacity-40 fixed inset-0 z-50 flex items-center justify-center bg-black p-4">
+    <div className="bg-opacity-40 fixed inset-0 z-50 flex items-center justify-center bg-black">
       <div className="w-full max-w-md rounded bg-white p-6 shadow-lg dark:bg-neutral-900">
         <h2 className="mb-4 text-lg font-semibold">Editar columna</h2>
         <form onSubmit={handleUpdate} className="flex flex-col gap-4">
-          <Input
+          <input
             type="text"
             placeholder="Nuevo título"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="mb-4"
+            className="rounded border px-3 py-2"
           />
           <div className="flex justify-end gap-2">
-            <Button type="button" onClick={onClose} variant="outline">
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded border px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-neutral-800"
+            >
               Cancelar
-            </Button>
-            <Button type="submit" disabled={loading}>
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="rounded bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700"
+            >
               {loading ? 'Guardando...' : 'Guardar cambios'}
-            </Button>
+            </button>
           </div>
         </form>
       </div>

@@ -202,6 +202,7 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
 
       if (!response.ok) throw new Error('Error updating task');
 
+      // Update local
       setTasks(tasks.map((t) => (t.id === taskId ? updatedTask : t)));
     } catch (err) {
       console.error('Error updating task:', err);
@@ -236,6 +237,7 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
 
       if (!response.ok) throw new Error('Error updating task');
 
+      // Update local
       setTasks(tasks.map((t) => (t.id === updatedTask.id ? updatedTask : t)));
       setIsDialogOpen(false);
     } catch (err) {
@@ -261,6 +263,7 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
     const taskStart = new Date(task.startDate);
     const taskEnd = new Date(task.endDate);
 
+    // Revisar si la tarea está dentro del rango
     const isInView = timelineDates.some((date) =>
       isWithinInterval(date, {
         start: startOfDay(taskStart),
@@ -270,9 +273,11 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
 
     if (!isInView) return { display: 'none' };
 
+    // Posición
     const startDiff = Math.max(0, differenceInDays(taskStart, startDate));
     const duration = Math.max(1, differenceInDays(taskEnd, taskStart) + 1);
 
+    // Limitar el ancho a la parte visible
     const visibleDuration = Math.min(duration, daysToShow - startDiff);
 
     return {
@@ -283,10 +288,10 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
 
   // Colores Status
   const getStatusColor = (status?: string, progress?: number) => {
-    if (progress === 100 || status === 'completed') return 'bg-emerald-500 hover:bg-emerald-600';
-    if (status === 'delayed') return 'bg-rose-500 hover:bg-rose-600';
-    if (status === 'in-progress') return 'bg-blue-500 hover:bg-blue-600';
-    return 'bg-amber-500 hover:bg-amber-600'; // pending
+    if (progress === 100 || status === 'completed') return 'bg-green-500';
+    if (status === 'delayed') return 'bg-red-500';
+    if (status === 'in-progress') return 'bg-blue-500';
+    return 'bg-yellow-500'; // pending
   };
 
   useEffect(() => {
@@ -385,31 +390,6 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
     document.removeEventListener('mousemove', handleDragMove);
     document.removeEventListener('mouseup', handleDragEnd);
   };
-
-  useEffect(() => {
-    const updateTodayIndicator = () => {
-      const todayIndicator = document.querySelector('.gantt-today-line');
-      if (!todayIndicator) return;
-
-      const dayWidth = document.querySelector('.gantt-day')?.clientWidth || 40;
-      const daysSinceStart = differenceInDays(new Date(), startDate);
-
-      if (daysSinceStart >= 0 && daysSinceStart < daysToShow) {
-        todayIndicator.setAttribute(
-          'style',
-          `left: calc(200px + ${daysSinceStart * dayWidth}px); display: block;`,
-        );
-      } else {
-        todayIndicator.setAttribute('style', 'display: none;');
-      }
-    };
-
-    updateTodayIndicator();
-
-    // Update on window resize
-    window.addEventListener('resize', updateTodayIndicator);
-    return () => window.removeEventListener('resize', updateTodayIndicator);
-  }, [startDate, daysToShow]);
 
   return (
     <Card className={cn('w-full', className)}>
@@ -562,7 +542,7 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
                         onClick={() => handleTaskClick(task)}
                       >
                         <div
-                          className="gantt-task-handle left absolute top-0 bottom-0 left-0 w-2 cursor-ew-resize rounded-l-md"
+                          className="gantt-task-handle left absolute top-0 bottom-0 left-0 w-2 cursor-ew-resize"
                           onMouseDown={(e) => handleDragStart(e, task.id, 'resize-start')}
                         ></div>
 
@@ -575,24 +555,20 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
                         </div>
 
                         <div
-                          className="gantt-task-handle right absolute top-0 right-0 bottom-0 w-2 cursor-ew-resize rounded-r-md"
+                          className="gantt-task-handle right absolute top-0 right-0 bottom-0 w-2 cursor-ew-resize"
                           onMouseDown={(e) => handleDragStart(e, task.id, 'resize-end')}
                         ></div>
 
                         {task.progress > 0 && (
                           <div
-                            className="absolute top-0 bottom-0 left-0 rounded-l-md bg-white/20"
-                            style={{ width: `${task.progress}%`, maxWidth: '100%' }}
+                            className="absolute top-0 bottom-0 left-0 bg-white/20"
+                            style={{ width: `${task.progress}%` }}
                           ></div>
                         )}
                       </div>
                     </div>
                   ))
                 )}
-              </div>
-              {/* Today indicator */}
-              <div className="gantt-today-line">
-                <div className="gantt-today-label">Hoy</div>
               </div>
             </div>
           </div>
