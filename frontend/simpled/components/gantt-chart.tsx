@@ -263,7 +263,7 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
     const taskStart = new Date(task.startDate);
     const taskEnd = new Date(task.endDate);
 
-    // Revisar si la tarea está dentro del rango
+    // Check if the task is within the visible range
     const isInView = timelineDates.some((date) =>
       isWithinInterval(date, {
         start: startOfDay(taskStart),
@@ -273,11 +273,11 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
 
     if (!isInView) return { display: 'none' };
 
-    // Posición
+    // Calculate position and duration
     const startDiff = Math.max(0, differenceInDays(taskStart, startDate));
     const duration = Math.max(1, differenceInDays(taskEnd, taskStart) + 1);
 
-    // Limitar el ancho a la parte visible
+    // Limit the width to the visible part
     const visibleDuration = Math.min(duration, daysToShow - startDiff);
 
     return {
@@ -288,10 +288,10 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
 
   // Colores Status
   const getStatusColor = (status?: string, progress?: number) => {
-    if (progress === 100 || status === 'completed') return 'bg-green-500';
-    if (status === 'delayed') return 'bg-red-500';
-    if (status === 'in-progress') return 'bg-blue-500';
-    return 'bg-yellow-500'; // pending
+    if (progress === 100 || status === 'completed') return 'bg-emerald-500 hover:bg-emerald-600';
+    if (status === 'delayed') return 'bg-rose-500 hover:bg-rose-600';
+    if (status === 'in-progress') return 'bg-blue-500 hover:bg-blue-600';
+    return 'bg-amber-500 hover:bg-amber-600'; // pending
   };
 
   useEffect(() => {
@@ -390,6 +390,31 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
     document.removeEventListener('mousemove', handleDragMove);
     document.removeEventListener('mouseup', handleDragEnd);
   };
+
+  useEffect(() => {
+    const updateTodayIndicator = () => {
+      const todayIndicator = document.querySelector('.gantt-today-line');
+      if (!todayIndicator) return;
+
+      const dayWidth = document.querySelector('.gantt-day')?.clientWidth || 40;
+      const daysSinceStart = differenceInDays(new Date(), startDate);
+
+      if (daysSinceStart >= 0 && daysSinceStart < daysToShow) {
+        todayIndicator.setAttribute(
+          'style',
+          `left: calc(200px + ${daysSinceStart * dayWidth}px); display: block;`,
+        );
+      } else {
+        todayIndicator.setAttribute('style', 'display: none;');
+      }
+    };
+
+    updateTodayIndicator();
+
+    // Update on window resize
+    window.addEventListener('resize', updateTodayIndicator);
+    return () => window.removeEventListener('resize', updateTodayIndicator);
+  }, [startDate, daysToShow]);
 
   return (
     <Card className={cn('w-full', className)}>
@@ -542,7 +567,7 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
                         onClick={() => handleTaskClick(task)}
                       >
                         <div
-                          className="gantt-task-handle left absolute top-0 bottom-0 left-0 w-2 cursor-ew-resize"
+                          className="gantt-task-handle left absolute top-0 bottom-0 left-0 w-2 cursor-ew-resize rounded-l-md"
                           onMouseDown={(e) => handleDragStart(e, task.id, 'resize-start')}
                         ></div>
 
@@ -555,20 +580,24 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
                         </div>
 
                         <div
-                          className="gantt-task-handle right absolute top-0 right-0 bottom-0 w-2 cursor-ew-resize"
+                          className="gantt-task-handle right absolute top-0 right-0 bottom-0 w-2 cursor-ew-resize rounded-r-md"
                           onMouseDown={(e) => handleDragStart(e, task.id, 'resize-end')}
                         ></div>
 
                         {task.progress > 0 && (
                           <div
-                            className="absolute top-0 bottom-0 left-0 bg-white/20"
-                            style={{ width: `${task.progress}%` }}
+                            className="absolute top-0 bottom-0 left-0 rounded-l-md bg-white/20"
+                            style={{ width: `${task.progress}%`, maxWidth: '100%' }}
                           ></div>
                         )}
                       </div>
                     </div>
                   ))
                 )}
+              </div>
+              {/* Today indicator */}
+              <div className="gantt-today-line">
+                <div className="gantt-today-label">Hoy</div>
               </div>
             </div>
           </div>

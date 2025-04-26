@@ -144,6 +144,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
 
 .gantt-task-bar {
   transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .gantt-task-bar:hover {
@@ -163,4 +164,27 @@ input[type='date']::-webkit-calendar-picker-indicator {
 
 .gantt-task-handle:hover {
   background-color: rgba(255, 255, 255, 0.3);
+}
+
+.gantt-today-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background-color: rgba(239, 68, 68, 0.8);
+  z-index: 10;
+  pointer-events: none;
+}
+
+.gantt-today-label {
+  position: absolute;
+  top: -24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgb(239, 68, 68);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  white-space: nowrap;
 }

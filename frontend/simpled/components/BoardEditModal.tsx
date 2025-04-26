@@ -23,6 +23,7 @@ export default function BoardEditModal({ board, onClose }: { board: Board; onClo
             value={name}
             onChange={(e) => setName(e.target.value)}
             className="rounded border px-3 py-2"
+            placeholder="Nombre del tablero"
             required
           />
 
