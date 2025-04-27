@@ -58,6 +58,7 @@ Registro de tareas realizadas durante el desarrollo del proyecto **Simpled**.
 | 2025-04-25  | Elías Robles     | Refactorización de variables de front, registro con nombre y foto, backend con foto, prettier, arreglos visuales |
 | 2025-04-26  | Elías Robles     | Modificar perfil en backend |
 | 2025-04-27  | Elías Robles     | Actualizar con las recomendaciones de la reunion del viernes, arreglos menores y nueva seccion del Navbar |
+| 2025-04-27  | Adrián Jiménez   | Implementación de autenticación con GitHub y Google; mejoras en la vista de Gantt |
 
 
 
