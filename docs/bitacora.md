@@ -56,6 +56,9 @@ Registro de tareas realizadas durante el desarrollo del proyecto **Simpled**.
 | 2025-04-23  | Elías Robles     | Instalación y ejecucion de prettier en el front |
 | 2025-04-23  | Elías Robles     | Refactorización de variables, atributos y metodos de español a inglés |
 | 2025-04-25  | Elías Robles     | Refactorización de variables de front, registro con nombre y foto, backend con foto, prettier, arreglos visuales |
+| 2025-04-26  | Elías Robles     | Modificar perfil en backend |
+| 2025-04-27  | Elías Robles     | Actualizar con las recomendaciones de la reunion del viernes, arreglos menores y nueva seccion del Navbar |
+
 
 
 ---
