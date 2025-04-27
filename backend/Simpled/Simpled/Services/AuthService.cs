@@ -1,13 +1,17 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Security.Claims;
+using System.Text;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
 using Simpled.Data;
 using Simpled.Dtos.Auth;
 using Simpled.Models;
 using Simpled.Repository;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 
 namespace Simpled.Services
 {
@@ -17,7 +21,10 @@ namespace Simpled.Services
         private readonly AchievementsService _achievementsService;
         private readonly IConfiguration _configuration;
 
-        public AuthService(SimpledDbContext context, AchievementsService achievementsService, IConfiguration configuration)
+        public AuthService(
+            SimpledDbContext context,
+            AchievementsService achievementsService,
+            IConfiguration configuration)
         {
             _context = context;
             _achievementsService = achievementsService;
@@ -25,7 +32,6 @@ namespace Simpled.Services
         }
 
         public async Task<LoginResultDto?> LoginAsync(LoginRequestDto loginDto)
-
         {
             var user = await _context.Users
                 .Include(u => u.Roles)
@@ -38,18 +44,13 @@ namespace Simpled.Services
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Email, user.Email),
-                new Claim("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress", user.Email)
+                new Claim(ClaimTypes.Role, string.Join(",", user.Roles.Select(r => r.Role)))
             };
 
-            foreach (var role in user.Roles.Select(r => r.Role))
-            {
-                claims.Add(new Claim(ClaimTypes.Role, role));
-            }
 
             var jwtSettings = _configuration.GetSection("JwtSettings");
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"]!));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
             var token = new JwtSecurityToken(
                 issuer: jwtSettings["Issuer"],
                 audience: jwtSettings["Audience"],
@@ -57,26 +58,71 @@ namespace Simpled.Services
                 expires: DateTime.UtcNow.AddHours(2),
                 signingCredentials: creds
             );
+            var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
 
-            // TESTING: logros automáticos al iniciar sesión
+
             user.CreatedBoardsCount = 10;
             user.CreatedTasksCount = 50;
             user.CompletedTasksCount = 5;
             user.TeamsCount = 3;
             await _context.SaveChangesAsync();
 
-            var logrosTesting = new List<string>();
-            logrosTesting.AddRange(await _achievementsService.ProcessActionAsync(user, "CrearTablero", user.CreatedBoardsCount));
-            logrosTesting.AddRange(await _achievementsService.ProcessActionAsync(user, "CrearTarea", user.CreatedTasksCount));
-            logrosTesting.AddRange(await _achievementsService.ProcessActionAsync(user, "CompletarTarea", user.CompletedTasksCount));
-            logrosTesting.AddRange(await _achievementsService.ProcessActionAsync(user, "UnirseEquipo", user.TeamsCount));
+            var unlocked = new List<string>();
+            unlocked.AddRange(await _achievementsService.ProcessActionAsync(user, "CrearTablero", user.CreatedBoardsCount));
+            unlocked.AddRange(await _achievementsService.ProcessActionAsync(user, "CrearTarea", user.CreatedTasksCount));
+            unlocked.AddRange(await _achievementsService.ProcessActionAsync(user, "CompletarTarea", user.CompletedTasksCount));
+            unlocked.AddRange(await _achievementsService.ProcessActionAsync(user, "UnirseEquipo", user.TeamsCount));
+            foreach (var logro in unlocked)
+                Console.WriteLine($"Logro desbloqueado al logear: {logro}");
 
-            foreach (var logro in logrosTesting)
+            return new LoginResultDto
             {
-                Console.WriteLine($" Logro desbloqueado al logear: {logro}");
+                Token = tokenString,
+                UserId = user.Id.ToString()
+            };
+        }
+
+        public async Task<LoginResultDto?> ExternalLoginAsync(ExternalLoginDto dto)
+        {
+
+            var user = await _context.Users
+                .Include(u => u.Roles)
+                .FirstOrDefaultAsync(u => u.Email == dto.Email);
+
+
+            if (user == null)
+            {
+                user = new User
+                {
+                    Email = dto.Email,
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword(Guid.NewGuid().ToString()),
+                    Roles = new List<UserRole> { new UserRole { Role = "User" } }
+                };
+
+                _context.Users.Add(user);
+                await _context.SaveChangesAsync();
             }
 
-            string tokenString = new JwtSecurityTokenHandler().WriteToken(token);
+
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Email, user.Email),
+                new Claim(ClaimTypes.Role, string.Join(",", user.Roles.Select(r => r.Role)))
+            };
+
+
+            var jwtSettings = _configuration.GetSection("JwtSettings");
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"]!));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+            var token = new JwtSecurityToken(
+                issuer: jwtSettings["Issuer"],
+                audience: jwtSettings["Audience"],
+                claims: claims,
+                expires: DateTime.UtcNow.AddHours(2),
+                signingCredentials: creds
+            );
+            var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
 
             return new LoginResultDto
             {

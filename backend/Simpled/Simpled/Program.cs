@@ -1,8 +1,12 @@
 ﻿using Simpled.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.OAuth.Claims;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using System.Security.Claims;
+using AspNet.Security.OAuth.GitHub;
 using Simpled.Hubs;
 using FluentValidation;
 using FluentValidation.AspNetCore;
@@ -13,6 +17,7 @@ using System.Reflection;
 using Simpled.Exception;
 using Microsoft.AspNetCore.SignalR;
 using Simpled.Helpers;
+using Microsoft.AspNetCore.Authentication;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,10 +31,10 @@ builder.Services.AddDbContext<SimpledDbContext>(options =>
 );
 
 // --------------------------------------------------
-//  JWT
+//  Authentication: JWT + Cookies + Google + GitHub
 // --------------------------------------------------
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
-var secretKey = jwtSettings["Key"];
+var secretKey = jwtSettings["Key"]!;
 var issuer = jwtSettings["Issuer"];
 var audience = jwtSettings["Audience"];
 
@@ -37,6 +42,7 @@ builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
 })
 .AddJwtBearer(options =>
 {
@@ -52,7 +58,6 @@ builder.Services.AddAuthentication(options =>
         ValidAudience = audience,
         ClockSkew = TimeSpan.Zero
     };
-
     options.Events = new JwtBearerEvents
     {
         OnMessageReceived = context =>
@@ -66,8 +71,36 @@ builder.Services.AddAuthentication(options =>
             return Task.CompletedTask;
         }
     };
-});
+})
+.AddCookie()
+// Google
+.AddGoogle("Google", options =>
+{
+    var section = builder.Configuration.GetSection("Authentication:Google");
+    options.ClientId = section["ClientId"]!;
+    options.ClientSecret = section["ClientSecret"]!;
+    options.CallbackPath = section["CallbackPath"];
+    options.Events.OnCreatingTicket = ctx =>
+    {
+        var email = ctx.User.GetProperty("email").GetString();
+        if (!string.IsNullOrEmpty(email))
+        {
+            ctx.Identity.AddClaim(new Claim(ClaimTypes.Email, email));
+        }
+        return Task.CompletedTask;
+    };
+})
+// GitHub
 
+.AddGitHub(options =>
+{
+    var section = builder.Configuration.GetSection("Authentication:GitHub");
+    options.ClientId = section["ClientId"]!;
+    options.ClientSecret = section["ClientSecret"]!;
+    options.CallbackPath = section["CallbackPath"];
+    options.Scope.Add("user:email");
+    options.ClaimActions.MapJsonKey(ClaimTypes.Email, "email");
+});
 
 // --------------------------------------------------
 //  CORS
@@ -75,18 +108,16 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
-    {
-        policy.WithOrigins("http://localhost:3000", "https://localhost:3000") // o el dominio de Vercel
+        policy.WithOrigins("http://localhost:3000", "https://localhost:3000")
               .AllowAnyHeader()
               .AllowAnyMethod()
-              .AllowCredentials();
-    });
+              .AllowCredentials()
+    );
 });
 
 // --------------------------------------------------
 //  Controladores + FluentValidation
 // --------------------------------------------------
-
 builder.Services.AddControllers();
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddFluentValidationClientsideAdapters();
@@ -105,9 +136,8 @@ builder.Services.AddSwaggerGen(options =>
         Scheme = "bearer",
         BearerFormat = "JWT",
         In = ParameterLocation.Header,
-        Description = "JWT Authorization header usando el esquema Bearer. \r\n\r\nIntroduce 'un <TOKEN>' para autenticarte."
+        Description = "Introduce 'Bearer <TOKEN>'"
     });
-
     options.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
@@ -116,32 +146,22 @@ builder.Services.AddSwaggerGen(options =>
                 Reference = new OpenApiReference
                 {
                     Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
+                    Id   = "Bearer"
                 }
             },
-            new string[] {}
+            Array.Empty<string>()
         }
     });
-
-    // Incluir comentarios XML
     var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
     options.IncludeXmlComments(xmlPath);
 });
 
 // --------------------------------------------------
-//  SignalR
+//  SignalR, Authorization, Servicios y Repositorios
 // --------------------------------------------------
 builder.Services.AddSignalR();
-
-// --------------------------------------------------
-//  Authorization
-// --------------------------------------------------
 builder.Services.AddAuthorization();
-
-// --------------------------------------------------
-//  Servicios y Repositorios
-// --------------------------------------------------
 builder.Services.AddScoped<IAuthRepository, AuthService>();
 builder.Services.AddScoped<IUserRepository, UserService>();
 builder.Services.AddScoped<IBoardRepository, BoardService>();
@@ -151,7 +171,6 @@ builder.Services.AddScoped<IBoardMemberRepository, BoardMemberService>();
 builder.Services.AddScoped<IBoardInvitationRepository, BoardInvitationService>();
 builder.Services.AddScoped<AchievementsService>();
 builder.Services.AddSingleton<IUserIdProvider, EmailBasedUserIdHelper>();
-
 
 var app = builder.Build();
 
@@ -177,9 +196,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseRouting();
-
 app.UseStaticFiles();
-
 app.UseGlobalExceptionHandler();
 app.UseAuthentication();
 app.UseAuthorization();

@@ -1,6 +1,7 @@
 'use client';
 import { useRouter } from 'next/navigation';
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import type React from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 
 const API_URL = 'http://localhost:5193/';
@@ -42,6 +43,7 @@ type AuthContextType = {
   logout: () => void;
   isAuthenticated: boolean;
   fetchUserProfile: (userId: string) => Promise<User | null>;
+  externalLogin: (provider: string) => void;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -216,6 +218,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         isAuthenticated,
         userData,
         fetchUserProfile,
+        externalLogin: (provider: string) => {
+          const redirectUrl = `${API_URL}api/Auth/external-login/${provider}`;
+          window.location.href = redirectUrl;
+        },
       }}
     >
       {children}
