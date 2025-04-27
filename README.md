@@ -154,10 +154,9 @@ Simpled/
 
 🔗 Se subirá en YouTube con duración máxima de **10 minutos**, donde se muestre:
 
-1. Nombre y propósito del proyecto  
-2. Arquitectura general  
-3. Demostración visual  
-4. Código relevante (solo fragmentos clave)
+- Haz clic en la imagen para ir al video.
+
+[![Simpled](https://img.youtube.com/vi/7ciRupxl6A4/0.jpg)](https://youtu.be/7ciRupxl6A4)
 
 ---
 
