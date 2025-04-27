@@ -4,7 +4,7 @@ import type React from 'react';
 import { createContext, useContext, useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 
-const API_URL = 'http://localhost:5193/';
+const API_URL = 'http://localhost:5193';
 
 type User = {
   id: string | null;
@@ -83,7 +83,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const fetchUserProfile = async (userId: string) => {
     try {
-      const response = await fetch(`${API_URL}api/Users/${userId}`);
+      const response = await fetch(`${API_URL}/api/Users/${userId}`);
       const data = await response.json();
       return data;
     } catch (error) {
@@ -104,7 +104,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const loginUser = async (email: string, password: string, keepUserLoggedIn: boolean) => {
     try {
-      const response = await fetch(`${API_URL}api/Auth/login`, {
+      const response = await fetch(`${API_URL}/api/Auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -150,7 +150,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         formData.append('image', image);
       }
 
-      const response = await fetch(`${API_URL}api/Users/register`, {
+      const response = await fetch(`${API_URL}/api/Users/register`, {
         method: 'POST',
 
         body: formData,
@@ -176,7 +176,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         formData.append('image', image);
       }
 
-      const response = await fetch(`${API_URL}api/Users/${id}`, {
+      const response = await fetch(`${API_URL}/api/Users/${id}`, {
         method: 'PUT',
         body: formData,
       });
@@ -219,7 +219,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         userData,
         fetchUserProfile,
         externalLogin: (provider: string) => {
-          const redirectUrl = `${API_URL}api/Auth/external-login/${provider}`;
+          const redirectUrl = `${API_URL}/api/Auth/external-login/${provider}`;
           window.location.href = redirectUrl;
         },
       }}

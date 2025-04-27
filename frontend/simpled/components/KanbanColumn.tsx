@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { PencilIcon, PlusIcon } from 'lucide-react';
+import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react';
 import KanbanItem from './KanbanItem';
 
 interface KanbanColumnProps {
@@ -17,6 +17,7 @@ interface KanbanColumnProps {
   onAddItem: () => void;
   onEditColumn: () => void;
   onEditItem: (item: any) => void;
+  onDeleteColumn: () => void;
 }
 
 export default function KanbanColumn({
@@ -26,6 +27,7 @@ export default function KanbanColumn({
   onAddItem,
   onEditColumn,
   onEditItem,
+  onDeleteColumn,
 }: KanbanColumnProps) {
   const { setNodeRef } = useDroppable({
     id: column.id,
@@ -36,10 +38,14 @@ export default function KanbanColumn({
       <CardHeader className="flex flex-row items-center justify-between p-3 pb-2">
         <CardTitle className="text-lg font-medium">{column.title}</CardTitle>
         {canEdit && (
-          <Button variant="ghost" size="icon" onClick={onEditColumn} className="h-8 w-8">
-            <PencilIcon className="h-4 w-4" />
-            <span className="sr-only">Editar columna</span>
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="ghost" size="icon" onClick={onEditColumn} className="h-8 w-8">
+              <PencilIcon className="size-4" />
+            </Button>
+            <Button variant="ghost" size="icon" onClick={onDeleteColumn} className="h-8 w-8">
+              <Trash2Icon className="size-4" />
+            </Button>
+          </div>
         )}
       </CardHeader>
       <CardContent className="flex-grow overflow-y-auto p-3 pt-0">

@@ -150,6 +150,20 @@ export default function KanbanBoard({ boardId }: { boardId: string }) {
     resetDrag();
   };
 
+  const handleDeleteColumn = async (columnId: string) => {
+    if (!confirm('¿Eliminar esta columna? Esta acción no se puede deshacer.')) return;
+
+    try {
+      await fetch(`${API}/api/Columns/${columnId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${auth.token}` },
+      });
+      fetchData();
+    } catch {
+      fetchData();
+    }
+  };
+
   const resetDrag = () => {
     setActiveId(null);
     setActiveItem(null);
@@ -204,6 +218,7 @@ export default function KanbanBoard({ boardId }: { boardId: string }) {
                 setEditColumnTitle(column.title);
               }}
               onEditItem={(item) => setEditItem(item)}
+              onDeleteColumn={() => handleDeleteColumn(column.id)}
             />
           ))}
         </div>
