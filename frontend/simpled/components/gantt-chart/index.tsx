@@ -3,14 +3,21 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
+import {
+  DndContext,
+  type DragEndEvent,
+  MouseSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
 import { format } from 'date-fns';
-import { useEffect, useRef } from 'react';
-import { GanttRenderer } from './gantt-renderer';
+import { useRef, useState } from 'react';
 import { GanttTaskDialog } from './gantt-task-dialog';
 import { GanttToolbar } from './gantt-toolbar';
+import { GanttView } from './gantt-view';
 import { useGanttData } from './use-gantt-data';
 import { useGanttFilters } from './use-gantt-filters';
-import { useGanttInteractions } from './use-gantt-interactions';
 import { useGanttTimeline } from './use-gantt-timeline';
 
 export interface Task {
@@ -22,7 +29,6 @@ export interface Task {
   progress: number;
   columnId?: string;
   boardId?: string;
-  dependencies?: string[];
   assignedTo?: string;
   status?: 'pending' | 'in-progress' | 'completed' | 'delayed';
   groupId?: string;
@@ -38,6 +44,8 @@ interface GanttChartProps {
 export function GanttChart({ boardId, className }: GanttChartProps) {
   const { auth } = useAuth();
   const containerRef = useRef<HTMLDivElement>(null);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const { tasks, loading, error, fetchTasks, updateTask, updateTaskDates } = useGanttData(
     boardId,
@@ -58,8 +66,6 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
   const {
     showCompleted,
     setShowCompleted,
-    showDependencies,
-    setShowDependencies,
     filterStatus,
     setFilterStatus,
     searchTerm,
@@ -73,18 +79,45 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
     toggleGroupExpansion,
   } = useGanttFilters(tasks);
 
-  const {
-    selectedTask,
-    setSelectedTask,
-    isDialogOpen,
-    setIsDialogOpen,
-    draggedTask,
-    setDraggedTask,
-    handleTaskClick,
-    handleDragStart,
-    handleDragMove,
-    handleDragEnd,
-  } = useGanttInteractions(tasks, updateTaskDates);
+  // Configure dnd-kit sensors
+  const sensors = useSensors(
+    useSensor(MouseSensor, {
+      // Require the mouse to move by 10 pixels before activating
+      activationConstraint: {
+        distance: 10,
+      },
+    }),
+    useSensor(TouchSensor, {
+      // Press delay of 250ms, with tolerance of 5px of movement
+      activationConstraint: {
+        delay: 250,
+        tolerance: 5,
+      },
+    }),
+  );
+
+  const handleTaskClick = (task: Task) => {
+    setSelectedTask(task);
+    setIsDialogOpen(true);
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (!over) return;
+
+    const taskId = active.id as string;
+    const task = tasks.find((t) => t.id === taskId);
+
+    if (!task) return;
+
+    // Extract the new dates from the data attribute
+    const newStartDate = new Date(active.data.current?.startDate);
+    const newEndDate = new Date(active.data.current?.endDate);
+
+    // Update the task dates
+    updateTaskDates(taskId, newStartDate, newEndDate);
+  };
 
   const exportToCSV = () => {
     const headers = [
@@ -95,7 +128,6 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
       'Fecha Fin',
       'Progreso',
       'Estado',
-      'Dependencias',
     ];
     const csvData = [
       headers.join(','),
@@ -108,7 +140,6 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
           format(new Date(task.endDate), 'yyyy-MM-dd'),
           task.progress,
           task.status || 'pending',
-          (task.dependencies || []).join(';'),
         ].join(','),
       ),
     ].join('\n');
@@ -123,33 +154,6 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
     link.click();
     document.body.removeChild(link);
   };
-
-  useEffect(() => {
-    const updateTodayIndicator = () => {
-      if (!containerRef.current) return;
-
-      const todayIndicator = containerRef.current.querySelector('.gantt-today-line');
-      if (!todayIndicator) return;
-
-      const dayWidth = containerRef.current.querySelector('.gantt-day')?.clientWidth || 40;
-      const daysSinceStart = Math.floor(
-        (new Date().getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
-      );
-
-      if (daysSinceStart >= 0 && daysSinceStart < daysToShow) {
-        todayIndicator.setAttribute(
-          'style',
-          `left: calc(200px + ${daysSinceStart * dayWidth * zoomLevel}px); display: block;`,
-        );
-      } else {
-        todayIndicator.setAttribute('style', 'display: none;');
-      }
-    };
-
-    updateTodayIndicator();
-    window.addEventListener('resize', updateTodayIndicator);
-    return () => window.removeEventListener('resize', updateTodayIndicator);
-  }, [startDate, daysToShow, zoomLevel]);
 
   return (
     <Card className={cn('w-full', className)}>
@@ -167,8 +171,6 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
             setViewMode={setViewMode}
             showCompleted={showCompleted}
             setShowCompleted={setShowCompleted}
-            showDependencies={showDependencies}
-            setShowDependencies={setShowDependencies}
             filterStatus={filterStatus}
             setFilterStatus={setFilterStatus}
             searchTerm={searchTerm}
@@ -191,22 +193,21 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
           <div className="p-4 text-center text-red-500">{error}</div>
         ) : (
           <div className="gantt-container overflow-x-auto" ref={containerRef}>
-            <GanttRenderer
-              tasks={tasks}
-              filteredTasks={filteredTasks}
-              groupedTasks={groupedTasks}
-              timelineDates={timelineDates}
-              timelineHeaders={timelineHeaders}
-              viewMode={viewMode}
-              startDate={startDate}
-              daysToShow={daysToShow}
-              zoomLevel={zoomLevel}
-              showDependencies={showDependencies}
-              draggedTask={draggedTask}
-              handleTaskClick={handleTaskClick}
-              handleDragStart={handleDragStart}
-              toggleGroupExpansion={toggleGroupExpansion}
-            />
+            <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+              <GanttView
+                tasks={tasks}
+                filteredTasks={filteredTasks}
+                groupedTasks={groupedTasks}
+                timelineDates={timelineDates}
+                timelineHeaders={timelineHeaders}
+                viewMode={viewMode}
+                startDate={startDate}
+                daysToShow={daysToShow}
+                zoomLevel={zoomLevel}
+                onTaskClick={handleTaskClick}
+                toggleGroupExpansion={toggleGroupExpansion}
+              />
+            </DndContext>
           </div>
         )}
       </CardContent>

@@ -49,7 +49,6 @@ export function useGanttData(boardId: string, auth: { token: string | null; id: 
         columnId: item.columnId,
         boardId,
         status: item.status ?? 'pending',
-        dependencies: item.dependencies ?? [],
         assignedTo: item.assignedTo,
       }));
 
@@ -79,7 +78,6 @@ export function useGanttData(boardId: string, auth: { token: string | null; id: 
           startDate: updatedTask.startDate,
           dueDate: updatedTask.endDate,
           columnId: updatedTask.columnId,
-          dependencies: updatedTask.dependencies,
           progress: updatedTask.progress,
           status: updatedTask.status,
           assignedTo: updatedTask.assignedTo,
@@ -123,7 +121,6 @@ export function useGanttData(boardId: string, auth: { token: string | null; id: 
           startDate: newStartDate.toISOString(),
           dueDate: newEndDate.toISOString(),
           columnId: task.columnId,
-          dependencies: task.dependencies,
         }),
       });
 

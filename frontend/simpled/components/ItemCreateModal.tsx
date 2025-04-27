@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useState } from 'react';
 import { toast } from 'react-toastify';
 
-const API = 'http://localhost:5193';
+const API = 'http://localhost:5193/';
 
 type Props = {
   readonly columnId: string;

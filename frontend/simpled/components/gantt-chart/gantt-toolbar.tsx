@@ -18,8 +18,6 @@ interface GanttToolbarProps {
   setViewMode: (mode: 'day' | 'week' | 'month') => void;
   showCompleted: boolean;
   setShowCompleted: (show: boolean) => void;
-  showDependencies: boolean;
-  setShowDependencies: (show: boolean) => void;
   filterStatus: string | null;
   setFilterStatus: (status: string | null) => void;
   searchTerm: string;
@@ -37,8 +35,6 @@ export function GanttToolbar({
   setViewMode,
   showCompleted,
   setShowCompleted,
-  showDependencies,
-  setShowDependencies,
   filterStatus,
   setFilterStatus,
   searchTerm,
@@ -85,15 +81,6 @@ export function GanttToolbar({
             onCheckedChange={(checked) => setShowCompleted(!!checked)}
           />
           <Label htmlFor="show-completed">Mostrar completadas</Label>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Checkbox
-            id="show-dependencies"
-            checked={showDependencies}
-            onCheckedChange={(checked) => setShowDependencies(!!checked)}
-          />
-          <Label htmlFor="show-dependencies">Mostrar dependencias</Label>
         </div>
 
         <Select

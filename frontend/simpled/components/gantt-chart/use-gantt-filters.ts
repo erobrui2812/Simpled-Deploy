@@ -13,7 +13,6 @@ interface GroupedTask {
 
 export function useGanttFilters(tasks: Task[]) {
   const [showCompleted, setShowCompleted] = useState(true);
-  const [showDependencies, setShowDependencies] = useState(true);
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [groupBy, setGroupBy] = useState<'none' | 'status' | 'assignee'>('none');
@@ -116,8 +115,6 @@ export function useGanttFilters(tasks: Task[]) {
   return {
     showCompleted,
     setShowCompleted,
-    showDependencies,
-    setShowDependencies,
     filterStatus,
     setFilterStatus,
     searchTerm,
