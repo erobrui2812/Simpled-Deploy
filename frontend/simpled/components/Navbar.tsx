@@ -4,7 +4,7 @@ import { DarkModeToggle } from '@/components/DarkModeToggle';
 import { useAuth } from '@/contexts/AuthContext';
 import React, { useEffect, useState } from 'react';
 import IconLink from '@/components/IconLink';
-import { Home, Info, Layers, LogIn, LogOut, Menu, User, X } from 'lucide-react';
+import { Home, Info, Layers, LogIn, LogOut, Menu, User, Users, X } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -27,15 +27,18 @@ export default function Navbar() {
         <IconLink href="/nosotros" icon={<Info className="size-4" />}>
           Nosotros
         </IconLink>
-        <IconLink href="/tableros" icon={<Layers className="size-4" />}>
-          Tableros
-        </IconLink>
         {mostrarLogin ? (
           <IconLink href="/login" icon={<LogIn className="size-4" />}>
             Login
           </IconLink>
         ) : (
           <>
+            <IconLink href="/tableros" icon={<Layers className="size-4" />}>
+              Tableros
+            </IconLink>
+            <IconLink href="/equipos" icon={<Users className="size-4" />}>
+              Equipos
+            </IconLink>
             <IconLink href={`/perfil/${auth.id}`} icon={<User className="size-4" />}>
               Perfil
             </IconLink>
