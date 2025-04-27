@@ -19,21 +19,17 @@ export function useGanttFilters(tasks: Task[]) {
   const [zoomLevel, setZoomLevel] = useState(1);
   const [groupExpansionState, setGroupExpansionState] = useState<Record<string, boolean>>({});
 
-  // Filter tasks based on criteria
   const filteredTasks = useMemo(() => {
     let filtered = tasks;
 
-    // Filter by completion status
     if (!showCompleted) {
       filtered = filtered.filter((task) => task.progress < 100 && task.status !== 'completed');
     }
 
-    // Filter by status
     if (filterStatus) {
       filtered = filtered.filter((task) => task.status === filterStatus);
     }
 
-    // Filter by search term
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       filtered = filtered.filter(
@@ -46,7 +42,6 @@ export function useGanttFilters(tasks: Task[]) {
     return filtered;
   }, [tasks, showCompleted, filterStatus, searchTerm]);
 
-  // Get status label for display
   const getStatusLabel = useCallback((status: string) => {
     switch (status) {
       case 'completed':
@@ -60,10 +55,8 @@ export function useGanttFilters(tasks: Task[]) {
     }
   }, []);
 
-  // Group tasks based on selected grouping
   const groupedTasks = useMemo(() => {
     if (groupBy === 'none') {
-      // No grouping, just set tasks directly
       return filteredTasks.map((task) => ({
         id: task.id,
         title: task.title,
@@ -75,7 +68,6 @@ export function useGanttFilters(tasks: Task[]) {
 
     const groups: Record<string, Task[]> = {};
 
-    // Group tasks
     filteredTasks.forEach((task) => {
       let groupKey = 'Unknown';
 
@@ -92,19 +84,17 @@ export function useGanttFilters(tasks: Task[]) {
       groups[groupKey].push(task);
     });
 
-    // Convert groups to GroupedTask array
     const result: GroupedTask[] = Object.entries(groups).map(([key, tasks]) => ({
       id: `group-${key}`,
       title: key === 'Unknown' ? 'Unknown' : groupBy === 'status' ? getStatusLabel(key) : key,
       isGroup: true,
       tasks,
-      expanded: groupExpansionState[`group-${key}`] !== false, // Default to expanded
+      expanded: groupExpansionState[`group-${key}`] !== false,
     }));
 
     return result;
   }, [filteredTasks, groupBy, getStatusLabel, groupExpansionState]);
 
-  // Toggle group expansion
   const toggleGroupExpansion = useCallback((groupId: string) => {
     setGroupExpansionState((prev) => ({
       ...prev,

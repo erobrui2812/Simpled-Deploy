@@ -52,7 +52,6 @@ export function GanttView({
   const [todayPosition, setTodayPosition] = useState<number | null>(null);
 
   useEffect(() => {
-    // Calculate today's position
     const today = new Date();
     const daysSinceStart = Math.floor(
       (today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
@@ -67,7 +66,6 @@ export function GanttView({
 
   return (
     <div className="gantt-chart min-w-[800px]">
-      {/* Timeline Header */}
       <div
         className="gantt-timeline-header grid"
         style={{
@@ -101,7 +99,6 @@ export function GanttView({
             ))}
       </div>
 
-      {/* Timeline Subheader for week/month view */}
       {viewMode !== 'day' && (
         <div
           className="gantt-timeline-subheader grid"
@@ -127,7 +124,6 @@ export function GanttView({
         </div>
       )}
 
-      {/* Gantt Body */}
       <div className="gantt-body relative">
         {groupedTasks.length === 0 ? (
           <div className="col-span-full border-b py-8 text-center">No hay tareas para mostrar</div>
@@ -175,7 +171,6 @@ export function GanttView({
           ))
         )}
 
-        {/* Today indicator */}
         {todayPosition !== null && (
           <div
             className="gantt-today-line pointer-events-none absolute top-0 bottom-0 z-10 w-[2px] bg-red-500/80"
@@ -269,7 +264,6 @@ function TaskRow({
   const taskStart = new Date(task.startDate);
   const taskEnd = new Date(task.endDate);
 
-  // Calculate position and width
   const startDiff = Math.max(
     0,
     Math.floor((taskStart.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)),
@@ -280,10 +274,8 @@ function TaskRow({
   );
   const visibleDuration = Math.min(duration, daysToShow - startDiff);
 
-  // Only show if task is visible in the current timeline
   const isVisible = startDiff < daysToShow && startDiff + duration > 0;
 
-  // Set up draggable
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: task.id,
     data: {
@@ -341,7 +333,7 @@ function TaskRow({
             isDragging && 'z-10 opacity-70',
           )}
           style={{
-            gridColumnStart: startDiff + 2, // +2 because of the task info column and 1-based indexing
+            gridColumnStart: startDiff + 2,
             gridColumnEnd: `span ${visibleDuration}`,
             top: '4px',
             height: 'calc(100% - 8px)',

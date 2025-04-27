@@ -79,16 +79,13 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
     toggleGroupExpansion,
   } = useGanttFilters(tasks);
 
-  // Configure dnd-kit sensors
   const sensors = useSensors(
     useSensor(MouseSensor, {
-      // Require the mouse to move by 10 pixels before activating
       activationConstraint: {
         distance: 10,
       },
     }),
     useSensor(TouchSensor, {
-      // Press delay of 250ms, with tolerance of 5px of movement
       activationConstraint: {
         delay: 250,
         tolerance: 5,
@@ -111,11 +108,9 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
 
     if (!task) return;
 
-    // Extract the new dates from the data attribute
     const newStartDate = new Date(active.data.current?.startDate);
     const newEndDate = new Date(active.data.current?.endDate);
 
-    // Update the task dates
     updateTaskDates(taskId, newStartDate, newEndDate);
   };
 

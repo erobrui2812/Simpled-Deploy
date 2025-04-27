@@ -4,6 +4,7 @@ import { Board, useBoards } from '@/contexts/BoardsContext';
 import Link from 'next/link';
 import { useState } from 'react';
 import BoardEditModal from './BoardEditModal';
+import { NotebookPen, Trash2Icon } from 'lucide-react';
 
 export default function BoardCard({ board }: { board: Board }) {
   const { auth } = useAuth();
@@ -33,12 +34,16 @@ export default function BoardCard({ board }: { board: Board }) {
           <div className="absolute top-2 right-2 flex gap-2">
             <button
               onClick={() => setShowEdit(true)}
-              className="text-sm text-blue-600 hover:underline"
+              className="text-sm text-blue-500 hover:cursor-pointer hover:text-blue-700 hover:underline"
             >
-              Editar
+              <NotebookPen className="size-6" />
             </button>
-            <button onClick={handleDelete} className="text-sm text-red-600 hover:underline">
-              Eliminar
+            <div className="h-7 w-px bg-gray-300" />
+            <button
+              onClick={handleDelete}
+              className="text-sm text-red-500 hover:cursor-pointer hover:text-red-700 hover:underline"
+            >
+              <Trash2Icon className="size-6" />
             </button>
           </div>
         )}

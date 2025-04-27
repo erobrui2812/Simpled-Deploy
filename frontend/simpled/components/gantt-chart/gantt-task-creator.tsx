@@ -44,7 +44,6 @@ export function GanttTaskCreator({ position, onClose, onSave, columns }: GanttTa
     onSave(taskData);
   };
 
-  // Calculate position styles
   const style = {
     position: 'absolute' as const,
     left: `${position.x}px`,

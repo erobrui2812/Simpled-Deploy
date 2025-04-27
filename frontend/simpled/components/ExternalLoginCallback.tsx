@@ -23,21 +23,16 @@ export default function ExternalLoginCallback() {
           return;
         }
 
-        // The backend will handle the authentication and redirect back with token and userId
-        // We just need to check if we have a token in the URL
         const token = searchParams.get('token');
         const userId = searchParams.get('id');
 
         if (token && userId) {
-          // Store the token and userId
           localStorage.setItem('token', token);
           localStorage.setItem('userId', userId);
 
           toast.success('Inicio de sesión exitoso');
           router.push('/');
         } else {
-          // If we don't have a token, it means the backend is still processing
-          // We'll show a loading state
           setLoading(true);
         }
       } catch (error) {
@@ -48,7 +43,6 @@ export default function ExternalLoginCallback() {
       }
     };
 
-    // If we're already authenticated, redirect to home
     if (auth.token) {
       router.push('/');
       return;

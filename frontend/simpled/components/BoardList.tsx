@@ -10,10 +10,12 @@ export default function BoardList() {
   if (!boards.length) return <p>No tienes tableros todavía.</p>;
 
   return (
-    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-      {boards.map((board) => (
-        <BoardCard key={board.id} board={board} />
-      ))}
+    <div className="min-h-screen">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {boards.map((board) => (
+          <BoardCard key={board.id} board={board} />
+        ))}
+      </div>
     </div>
   );
 }
