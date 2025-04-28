@@ -1,6 +1,6 @@
-import { Users } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Users } from 'lucide-react';
 
 interface Team {
   key: string;
@@ -9,7 +9,7 @@ interface Team {
 }
 
 interface TeamsListProps {
-  teams: Team[];
+  readonly teams: Team[];
 }
 
 export default function TeamsList({ teams }: TeamsListProps) {
@@ -35,12 +35,14 @@ export default function TeamsList({ teams }: TeamsListProps) {
       <CardContent>
         <ul className="space-y-3">
           {teams.map((team) => (
-            <Card key={team.key}>
-              <CardContent className="flex items-center justify-between">
-                <span className="font-medium">{team.name}</span>
-                <Badge className={`${getRoleBadgeColor(team.role)}`}>{team.role}</Badge>
-              </CardContent>
-            </Card>
+            <li key={team.key}>
+              <Card>
+                <CardContent className="flex items-center justify-between">
+                  <span className="font-medium">{team.name}</span>
+                  <Badge className={`${getRoleBadgeColor(team.role)}`}>{team.role}</Badge>
+                </CardContent>
+              </Card>
+            </li>
           ))}
         </ul>
       </CardContent>

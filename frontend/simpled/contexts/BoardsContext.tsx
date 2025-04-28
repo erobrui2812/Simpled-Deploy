@@ -1,5 +1,5 @@
 'use client';
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useAuth } from './AuthContext';
 
@@ -119,20 +119,19 @@ export const BoardsProvider = ({ children }: { children: React.ReactNode }) => {
     fetchBoards();
   }, [auth.token]);
 
-  return (
-    <BoardsContext.Provider
-      value={{
-        boards,
-        loading,
-        fetchBoards,
-        createBoard,
-        updateBoard,
-        deleteBoard,
-      }}
-    >
-      {children}
-    </BoardsContext.Provider>
+  const contextValue = useMemo(
+    () => ({
+      boards,
+      loading,
+      fetchBoards,
+      createBoard,
+      updateBoard,
+      deleteBoard,
+    }),
+    [boards, loading, auth.token],
   );
+
+  return <BoardsContext.Provider value={contextValue}>{children}</BoardsContext.Provider>;
 };
 
 export const useBoards = (): BoardsContextType => {

@@ -5,21 +5,21 @@ import { useDraggable } from '@dnd-kit/core';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { ChevronDown, ChevronRight, Grip } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { Task } from './index';
 
 interface TimelineHeader {
-  label: string;
-  span: number;
-  startDate: Date;
+  readonly label: string;
+  readonly span: number;
+  readonly startDate: Date;
 }
 
 interface GroupedTask {
-  id: string;
-  title: string;
-  isGroup: boolean;
-  tasks: Task[];
-  expanded: boolean;
+  readonly id: string;
+  readonly title: string;
+  readonly isGroup: boolean;
+  readonly tasks: Task[];
+  readonly expanded: boolean;
 }
 
 interface GanttViewProps {
@@ -51,6 +51,8 @@ export function GanttView({
 }: GanttViewProps) {
   const [todayPosition, setTodayPosition] = useState<number | null>(null);
 
+  const todayFormatted = useMemo(() => format(new Date(), 'yyyy-MM-dd'), []);
+
   useEffect(() => {
     const today = new Date();
     const daysSinceStart = Math.floor(
@@ -75,22 +77,25 @@ export function GanttView({
         <div className="gantt-header-cell bg-muted/50 border-r border-b p-2">Tarea</div>
 
         {viewMode === 'day'
-          ? timelineDates.map((date, index) => (
+          ? timelineDates.map((date) => {
+              const formattedDate = format(date, 'yyyy-MM-dd');
+              return (
+                <div
+                  key={formattedDate}
+                  className={cn(
+                    'gantt-header-cell gantt-day border-r border-b p-2 text-center text-xs',
+                    formattedDate === todayFormatted
+                      ? 'bg-blue-100 dark:bg-blue-900/20'
+                      : 'bg-muted/50',
+                  )}
+                >
+                  {format(date, 'EEE d', { locale: es })}
+                </div>
+              );
+            })
+          : timelineHeaders.map((header) => (
               <div
-                key={index}
-                className={cn(
-                  'gantt-header-cell gantt-day border-r border-b p-2 text-center text-xs',
-                  format(date, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')
-                    ? 'bg-blue-100 dark:bg-blue-900/20'
-                    : 'bg-muted/50',
-                )}
-              >
-                {format(date, 'EEE d', { locale: es })}
-              </div>
-            ))
-          : timelineHeaders.map((header, index) => (
-              <div
-                key={index}
+                key={header.label}
                 className="gantt-header-cell bg-muted/50 border-r border-b p-2 text-center text-xs"
                 style={{ gridColumn: `span ${header.span}` }}
               >
@@ -108,19 +113,22 @@ export function GanttView({
         >
           <div className="gantt-header-cell bg-muted/30 border-r border-b p-2"></div>
 
-          {timelineDates.map((date, index) => (
-            <div
-              key={index}
-              className={cn(
-                'gantt-day border-r border-b p-1 text-center text-xs',
-                format(date, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')
-                  ? 'bg-blue-100 dark:bg-blue-900/20'
-                  : 'bg-muted/30',
-              )}
-            >
-              {format(date, 'd', { locale: es })}
-            </div>
-          ))}
+          {timelineDates.map((date) => {
+            const formattedDate = format(date, 'yyyy-MM-dd');
+            return (
+              <div
+                key={formattedDate}
+                className={cn(
+                  'gantt-day border-r border-b p-1 text-center text-xs',
+                  formattedDate === todayFormatted
+                    ? 'bg-blue-100 dark:bg-blue-900/20'
+                    : 'bg-muted/30',
+                )}
+              >
+                {format(date, 'd', { locale: es })}
+              </div>
+            );
+          })}
         </div>
       )}
 
@@ -140,7 +148,6 @@ export function GanttView({
                     timelineDates={timelineDates}
                     startDate={startDate}
                   />
-
                   {group.expanded &&
                     group.tasks.map((task) => (
                       <TaskRow
@@ -190,12 +197,12 @@ export function GanttView({
 }
 
 interface GroupRowProps {
-  group: GroupedTask;
-  daysToShow: number;
-  zoomLevel: number;
-  toggleGroupExpansion: (groupId: string) => void;
-  timelineDates: Date[];
-  startDate: Date;
+  readonly group: GroupedTask;
+  readonly daysToShow: number;
+  readonly zoomLevel: number;
+  readonly toggleGroupExpansion: (groupId: string) => void;
+  readonly timelineDates: Date[];
+  readonly startDate: Date;
 }
 
 function GroupRow({
@@ -206,6 +213,8 @@ function GroupRow({
   timelineDates,
   startDate,
 }: GroupRowProps) {
+  const todayFormatted = useMemo(() => format(new Date(), 'yyyy-MM-dd'), []);
+
   return (
     <div
       className="gantt-row bg-muted/30 relative grid"
@@ -213,8 +222,9 @@ function GroupRow({
         gridTemplateColumns: `200px repeat(${daysToShow}, minmax(${40 * zoomLevel}px, 1fr))`,
       }}
     >
-      <div
-        className="gantt-task-info cursor-pointer truncate border-r border-b p-2 font-medium"
+      <button
+        type="button"
+        className="gantt-task-info w-full truncate border-r border-b p-2 text-left font-medium"
         onClick={() => toggleGroupExpansion(group.id)}
       >
         <div className="flex items-center">
@@ -225,31 +235,32 @@ function GroupRow({
           )}
           <span>{`${group.title} (${group.tasks.length})`}</span>
         </div>
-      </div>
+      </button>
 
-      {timelineDates.map((date, index) => (
-        <div
-          key={index}
-          className={cn(
-            'gantt-cell border-r border-b',
-            format(date, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')
-              ? 'bg-blue-100 dark:bg-blue-900/20'
-              : '',
-          )}
-        />
-      ))}
+      {timelineDates.map((date) => {
+        const formattedDate = format(date, 'yyyy-MM-dd');
+        return (
+          <div
+            key={formattedDate}
+            className={cn(
+              'gantt-cell border-r border-b',
+              formattedDate === todayFormatted ? 'bg-blue-100 dark:bg-blue-900/20' : '',
+            )}
+          />
+        );
+      })}
     </div>
   );
 }
 
 interface TaskRowProps {
-  task: Task;
-  daysToShow: number;
-  zoomLevel: number;
-  startDate: Date;
-  timelineDates: Date[];
-  onTaskClick: (task: Task) => void;
-  isInGroup: boolean;
+  readonly task: Task;
+  readonly daysToShow: number;
+  readonly zoomLevel: number;
+  readonly startDate: Date;
+  readonly timelineDates: Date[];
+  readonly onTaskClick: (task: Task) => void;
+  readonly isInGroup: boolean;
 }
 
 function TaskRow({
@@ -261,6 +272,8 @@ function TaskRow({
   onTaskClick,
   isInGroup,
 }: TaskRowProps) {
+  const todayFormatted = useMemo(() => format(new Date(), 'yyyy-MM-dd'), []);
+
   const taskStart = new Date(task.startDate);
   const taskEnd = new Date(task.endDate);
 
@@ -310,23 +323,33 @@ function TaskRow({
         <div className="truncate font-medium">{task.title}</div>
       </div>
 
-      {timelineDates.map((date, index) => (
-        <div
-          key={index}
-          className={cn(
-            'gantt-cell border-r border-b',
-            format(date, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')
-              ? 'bg-blue-100 dark:bg-blue-900/20'
-              : '',
-          )}
-        />
-      ))}
+      {timelineDates.map((date) => {
+        const formattedDate = format(date, 'yyyy-MM-dd');
+        return (
+          <div
+            key={formattedDate}
+            className={cn(
+              'gantt-cell border-r border-b',
+              formattedDate === todayFormatted ? 'bg-blue-100 dark:bg-blue-900/20' : '',
+            )}
+          />
+        );
+      })}
 
       {isVisible && (
         <div
           ref={setNodeRef}
           {...attributes}
           {...listeners}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onTaskClick(task);
+            }
+          }}
+          onClick={() => onTaskClick(task)}
           className={cn(
             'gantt-task-bar absolute flex cursor-pointer items-center rounded-md px-2 text-xs text-white',
             getStatusColor(task.status, task.progress),
@@ -339,7 +362,6 @@ function TaskRow({
             height: 'calc(100% - 8px)',
             ...style,
           }}
-          onClick={() => onTaskClick(task)}
         >
           <div className="gantt-task-content flex-1 truncate">
             <Grip className="mr-1 inline h-3 w-3 opacity-70" />

@@ -15,7 +15,6 @@ export function RegisterForm({ className, ...props }: React.ComponentProps<'div'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [image, setImage] = useState<File | null>(null);
-  // Extraemos registerUser y externalLogin del contexto
   const { registerUser, externalLogin } = useAuth();
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {

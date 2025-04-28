@@ -9,14 +9,14 @@ import { es } from 'date-fns/locale';
 import { CalendarIcon } from 'lucide-react';
 
 interface KanbanItemProps {
-  item: {
-    id: string;
-    title: string;
-    description?: string;
-    dueDate?: string;
+  readonly item: {
+    readonly id: string;
+    readonly title: string;
+    readonly description?: string;
+    readonly dueDate?: string;
   };
-  onClick?: () => void;
-  isOverlay?: boolean;
+  readonly onClick?: () => void;
+  readonly isOverlay?: boolean;
 }
 
 export default function KanbanItem({ item, onClick, isOverlay = false }: KanbanItemProps) {

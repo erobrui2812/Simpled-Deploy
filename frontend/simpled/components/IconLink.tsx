@@ -5,11 +5,11 @@ export default function IconLink({
   href,
   children,
   icon,
-}: {
+}: Readonly<{
   href: string;
   children: React.ReactNode;
   icon?: React.ReactNode;
-}) {
+}>) {
   return (
     <Link
       href={href}

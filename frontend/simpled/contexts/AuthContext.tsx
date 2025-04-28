@@ -1,7 +1,7 @@
 'use client';
 import { useRouter } from 'next/navigation';
 import type React from 'react';
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 
 const API_URL = 'http://localhost:5193';
@@ -54,18 +54,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     id: null,
   });
   const [isAuthenticated, setAuthenticated] = useState(false);
-  const router = useRouter();
   const [userData, setUserData] = useState<User | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     const token =
       typeof window !== 'undefined'
-        ? sessionStorage.getItem('token') || localStorage.getItem('token')
+        ? (sessionStorage.getItem('token') ?? localStorage.getItem('token'))
         : null;
 
     const id =
       typeof window !== 'undefined'
-        ? sessionStorage.getItem('userId') || localStorage.getItem('userId')
+        ? (sessionStorage.getItem('userId') ?? localStorage.getItem('userId'))
         : null;
 
     if (token && id) {
@@ -74,16 +74,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   useEffect(() => {
-    if (auth.token) {
-      setAuthenticated(true);
-    } else {
-      setAuthenticated(false);
-    }
+    setAuthenticated(!!auth.token);
   }, [auth.token]);
 
   const fetchUserProfile = async (userId: string) => {
     try {
       const response = await fetch(`${API_URL}/api/Users/${userId}`);
+      if (!response.ok) throw new Error('Error al obtener perfil.');
       const data = await response.json();
       return data;
     } catch (error) {
@@ -106,15 +103,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       const response = await fetch(`${API_URL}/api/Auth/login`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
 
       if (!response.ok) throw new Error('Credenciales incorrectas o error en el servidor.');
 
-      console.log('response', response);
       const { token, id } = await response.json();
       setAuth({ token, id });
 
@@ -128,7 +122,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       toast.success('Sesión iniciada correctamente.');
       router.push('/');
-      setAuthenticated(true);
     } catch (error) {
       console.error('Error al iniciar sesión:', error);
       toast.error('Correo o contraseña incorrectos.');
@@ -146,13 +139,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       formData.append('name', name);
       formData.append('email', email);
       formData.append('password', password);
-      if (image) {
-        formData.append('image', image);
-      }
+      if (image) formData.append('image', image);
 
       const response = await fetch(`${API_URL}/api/Users/register`, {
         method: 'POST',
-
         body: formData,
       });
 
@@ -169,12 +159,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const updateUser = async (id: string, name: string, email: string, image: File | null) => {
     try {
       const formData = new FormData();
-      formData.append('id', id); // importante!
+      formData.append('id', id);
       formData.append('name', name);
       formData.append('email', email);
-      if (image) {
-        formData.append('image', image);
-      }
+      if (image) formData.append('image', image);
 
       const response = await fetch(`${API_URL}/api/Users/${id}`, {
         method: 'PUT',
@@ -192,41 +180,35 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const logout = () => {
     setAuth({ token: null, id: null });
-
     setUserData(null);
-
-    sessionStorage.removeItem('userId');
-    localStorage.removeItem('userId');
-
     localStorage.removeItem('token');
+    localStorage.removeItem('userId');
     sessionStorage.removeItem('token');
-
+    sessionStorage.removeItem('userId');
     setAuthenticated(false);
-
     router.push('/login');
     toast.info('Sesión cerrada.');
   };
 
-  return (
-    <AuthContext.Provider
-      value={{
-        auth,
-        loginUser,
-        registerUser,
-        updateUser,
-        logout,
-        isAuthenticated,
-        userData,
-        fetchUserProfile,
-        externalLogin: (provider: string) => {
-          const redirectUrl = `${API_URL}/api/Auth/external-login/${provider}`;
-          window.location.href = redirectUrl;
-        },
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
+  const authContextValue = useMemo(
+    () => ({
+      auth,
+      loginUser,
+      registerUser,
+      updateUser,
+      logout,
+      isAuthenticated,
+      userData,
+      fetchUserProfile,
+      externalLogin: (provider: string) => {
+        const redirectUrl = `${API_URL}/api/Auth/external-login/${provider}`;
+        window.location.href = redirectUrl;
+      },
+    }),
+    [auth, isAuthenticated, userData],
   );
+
+  return <AuthContext.Provider value={authContextValue}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = (): AuthContextType => {

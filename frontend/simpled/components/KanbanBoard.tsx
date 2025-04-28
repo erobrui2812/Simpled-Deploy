@@ -28,7 +28,7 @@ import KanbanItem from './KanbanItem';
 
 const API = 'http://localhost:5193';
 
-export default function KanbanBoard({ boardId }: { boardId: string }) {
+export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
   const { auth } = useAuth();
   const [board, setBoard] = useState<any>(null);
   const [columns, setColumns] = useState<any[]>([]);

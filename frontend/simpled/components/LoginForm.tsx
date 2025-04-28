@@ -7,15 +7,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
-import React, { useState } from 'react';
-// Iconos
 import { AtSign, Github, KeyRound, Mail } from 'lucide-react';
+import React, { useState } from 'react';
 
 export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [keepUserLoggedIn, setKeepUserLoggedIn] = useState(false);
-  // Extraemos loginUser y externalLogin del contexto
   const { loginUser, externalLogin } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -73,7 +71,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
                 <Checkbox
                   id="keepUserLoggedIn"
                   checked={keepUserLoggedIn}
-                  onCheckedChange={(checked: boolean) => setKeepUserLoggedIn(checked)}
+                  onCheckedChange={(checked: boolean) => setKeepUserLoggedIn(!!checked)}
                 />
                 <Label htmlFor="keepUserLoggedIn">Mantener sesión iniciada</Label>
               </div>

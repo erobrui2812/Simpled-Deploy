@@ -3,7 +3,7 @@ import { useBoards } from '@/contexts/BoardsContext';
 import { useState } from 'react';
 import { toast } from 'react-toastify';
 
-type Props = {
+type Props = Readonly<{
   item: {
     id: string;
     title: string;
@@ -13,13 +13,13 @@ type Props = {
   };
   onClose: () => void;
   onUpdated: () => void;
-};
+}>;
 
 export default function ItemEditModal({ item, onClose, onUpdated }: Props) {
   const [title, setTitle] = useState(item.title);
-  const [description, setDescription] = useState(item.description || '');
-  const [dueDate, setDueDate] = useState(item.dueDate?.slice(0, 10) || '');
-  const { updateBoard } = useBoards(); // reutilizamos contexto por si se refresca al cerrar
+  const [description, setDescription] = useState(item.description ?? '');
+  const [dueDate, setDueDate] = useState(item.dueDate?.slice(0, 10) ?? '');
+  const { updateBoard } = useBoards();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,7 +29,7 @@ export default function ItemEditModal({ item, onClose, onUpdated }: Props) {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${
-            localStorage.getItem('token') || sessionStorage.getItem('token')
+            localStorage.getItem('token') ?? sessionStorage.getItem('token')
           }`,
         },
         body: JSON.stringify({
