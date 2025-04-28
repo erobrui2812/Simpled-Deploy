@@ -1,7 +1,5 @@
 'use client';
 
-import type React from 'react';
-import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,13 +7,15 @@ import {
   Sheet,
   SheetContent,
   SheetDescription,
+  SheetFooter,
   SheetHeader,
   SheetTitle,
-  SheetFooter,
 } from '@/components/ui/sheet';
-import { Image } from 'lucide-react';
-import { toast } from 'react-toastify';
 import { useAuth } from '@/contexts/AuthContext';
+import { Image } from 'lucide-react';
+import type React from 'react';
+import { useState } from 'react';
+import { toast } from 'react-toastify';
 
 interface User {
   id: string;
@@ -25,9 +25,9 @@ interface User {
 }
 
 interface EditProfileModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  user: User;
+  readonly isOpen: boolean;
+  readonly onClose: () => void;
+  readonly user: User;
 }
 
 export default function EditProfileModal({ isOpen, onClose, user }: EditProfileModalProps) {

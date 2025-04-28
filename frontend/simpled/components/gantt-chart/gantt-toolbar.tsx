@@ -13,21 +13,25 @@ import {
 } from '@/components/ui/select';
 import { ChevronLeft, ChevronRight, Download, Search, ZoomIn, ZoomOut } from 'lucide-react';
 
+type ViewMode = 'day' | 'week' | 'month';
+type GroupBy = 'none' | 'status' | 'assignee';
+type TimelineDirection = 'prev' | 'next';
+
 interface GanttToolbarProps {
-  viewMode: 'day' | 'week' | 'month';
-  setViewMode: (mode: 'day' | 'week' | 'month') => void;
-  showCompleted: boolean;
-  setShowCompleted: (show: boolean) => void;
-  filterStatus: string | null;
-  setFilterStatus: (status: string | null) => void;
-  searchTerm: string;
-  setSearchTerm: (term: string) => void;
-  groupBy: 'none' | 'status' | 'assignee';
-  setGroupBy: (groupBy: 'none' | 'status' | 'assignee') => void;
-  zoomLevel: number;
-  setZoomLevel: (level: number) => void;
-  navigateTimeline: (direction: 'prev' | 'next') => void;
-  exportData: () => void;
+  readonly viewMode: ViewMode;
+  readonly setViewMode: (mode: ViewMode) => void;
+  readonly showCompleted: boolean;
+  readonly setShowCompleted: (show: boolean) => void;
+  readonly filterStatus: string | null;
+  readonly setFilterStatus: (status: string | null) => void;
+  readonly searchTerm: string;
+  readonly setSearchTerm: (term: string) => void;
+  readonly groupBy: GroupBy;
+  readonly setGroupBy: (groupBy: GroupBy) => void;
+  readonly zoomLevel: number;
+  readonly setZoomLevel: (level: number) => void;
+  readonly navigateTimeline: (direction: TimelineDirection) => void;
+  readonly exportData: () => void;
 }
 
 export function GanttToolbar({
@@ -84,7 +88,7 @@ export function GanttToolbar({
         </div>
 
         <Select
-          value={filterStatus || 'all'}
+          value={filterStatus ?? 'all'}
           onValueChange={(value) => setFilterStatus(value === 'all' ? null : value)}
         >
           <SelectTrigger className="w-[150px]">

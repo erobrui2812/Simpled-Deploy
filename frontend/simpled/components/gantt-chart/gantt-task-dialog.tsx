@@ -24,11 +24,11 @@ import { useEffect, useState } from 'react';
 import type { Task } from './index';
 
 interface GanttTaskDialogProps {
-  task: Task;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onUpdate: (task: Task) => void;
-  allTasks?: Task[];
+  readonly task: Task;
+  readonly open: boolean;
+  readonly onOpenChange: (open: boolean) => void;
+  readonly onUpdate: (task: Task) => void;
+  readonly allTasks?: readonly Task[];
 }
 
 export function GanttTaskDialog({
@@ -103,7 +103,7 @@ export function GanttTaskDialog({
               <Label htmlFor="description">Descripción</Label>
               <Input
                 id="description"
-                value={editedTask.description || ''}
+                value={editedTask.description ?? ''}
                 onChange={(e) => handleChange('description', e.target.value)}
               />
             </div>

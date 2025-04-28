@@ -23,17 +23,17 @@ interface GroupedTask {
 }
 
 interface GanttViewProps {
-  tasks: Task[];
-  filteredTasks: Task[];
-  groupedTasks: GroupedTask[];
-  timelineDates: Date[];
-  timelineHeaders: TimelineHeader[];
-  viewMode: 'day' | 'week' | 'month';
-  startDate: Date;
-  daysToShow: number;
-  zoomLevel: number;
-  onTaskClick: (task: Task) => void;
-  toggleGroupExpansion: (groupId: string) => void;
+  readonly tasks: Task[];
+  readonly filteredTasks: Task[];
+  readonly groupedTasks: GroupedTask[];
+  readonly timelineDates: Date[];
+  readonly timelineHeaders: TimelineHeader[];
+  readonly viewMode: 'day' | 'week' | 'month';
+  readonly startDate: Date;
+  readonly daysToShow: number;
+  readonly zoomLevel: number;
+  readonly onTaskClick: (task: Task) => void;
+  readonly toggleGroupExpansion: (groupId: string) => void;
 }
 
 export function GanttView({

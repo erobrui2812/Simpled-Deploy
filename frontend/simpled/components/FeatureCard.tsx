@@ -3,10 +3,10 @@ import Image from 'next/image';
 import type React from 'react';
 
 export interface FeatureCardProps {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-  imageUrl: string;
+  readonly icon: React.ReactNode;
+  readonly title: string;
+  readonly description: string;
+  readonly imageUrl: string;
 }
 
 export default function FeatureCard({ icon, title, description, imageUrl }: FeatureCardProps) {

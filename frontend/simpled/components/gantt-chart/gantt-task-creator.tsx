@@ -18,10 +18,10 @@ import { useState } from 'react';
 import type { Task } from './index';
 
 interface GanttTaskCreatorProps {
-  position: { x: number; y: number; date: Date };
-  onClose: () => void;
-  onSave: (task: Partial<Task>) => void;
-  columns: { id: string; title: string }[];
+  readonly position: { x: number; y: number; date: Date };
+  readonly onClose: () => void;
+  readonly onSave: (task: Partial<Task>) => void;
+  readonly columns: { id: string; title: string }[];
 }
 
 export function GanttTaskCreator({ position, onClose, onSave, columns }: GanttTaskCreatorProps) {
@@ -66,7 +66,7 @@ export function GanttTaskCreator({ position, onClose, onSave, columns }: GanttTa
           <Label htmlFor="title">Título</Label>
           <Input
             id="title"
-            value={taskData.title || ''}
+            value={taskData.title ?? ''}
             onChange={(e) => handleChange('title', e.target.value)}
             placeholder="Título de la tarea"
             required
@@ -77,7 +77,7 @@ export function GanttTaskCreator({ position, onClose, onSave, columns }: GanttTa
           <Label htmlFor="description">Descripción</Label>
           <Input
             id="description"
-            value={taskData.description || ''}
+            value={taskData.description ?? ''}
             onChange={(e) => handleChange('description', e.target.value)}
             placeholder="Descripción (opcional)"
           />
@@ -89,7 +89,7 @@ export function GanttTaskCreator({ position, onClose, onSave, columns }: GanttTa
             <Input
               id="startDate"
               type="date"
-              value={format(new Date(taskData.startDate || position.date), 'yyyy-MM-dd')}
+              value={format(new Date(taskData.startDate ?? position.date), 'yyyy-MM-dd')}
               onChange={(e) => handleChange('startDate', new Date(e.target.value).toISOString())}
               required
             />
@@ -102,7 +102,7 @@ export function GanttTaskCreator({ position, onClose, onSave, columns }: GanttTa
               type="date"
               value={format(
                 new Date(
-                  taskData.endDate || new Date(position.date.getTime() + 3 * 24 * 60 * 60 * 1000),
+                  taskData.endDate ?? new Date(position.date.getTime() + 3 * 24 * 60 * 60 * 1000),
                 ),
                 'yyyy-MM-dd',
               )}
@@ -115,7 +115,7 @@ export function GanttTaskCreator({ position, onClose, onSave, columns }: GanttTa
         <div className="space-y-2">
           <Label htmlFor="status">Estado</Label>
           <Select
-            value={taskData.status || 'pending'}
+            value={taskData.status ?? 'pending'}
             onValueChange={(value) => handleChange('status', value)}
           >
             <SelectTrigger id="status">
@@ -154,7 +154,7 @@ export function GanttTaskCreator({ position, onClose, onSave, columns }: GanttTa
           <div className="space-y-2">
             <Label htmlFor="column">Columna</Label>
             <Select
-              value={taskData.columnId || columns[0]?.id}
+              value={taskData.columnId ?? columns[0]?.id}
               onValueChange={(value) => handleChange('columnId', value)}
             >
               <SelectTrigger id="column">
