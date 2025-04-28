@@ -1,13 +1,14 @@
+// KanbanBoard.tsx
 'use client';
 
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import {
-  closestCorners,
   DndContext,
   DragOverlay,
   KeyboardSensor,
   PointerSensor,
+  pointerWithin,
   useSensor,
   useSensors,
   type DragEndEvent,
@@ -53,12 +54,13 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
   if (auth.token) headers['Authorization'] = `Bearer ${auth.token}`;
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(PointerSensor, { activationConstraint: { distance: 0 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
   const fetchData = async () => {
     try {
+      setLoading(true);
       const [boardRes, columnRes, itemRes, membersRes] = await Promise.all([
         fetch(`${API}/api/Boards/${boardId}`, { headers }),
         fetch(`${API}/api/Columns`, { headers }),
@@ -69,9 +71,12 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
       if (!boardRes.ok) throw new Error('Error al cargar el tablero.');
 
       const boardData = await boardRes.json();
-      const columnData = (await columnRes.json()).filter((c: any) => c.boardId === boardId);
-      const itemData = await itemRes.json();
-
+      const allColumns = await columnRes.json();
+      const columnData = allColumns.filter((c: any) => c.boardId === boardId);
+      const allItems = await itemRes.json();
+      const itemData = allItems.filter((i: any) =>
+        columnData.some((col: any) => col.id === i.columnId),
+      );
       const membersRaw = await membersRes.text();
       const membersData = membersRaw ? JSON.parse(membersRaw) : [];
 
@@ -96,24 +101,12 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
     setActiveId(active.id as string);
-    const activeItem = findActiveItem(active.id as string);
-    if (activeItem) setActiveItem(activeItem);
+    const item = findActiveItem(active.id as string);
+    if (item) setActiveItem(item);
   };
 
-  const handleDragOver = (event: DragOverEvent) => {
-    const { active, over } = event;
-    if (!over) return;
-
-    const activeId = active.id as string;
-    const overId = over.id as string;
-    const activeItem = findActiveItem(activeId);
-    if (!activeItem) return;
-
-    const isOverColumn = columns.some((col) => col.id === overId);
-    if (isOverColumn) {
-      setItems(items.map((item) => (item.id === activeId ? { ...item, columnId: overId } : item)));
-    }
-  };
+  // Ya no mutamos estado aquí
+  const handleDragOver = (_event: DragOverEvent) => {};
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
@@ -121,25 +114,22 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
 
     const activeId = active.id as string;
     const overId = over.id as string;
-    const activeItem = findActiveItem(activeId);
-    if (!activeItem) return resetDrag();
+    if (activeId === overId) return resetDrag();
 
-    const isOverColumn = columns.some((col) => col.id === overId);
-    if (isOverColumn && activeItem.columnId !== overId) {
+    const item = findActiveItem(activeId);
+    if (!item) return resetDrag();
+
+    const isColumn = columns.some((col) => col.id === overId);
+    if (isColumn && item.columnId !== overId) {
       try {
-        const response = await fetch(`${API}/api/Items/${activeId}`, {
+        const res = await fetch(`${API}/api/Items/${activeId}`, {
           method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${auth.token}`,
-          },
-          body: JSON.stringify({ ...activeItem, columnId: overId }),
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${auth.token}` },
+          body: JSON.stringify({ ...item, columnId: overId }),
         });
+        if (!res.ok) throw new Error();
 
-        if (!response.ok) throw new Error();
-        setItems(
-          items.map((item) => (item.id === activeId ? { ...item, columnId: overId } : item)),
-        );
+        setItems((prev) => prev.map((i) => (i.id === activeId ? { ...i, columnId: overId } : i)));
         toast.success('Tarea movida correctamente');
       } catch {
         toast.error('Error al mover la tarea');
@@ -151,15 +141,29 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
   };
 
   const handleDeleteColumn = async (columnId: string) => {
-    if (!confirm('¿Eliminar esta columna? Esta acción no se puede deshacer.')) return;
+    const tareas = items.filter((i) => i.columnId === columnId);
+    if (tareas.length) {
+      if (
+        !confirm(`La columna tiene ${tareas.length} tarea(s). ¿Eliminarlas junto con la columna?`)
+      ) {
+        return;
+      }
+    } else if (!confirm('¿Eliminar esta columna? Esta acción no se puede deshacer.')) {
+      return;
+    }
 
     try {
-      await fetch(`${API}/api/Columns/${columnId}`, {
+      const res = await fetch(`${API}/api/Columns/${columnId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${auth.token}` },
       });
-      fetchData();
+      if (!res.ok) throw new Error();
+
+      setColumns((prev) => prev.filter((c) => c.id !== columnId));
+      setItems((prev) => prev.filter((i) => i.columnId !== columnId));
+      toast.success('Columna eliminada correctamente');
     } catch {
+      toast.error('Error al eliminar la columna');
       fetchData();
     }
   };
@@ -200,7 +204,7 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
 
       <DndContext
         sensors={sensors}
-        collisionDetection={closestCorners}
+        collisionDetection={pointerWithin}
         onDragStart={handleDragStart}
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
@@ -222,9 +226,7 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
             />
           ))}
         </div>
-        <DragOverlay>
-          {activeId && activeItem && <KanbanItem item={activeItem} isOverlay />}
-        </DragOverlay>
+        <DragOverlay>{activeItem && <KanbanItem item={activeItem} isOverlay />}</DragOverlay>
       </DndContext>
 
       {showCreateColumn && (
@@ -251,20 +253,19 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
           onUpdated={fetchData}
         />
       )}
-
       {editItem && (
         <ItemEditModal item={editItem} onClose={() => setEditItem(null)} onUpdated={fetchData} />
       )}
     </div>
   );
+}
 
-  function getUserIdFromToken(token: string | null): string | null {
-    if (!token) return null;
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      return payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'];
-    } catch {
-      return null;
-    }
+function getUserIdFromToken(token: string | null): string | null {
+  if (!token) return null;
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'];
+  } catch {
+    return null;
   }
 }

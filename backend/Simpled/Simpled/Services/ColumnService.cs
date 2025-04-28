@@ -80,11 +80,39 @@ namespace Simpled.Services
             return true;
         }
 
-        public async Task<bool> DeleteAsync(Guid id)
+        public async Task<bool> DeleteAsync(Guid columnId, bool cascadeItems = false, Guid? targetColumnId = null)
         {
-            var column = await _context.BoardColumns.FindAsync(id);
+            var column = await _context.BoardColumns
+                .Include(c => c.Items)
+                .FirstOrDefaultAsync(c => c.Id == columnId);
+
             if (column == null)
                 throw new NotFoundException("Columna no encontrada.");
+
+            if (column.Items.Any())
+            {
+                if (targetColumnId.HasValue)
+                {
+                   
+                    var target = await _context.BoardColumns.FindAsync(targetColumnId.Value);
+                    if (target == null)
+                        throw new NotFoundException("Columna destino no encontrada.");
+
+                    foreach (var item in column.Items)
+                        item.ColumnId = targetColumnId.Value;
+                }
+                else if (cascadeItems)
+                {
+                   
+                    _context.Items.RemoveRange(column.Items);
+                }
+                else
+                {
+                    
+                    throw new InvalidOperationException(
+                        "La columna contiene tareas. Debes moverlas o usar cascadeItems=true.");
+                }
+            }
 
             _context.BoardColumns.Remove(column);
             await _context.SaveChangesAsync();

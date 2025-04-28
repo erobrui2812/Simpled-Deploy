@@ -17,8 +17,8 @@ interface User {
 }
 
 interface ProfileHeaderProps {
-  user: User;
-  isOwner: boolean;
+  readonly user: User;
+  readonly isOwner: boolean;
 }
 
 export default function ProfileHeader({ user, isOwner }: ProfileHeaderProps) {
