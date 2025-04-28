@@ -1,9 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿
+using Microsoft.EntityFrameworkCore;
 using Simpled.Data;
 using Simpled.Dtos.Columns;
+using Simpled.Exception;
 using Simpled.Models;
 using Simpled.Repository;
-using Simpled.Exception;
 
 namespace Simpled.Services
 {
@@ -80,6 +81,12 @@ namespace Simpled.Services
             return true;
         }
 
+
+        public Task<bool> DeleteAsync(Guid id)
+        {
+            return DeleteAsync(id, cascadeItems: false, targetColumnId: null);
+        }
+
         public async Task<bool> DeleteAsync(Guid columnId, bool cascadeItems = false, Guid? targetColumnId = null)
         {
             var column = await _context.BoardColumns
@@ -93,7 +100,6 @@ namespace Simpled.Services
             {
                 if (targetColumnId.HasValue)
                 {
-                   
                     var target = await _context.BoardColumns.FindAsync(targetColumnId.Value);
                     if (target == null)
                         throw new NotFoundException("Columna destino no encontrada.");
@@ -103,12 +109,10 @@ namespace Simpled.Services
                 }
                 else if (cascadeItems)
                 {
-                   
                     _context.Items.RemoveRange(column.Items);
                 }
                 else
                 {
-                    
                     throw new InvalidOperationException(
                         "La columna contiene tareas. Debes moverlas o usar cascadeItems=true.");
                 }
@@ -119,7 +123,6 @@ namespace Simpled.Services
             return true;
         }
 
-
         public async Task<Guid> GetBoardIdByColumnId(Guid columnId)
         {
             var column = await _context.BoardColumns.FindAsync(columnId);
@@ -128,6 +131,5 @@ namespace Simpled.Services
 
             return column.BoardId;
         }
-
     }
 }

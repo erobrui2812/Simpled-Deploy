@@ -3,45 +3,43 @@
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react';
 import KanbanItem from './KanbanItem';
 
+interface User {
+  id: string;
+  name: string;
+  imageUrl: string;
+}
+
 interface KanbanColumnProps {
-  readonly column: {
-    readonly id: string;
-    readonly title: string;
-  };
-  readonly items: readonly any[];
-  readonly canEdit: boolean;
-  readonly onAddItem: () => void;
-  readonly onEditColumn: () => void;
-  readonly onEditItem: (item: any) => void;
-  readonly onDeleteColumn: () => void;
+  column: { id: string; title: string };
+  items: any[];
+  users: User[]; // ← añadimos aquí
+  canEdit: boolean;
+  onAddItem: () => void;
+  onEditColumn: () => void;
+  onEditItem: (item: any) => void;
+  onDeleteColumn: () => void;
 }
 
 export default function KanbanColumn({
   column,
   items,
+  users,
   canEdit,
   onAddItem,
   onEditColumn,
   onEditItem,
   onDeleteColumn,
 }: KanbanColumnProps) {
-  const { setNodeRef, isOver } = useDroppable({ id: column.id });
+  const { setNodeRef } = useDroppable({ id: column.id });
 
   return (
-    <Card
-      ref={setNodeRef}
-      className={cn(
-        'bg-card flex w-[300px] min-w-[300px] flex-col shadow-md transition-colors',
-        isOver && 'ring-2 ring-blue-500 ring-offset-2',
-      )}
-    >
-      <CardHeader className="flex items-center justify-between p-3 pb-2">
+    <Card ref={setNodeRef} className="bg-card flex w-[300px] min-w-[300px] flex-col shadow-md">
+      <CardHeader className="flex flex-row items-center justify-between p-3 pb-2">
         <CardTitle className="text-lg font-medium">{column.title}</CardTitle>
         {canEdit && (
           <div className="flex gap-2">
@@ -54,23 +52,22 @@ export default function KanbanColumn({
           </div>
         )}
       </CardHeader>
-
       <CardContent className="flex-grow overflow-y-auto p-3 pt-0">
-        <SortableContext
-          items={items.map((item) => item.id)}
-          strategy={verticalListSortingStrategy}
-        >
-          <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2">
+          <SortableContext
+            items={items.map((item) => item.id)}
+            strategy={verticalListSortingStrategy}
+          >
             {items.map((item) => (
               <KanbanItem
                 key={item.id}
                 item={item}
-                users={item.users}
+                users={users} // ← y aquí
                 onClick={() => canEdit && onEditItem(item)}
               />
             ))}
-          </div>
-        </SortableContext>
+          </SortableContext>
+        </div>
 
         {canEdit && (
           <Button

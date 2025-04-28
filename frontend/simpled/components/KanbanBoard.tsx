@@ -57,7 +57,7 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
 
   const userId = getUserIdFromToken(auth.token);
   const userMember = members.find((m) => m.userId === userId);
-  const userRole = userMember?.role;
+  const userRole = userMember?.role; // 'admin' | 'editor' | 'viewer'
   const canEdit = userRole === 'admin' || userRole === 'editor';
 
   const headers: HeadersInit = {};
@@ -68,44 +68,40 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
-  // Filtra sólo los miembros con rol 'editor' para asignables
+  // solo 'admin' puede asignar
   const assignees: User[] = members
     .filter((m) => m.role === 'editor')
     .map((m) => users.find((u) => u.id === m.userId))
     .filter(Boolean) as User[];
 
+  // fetch initial
   const fetchData = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      const [boardRes, columnRes, itemRes, membersRes, usersRes] = await Promise.all([
+      const [bR, cR, iR, mR, uR] = await Promise.all([
         fetch(`${API}/api/Boards/${boardId}`, { headers }),
         fetch(`${API}/api/Columns`, { headers }),
         fetch(`${API}/api/Items`, { headers }),
         fetch(`${API}/api/BoardMembers/board/${boardId}`, { headers }),
         fetch(`${API}/api/Users`, { headers }),
       ]);
-
-      if (!boardRes.ok) throw new Error('Error al cargar el tablero.');
-
-      const boardData = await boardRes.json();
-      const allColumns = await columnRes.json();
-      const columnData = allColumns.filter((c: any) => c.boardId === boardId);
-      const allItems = await itemRes.json();
-      const itemData = allItems.filter((i: any) =>
-        columnData.some((col: any) => col.id === i.columnId),
-      );
-      const membersRaw = await membersRes.text();
-      const membersData = membersRaw ? JSON.parse(membersRaw) : [];
-      const usersData = await usersRes.json();
-
-      setBoard(boardData);
-      setColumns(columnData);
-      setItems(itemData);
-      setMembers(membersData);
-      setUsers(usersData);
-    } catch (err) {
-      console.error('Error al cargar el tablero:', err);
-      toast.error('Error al cargar el tablero');
+      if (!bR.ok) throw new Error();
+      const [bd, allCols, allItems, memText, us] = await Promise.all([
+        bR.json(),
+        cR.json(),
+        iR.json(),
+        mR.text(),
+        uR.json(),
+      ]);
+      const cols = allCols.filter((c: any) => c.boardId === boardId);
+      const its = allItems.filter((i: any) => cols.some((c: any) => c.id === i.columnId));
+      setBoard(bd);
+      setColumns(cols);
+      setItems(its);
+      setMembers(memText ? JSON.parse(memText) : []);
+      setUsers(us);
+    } catch {
+      toast.error('Error cargando datos');
     } finally {
       setLoading(false);
     }
@@ -115,72 +111,69 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
     fetchData();
   }, [boardId, auth.token]);
 
-  const findActiveItem = (id: string) => items.find((item) => item.id === id);
+  const findActiveItem = (id: string) => items.find((it) => it.id === id);
 
-  const handleDragStart = (event: DragStartEvent) => {
-    const { active } = event;
+  const handleDragStart = ({ active }: DragStartEvent) => {
     setActiveId(active.id as string);
-    const item = findActiveItem(active.id as string);
-    if (item) setActiveItem(item);
+    const it = findActiveItem(active.id as string);
+    if (it) setActiveItem(it);
   };
 
-  const handleDragOver = (_event: DragOverEvent) => {};
+  const handleDragOver = (_: DragOverEvent) => {};
 
-  const handleDragEnd = async (event: DragEndEvent) => {
-    const { active, over } = event;
+  const handleDragEnd = async ({ active, over }: DragEndEvent) => {
     if (!over) return resetDrag();
-    const activeId = active.id as string;
-    const overId = over.id as string;
-    if (activeId === overId) return resetDrag();
-
-    const item = findActiveItem(activeId);
-    if (!item) return resetDrag();
-
-    const isColumn = columns.some((col) => col.id === overId);
-    if (isColumn && item.columnId !== overId) {
+    const aId = active.id as string;
+    const oId = over.id as string;
+    if (aId === oId) return resetDrag();
+    const it = findActiveItem(aId);
+    if (!it) return resetDrag();
+    const isCol = columns.some((c) => c.id === oId);
+    if (isCol && it.columnId !== oId) {
       try {
-        const res = await fetch(`${API}/api/Items/${activeId}`, {
+        const res = await fetch(`${API}/api/Items/${aId}`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${auth.token}` },
-          body: JSON.stringify({ ...item, columnId: overId }),
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${auth.token}`,
+          },
+          body: JSON.stringify({ ...it, columnId: oId }),
         });
         if (!res.ok) throw new Error();
-
-        setItems((prev) => prev.map((i) => (i.id === activeId ? { ...i, columnId: overId } : i)));
-        toast.success('Tarea movida correctamente');
+        setItems((prev) => prev.map((i) => (i.id === aId ? { ...i, columnId: oId } : i)));
+        toast.success('Tarea movida');
       } catch {
-        toast.error('Error al mover la tarea');
+        toast.error('Error moviendo');
         fetchData();
       }
     }
-
     resetDrag();
   };
 
-  const handleDeleteColumn = async (columnId: string) => {
-    const tareas = items.filter((i) => i.columnId === columnId);
+  const handleDeleteColumn = async (colId: string) => {
+    const tareas = items.filter((i) => i.columnId === colId);
+    let cascade = false;
     if (tareas.length) {
-      if (
-        !confirm(`La columna tiene ${tareas.length} tarea(s). ¿Eliminarlas junto con la columna?`)
-      ) {
-        return;
-      }
-    } else if (!confirm('¿Eliminar esta columna? Esta acción no se puede deshacer.')) {
+      cascade = confirm(`La columna tiene ${tareas.length} tareas. ¿Eliminar también?`);
+    } else if (!confirm('¿Eliminar columna?')) {
       return;
     }
-
     try {
-      const res = await fetch(`${API}/api/Columns/${columnId}`, {
+      const url = new URL(`${API}/api/Columns/${colId}`);
+      if (cascade) url.searchParams.set('cascadeItems', 'true');
+      const res = await fetch(url.toString(), {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${auth.token}` },
       });
-      if (!res.ok) throw new Error();
-
-      setColumns((prev) => prev.filter((c) => c.id !== columnId));
-      setItems((prev) => prev.filter((i) => i.columnId !== columnId));
-      toast.success('Columna eliminada correctamente');
-    } catch {
-      toast.error('Error al eliminar la columna');
+      if (!res.ok) {
+        const txt = await res.text();
+        throw new Error(txt || 'Error al borrar');
+      }
+      setColumns((p) => p.filter((c) => c.id !== colId));
+      setItems((p) => p.filter((i) => i.columnId !== colId));
+      toast.success('Columna eliminada');
+    } catch (e: any) {
+      toast.error(e.message);
       fetchData();
     }
   };
@@ -192,14 +185,14 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
 
   if (loading)
     return (
-      <div className="flex items-center justify-center p-8">
+      <div className="flex justify-center p-8">
         <div className="spinner" />
       </div>
     );
   if (!board) return <div className="p-8 text-red-600">Tablero no encontrado</div>;
 
   return (
-    <div className="mx-auto max-w-full p-4">
+    <div className="mx-auto p-4">
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">{board.name}</h1>
@@ -208,7 +201,7 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
           </p>
         </div>
         <div className="flex gap-2">
-          {canEdit && <Button onClick={() => setShowInvite(true)}>Invitar</Button>}
+          {userRole === 'admin' && <Button onClick={() => setShowInvite(true)}>Invitar</Button>}
           {canEdit && <Button onClick={() => setShowCreateColumn(true)}>Añadir columna</Button>}
           <Link href={`/tableros/${boardId}/gantt`}>
             <Button variant="outline">
@@ -226,24 +219,32 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
       >
-        <div className="flex min-h-[calc(100vh-220px)] gap-6 overflow-x-auto pb-4">
-          {columns.map((column) => (
+        <div className="flex gap-6 overflow-x-auto pb-4">
+          {columns.map((col) => (
             <KanbanColumn
-              key={column.id}
-              column={column}
-              items={items.filter((item) => item.columnId === column.id)}
+              key={col.id}
+              column={col}
+              items={items.filter((i) => i.columnId === col.id)}
+              users={users}
               canEdit={canEdit}
-              onAddItem={() => setCreateItemColumnId(column.id)}
+              onAddItem={() => setCreateItemColumnId(col.id)}
               onEditColumn={() => {
-                setEditColumnId(column.id);
-                setEditColumnTitle(column.title);
+                setEditColumnId(col.id);
+                setEditColumnTitle(col.title);
               }}
-              onEditItem={(item) => setEditItem(item)}
-              onDeleteColumn={() => handleDeleteColumn(column.id)}
+              onEditItem={(it) => {
+                // sólo admin o si yo soy el assignee
+                if (userRole === 'admin' || it.assigneeId === userId) {
+                  setEditItem(it);
+                }
+              }}
+              onDeleteColumn={() => handleDeleteColumn(col.id)}
             />
           ))}
         </div>
-        <DragOverlay>{activeItem && <KanbanItem item={activeItem} users={users} />}</DragOverlay>
+        <DragOverlay>
+          {activeItem && <KanbanItem item={activeItem} users={users} isOverlay />}
+        </DragOverlay>
       </DndContext>
 
       {showInvite && (
@@ -289,7 +290,7 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
           onUpdated={fetchData}
           assignees={assignees}
           userRole={userRole}
-          currentUserId={userId}
+          currentUserId={userId!}
         />
       )}
     </div>
@@ -299,8 +300,8 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
 function getUserIdFromToken(token: string | null): string | null {
   if (!token) return null;
   try {
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    return payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'];
+    const pl = JSON.parse(atob(token.split('.')[1]));
+    return pl['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'];
   } catch {
     return null;
   }
