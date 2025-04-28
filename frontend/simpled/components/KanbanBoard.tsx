@@ -1,4 +1,3 @@
-// KanbanBoard.tsx
 'use client';
 
 import { Button } from '@/components/ui/button';
@@ -20,6 +19,7 @@ import { Calendar } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
+import BoardInviteModal from './BoardInviteModal';
 import ColumnCreateModal from './ColumnCreateModal';
 import ColumnEditModal from './ColumnEditModal';
 import ItemCreateModal from './ItemCreateModal';
@@ -29,13 +29,21 @@ import KanbanItem from './KanbanItem';
 
 const API = 'http://localhost:5193';
 
+type User = {
+  id: string;
+  name: string;
+  imageUrl: string;
+};
+
 export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
   const { auth } = useAuth();
   const [board, setBoard] = useState<any>(null);
   const [columns, setColumns] = useState<any[]>([]);
   const [items, setItems] = useState<any[]>([]);
   const [members, setMembers] = useState<any[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+
   const [activeId, setActiveId] = useState<string | null>(null);
   const [activeItem, setActiveItem] = useState<any>(null);
 
@@ -45,8 +53,10 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
   const [editColumnTitle, setEditColumnTitle] = useState<string>('');
   const [editItem, setEditItem] = useState<any>(null);
 
+  const [showInvite, setShowInvite] = useState(false);
+
   const userId = getUserIdFromToken(auth.token);
-  const userMember = Array.isArray(members) ? members.find((m) => m.userId === userId) : null;
+  const userMember = members.find((m) => m.userId === userId);
   const userRole = userMember?.role;
   const canEdit = userRole === 'admin' || userRole === 'editor';
 
@@ -58,14 +68,21 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
+  // Filtra sólo los miembros con rol 'editor' para asignables
+  const assignees: User[] = members
+    .filter((m) => m.role === 'editor')
+    .map((m) => users.find((u) => u.id === m.userId))
+    .filter(Boolean) as User[];
+
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [boardRes, columnRes, itemRes, membersRes] = await Promise.all([
+      const [boardRes, columnRes, itemRes, membersRes, usersRes] = await Promise.all([
         fetch(`${API}/api/Boards/${boardId}`, { headers }),
         fetch(`${API}/api/Columns`, { headers }),
         fetch(`${API}/api/Items`, { headers }),
         fetch(`${API}/api/BoardMembers/board/${boardId}`, { headers }),
+        fetch(`${API}/api/Users`, { headers }),
       ]);
 
       if (!boardRes.ok) throw new Error('Error al cargar el tablero.');
@@ -79,11 +96,13 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
       );
       const membersRaw = await membersRes.text();
       const membersData = membersRaw ? JSON.parse(membersRaw) : [];
+      const usersData = await usersRes.json();
 
       setBoard(boardData);
       setColumns(columnData);
       setItems(itemData);
       setMembers(membersData);
+      setUsers(usersData);
     } catch (err) {
       console.error('Error al cargar el tablero:', err);
       toast.error('Error al cargar el tablero');
@@ -105,13 +124,11 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
     if (item) setActiveItem(item);
   };
 
-  // Ya no mutamos estado aquí
   const handleDragOver = (_event: DragOverEvent) => {};
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over) return resetDrag();
-
     const activeId = active.id as string;
     const overId = over.id as string;
     if (activeId === overId) return resetDrag();
@@ -179,7 +196,6 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
         <div className="spinner" />
       </div>
     );
-
   if (!board) return <div className="p-8 text-red-600">Tablero no encontrado</div>;
 
   return (
@@ -192,6 +208,7 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
           </p>
         </div>
         <div className="flex gap-2">
+          {canEdit && <Button onClick={() => setShowInvite(true)}>Invitar</Button>}
           {canEdit && <Button onClick={() => setShowCreateColumn(true)}>Añadir columna</Button>}
           <Link href={`/tableros/${boardId}/gantt`}>
             <Button variant="outline">
@@ -226,9 +243,19 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
             />
           ))}
         </div>
-        <DragOverlay>{activeItem && <KanbanItem item={activeItem} isOverlay />}</DragOverlay>
+        <DragOverlay>{activeItem && <KanbanItem item={activeItem} users={users} />}</DragOverlay>
       </DndContext>
 
+      {showInvite && (
+        <BoardInviteModal
+          boardId={boardId}
+          onClose={() => setShowInvite(false)}
+          onInvited={() => {
+            setShowInvite(false);
+            fetchData();
+          }}
+        />
+      )}
       {showCreateColumn && (
         <ColumnCreateModal
           boardId={boardId}
@@ -241,6 +268,8 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
           columnId={createItemColumnId}
           onClose={() => setCreateItemColumnId(null)}
           onCreated={fetchData}
+          assignees={assignees}
+          userRole={userRole}
         />
       )}
       {editColumnId && (
@@ -254,7 +283,14 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
         />
       )}
       {editItem && (
-        <ItemEditModal item={editItem} onClose={() => setEditItem(null)} onUpdated={fetchData} />
+        <ItemEditModal
+          item={editItem}
+          onClose={() => setEditItem(null)}
+          onUpdated={fetchData}
+          assignees={assignees}
+          userRole={userRole}
+          currentUserId={userId}
+        />
       )}
     </div>
   );

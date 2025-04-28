@@ -8,6 +8,12 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { CalendarIcon } from 'lucide-react';
 
+type User = {
+  id: string;
+  name: string;
+  imageUrl: string;
+};
+
 interface KanbanItemProps {
   readonly item: {
     readonly id: string;
@@ -15,7 +21,9 @@ interface KanbanItemProps {
     readonly description?: string;
     readonly dueDate?: string;
     readonly status?: 'pending' | 'in-progress' | 'completed' | 'delayed';
+    readonly assigneeId?: string | null;
   };
+  readonly users: readonly User[];
   readonly onClick?: () => void;
   readonly isOverlay?: boolean;
 }
@@ -34,7 +42,7 @@ const statusLabels: Record<string, string> = {
   delayed: 'Retrasada',
 };
 
-export default function KanbanItem({ item, onClick, isOverlay = false }: KanbanItemProps) {
+export default function KanbanItem({ item, users, onClick, isOverlay = false }: KanbanItemProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: item.id,
     data: { type: 'item', item },
@@ -45,8 +53,10 @@ export default function KanbanItem({ item, onClick, isOverlay = false }: KanbanI
     ? format(new Date(item.dueDate), 'd MMM yyyy', { locale: es })
     : null;
 
-  const cls = statusClasses[item.status || 'pending'] ?? statusClasses.pending;
-  const label = statusLabels[item.status || 'pending'] ?? statusLabels.pending;
+  const cls = statusClasses[item.status ?? 'pending'] ?? statusClasses.pending;
+  const label = statusLabels[item.status ?? 'pending'] ?? statusLabels.pending;
+
+  const assignee = item.assigneeId ? users.find((u) => u.id === item.assigneeId) : null;
 
   return (
     <Card
@@ -66,6 +76,12 @@ export default function KanbanItem({ item, onClick, isOverlay = false }: KanbanI
           <CardTitle className="text-base font-medium">{item.title}</CardTitle>
           <span className={cn('rounded-full px-2 py-0.5 text-xs font-semibold', cls)}>{label}</span>
         </div>
+        {assignee && (
+          <div className="mb-1 flex items-center space-x-2 text-xs">
+            <img src={assignee.imageUrl} alt={assignee.name} className="h-5 w-5 rounded-full" />
+            <span>{assignee.name}</span>
+          </div>
+        )}
         {item.description && (
           <CardDescription className="line-clamp-2 text-sm">{item.description}</CardDescription>
         )}

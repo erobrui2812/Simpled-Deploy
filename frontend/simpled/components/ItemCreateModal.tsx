@@ -4,15 +4,27 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useState } from 'react';
 import { toast } from 'react-toastify';
 
-const API = 'http://localhost:5193';
+type User = {
+  id: string;
+  name: string;
+  imageUrl: string;
+};
 
 type Props = {
   readonly columnId: string;
   readonly onCreated: () => void;
   readonly onClose: () => void;
+  readonly assignees: User[];
+  readonly userRole?: string;
 };
 
-export default function ItemCreateModal({ columnId, onClose, onCreated }: Props) {
+export default function ItemCreateModal({
+  columnId,
+  onClose,
+  onCreated,
+  assignees,
+  userRole,
+}: Props) {
   const { auth } = useAuth();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -20,7 +32,10 @@ export default function ItemCreateModal({ columnId, onClose, onCreated }: Props)
   const [status, setStatus] = useState<'pending' | 'in-progress' | 'completed' | 'delayed'>(
     'pending',
   );
+  const [assigneeId, setAssigneeId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const canAssign = userRole === 'admin';
 
   const handleCreate = async () => {
     if (!title.trim()) {
@@ -29,7 +44,7 @@ export default function ItemCreateModal({ columnId, onClose, onCreated }: Props)
     }
     setLoading(true);
     try {
-      const response = await fetch(`${API}/api/Items`, {
+      const response = await fetch(`http://localhost:5193/api/Items`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -41,6 +56,7 @@ export default function ItemCreateModal({ columnId, onClose, onCreated }: Props)
           dueDate: dueDate ? new Date(dueDate).toISOString() : null,
           columnId,
           status,
+          assigneeId: canAssign ? assigneeId : null,
         }),
       });
       if (!response.ok) throw new Error();
@@ -58,6 +74,7 @@ export default function ItemCreateModal({ columnId, onClose, onCreated }: Props)
     <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black">
       <div className="w-full max-w-sm rounded bg-white p-6 shadow dark:bg-neutral-900">
         <h2 className="mb-4 text-xl font-semibold">Nueva tarea</h2>
+
         <input
           type="text"
           placeholder="Título"
@@ -65,6 +82,7 @@ export default function ItemCreateModal({ columnId, onClose, onCreated }: Props)
           onChange={(e) => setTitle(e.target.value)}
           className="mb-3 w-full rounded border px-3 py-2"
         />
+
         <textarea
           placeholder="Descripción (opcional)"
           value={description}
@@ -72,6 +90,7 @@ export default function ItemCreateModal({ columnId, onClose, onCreated }: Props)
           className="mb-3 w-full rounded border px-3 py-2"
           rows={3}
         />
+
         <label htmlFor="dueDate" className="mb-1 block text-sm font-medium">
           Fecha de vencimiento
         </label>
@@ -81,8 +100,8 @@ export default function ItemCreateModal({ columnId, onClose, onCreated }: Props)
           value={dueDate}
           onChange={(e) => setDueDate(e.target.value)}
           className="mb-4 w-full rounded border px-3 py-2"
-          title="Selecciona una fecha de vencimiento"
         />
+
         <label htmlFor="status" className="mb-1 block text-sm font-medium">
           Estado
         </label>
@@ -97,6 +116,25 @@ export default function ItemCreateModal({ columnId, onClose, onCreated }: Props)
           <option value="completed">Completada</option>
           <option value="delayed">Retrasada</option>
         </select>
+
+        <label htmlFor="assignee" className="mb-1 block text-sm font-medium">
+          Asignar a
+        </label>
+        <select
+          id="assignee"
+          className="mb-4 w-full rounded border px-3 py-2"
+          value={assigneeId ?? ''}
+          onChange={(e) => setAssigneeId(e.target.value || null)}
+          disabled={!canAssign}
+        >
+          <option value="">— Ninguno —</option>
+          {assignees.map((u) => (
+            <option key={u.id} value={u.id}>
+              {u.name}
+            </option>
+          ))}
+        </select>
+
         <div className="flex justify-end gap-2">
           <button onClick={onClose} className="rounded bg-gray-300 px-4 py-2 dark:bg-gray-700">
             Cancelar

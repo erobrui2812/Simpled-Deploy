@@ -1,5 +1,4 @@
-﻿
-using System;
+﻿using System;
 
 namespace Simpled.Dtos.Items
 {
@@ -10,7 +9,7 @@ namespace Simpled.Dtos.Items
         public string? Description { get; set; }
         public DateTime? DueDate { get; set; }
         public Guid? ColumnId { get; set; }
-
         public string Status { get; set; } = default!;
+        public Guid? AssigneeId { get; set; }
     }
 }

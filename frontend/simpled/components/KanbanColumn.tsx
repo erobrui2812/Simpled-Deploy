@@ -62,7 +62,12 @@ export default function KanbanColumn({
         >
           <div className="flex flex-col gap-2">
             {items.map((item) => (
-              <KanbanItem key={item.id} item={item} onClick={() => canEdit && onEditItem(item)} />
+              <KanbanItem
+                key={item.id}
+                item={item}
+                users={item.users}
+                onClick={() => canEdit && onEditItem(item)}
+              />
             ))}
           </div>
         </SortableContext>

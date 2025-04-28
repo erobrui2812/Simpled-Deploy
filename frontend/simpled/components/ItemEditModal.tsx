@@ -2,6 +2,12 @@
 import { useState } from 'react';
 import { toast } from 'react-toastify';
 
+type User = {
+  id: string;
+  name: string;
+  imageUrl: string;
+};
+
 type Props = Readonly<{
   item: {
     id: string;
@@ -10,17 +16,32 @@ type Props = Readonly<{
     dueDate?: string;
     columnId: string;
     status: 'pending' | 'in-progress' | 'completed' | 'delayed';
+    assigneeId?: string | null;
   };
   onClose: () => void;
   onUpdated: () => void;
+  assignees: User[];
+  userRole?: string;
+  currentUserId?: string | null;
 }>;
 
-export default function ItemEditModal({ item, onClose, onUpdated }: Props) {
+export default function ItemEditModal({
+  item,
+  onClose,
+  onUpdated,
+  assignees,
+  userRole,
+  currentUserId,
+}: Props) {
   const [title, setTitle] = useState(item.title);
   const [description, setDescription] = useState(item.description ?? '');
   const [dueDate, setDueDate] = useState(item.dueDate?.slice(0, 10) ?? '');
   const [status, setStatus] = useState(item.status);
+  const [assigneeId, setAssigneeId] = useState<string | null>(item.assigneeId ?? null);
   const [loading, setLoading] = useState(false);
+
+  const isAdmin = userRole === 'admin';
+  const isEditorAssigned = userRole === 'editor' && item.assigneeId === currentUserId;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,6 +62,7 @@ export default function ItemEditModal({ item, onClose, onUpdated }: Props) {
           dueDate: dueDate ? new Date(dueDate).toISOString() : null,
           columnId: item.columnId,
           status,
+          assigneeId: isAdmin ? assigneeId : item.assigneeId,
         }),
       });
       if (!response.ok) throw new Error();
@@ -59,10 +81,7 @@ export default function ItemEditModal({ item, onClose, onUpdated }: Props) {
       <div className="w-full max-w-md rounded bg-white p-6 shadow-lg dark:bg-neutral-900">
         <h2 className="mb-4 text-lg font-semibold">Editar tarea</h2>
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-          <label
-            htmlFor="title"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-          >
+          <label htmlFor="title" className="block text-sm font-medium">
             Título
           </label>
           <input
@@ -72,22 +91,33 @@ export default function ItemEditModal({ item, onClose, onUpdated }: Props) {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             required
+            disabled={isEditorAssigned}
           />
+
+          <label htmlFor="description" className="block text-sm font-medium">
+            Descripción
+          </label>
           <textarea
+            id="description"
             className="rounded border px-3 py-2"
             rows={3}
-            placeholder="Descripción (opcional)"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
+            disabled={isEditorAssigned}
           />
+
+          <label htmlFor="dueDate" className="block text-sm font-medium">
+            Fecha de vencimiento
+          </label>
           <input
+            id="dueDate"
             type="date"
             className="rounded border px-3 py-2"
             value={dueDate}
             onChange={(e) => setDueDate(e.target.value)}
-            title="Fecha de vencimiento"
-            placeholder="Selecciona una fecha"
+            disabled={isEditorAssigned}
           />
+
           <label htmlFor="status" className="block text-sm font-medium">
             Estado
           </label>
@@ -102,6 +132,25 @@ export default function ItemEditModal({ item, onClose, onUpdated }: Props) {
             <option value="completed">Completada</option>
             <option value="delayed">Retrasada</option>
           </select>
+
+          <label htmlFor="assignee" className="block text-sm font-medium">
+            Asignar a
+          </label>
+          <select
+            id="assignee"
+            className="rounded border px-3 py-2"
+            value={assigneeId ?? ''}
+            onChange={(e) => setAssigneeId(e.target.value || null)}
+            disabled={!isAdmin}
+          >
+            <option value="">— Ninguno —</option>
+            {assignees.map((u) => (
+              <option key={u.id} value={u.id}>
+                {u.name}
+              </option>
+            ))}
+          </select>
+
           <div className="mt-4 flex justify-end gap-2">
             <button
               type="button"

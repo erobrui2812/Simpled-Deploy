@@ -1,11 +1,14 @@
 ﻿
+using System;
+using System.Security.Claims;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 using Simpled.Dtos.Items;
 using Simpled.Exception;
 using Simpled.Helpers;
 using Simpled.Repository;
-
 
 namespace Simpled.Controllers
 {
@@ -15,26 +18,23 @@ namespace Simpled.Controllers
     public class ItemsController : ControllerBase
     {
         private readonly IItemRepository _itemService;
-        private readonly IBoardMemberRepository _boardMemberRepo;
+        private readonly IBoardMemberRepository _memberRepo;
 
-        public ItemsController(IItemRepository itemService, IBoardMemberRepository boardMemberRepo)
+        public ItemsController(IItemRepository itemService, IBoardMemberRepository memberRepo)
         {
             _itemService = itemService;
-            _boardMemberRepo = boardMemberRepo;
+            _memberRepo = memberRepo;
         }
 
         /// <summary>
-        /// Lista todos los ítems
+        /// Lista todos los ítems.
         /// </summary>
         [HttpGet]
         public async Task<IActionResult> GetAllItems()
-        {
-            var result = await _itemService.GetAllAsync();
-            return Ok(result);
-        }
+            => Ok(await _itemService.GetAllAsync());
 
         /// <summary>
-        /// Obtiene un ítem específico.
+        /// Obtiene un ítem específico por su ID.
         /// </summary>
         [HttpGet("{id}")]
         public async Task<IActionResult> GetItem(Guid id)
@@ -46,29 +46,35 @@ namespace Simpled.Controllers
             }
             catch (NotFoundException)
             {
-                return NotFound("Item no encontrado.");
+                return NotFound("Ítem no encontrado.");
             }
         }
 
         /// <summary>
         /// Crea un nuevo ítem dentro de una columna.
+        /// Solo admin/editor pueden crear; solo admin puede asignar responsables.
         /// </summary>
         [HttpPost]
         public async Task<IActionResult> CreateItem([FromBody] ItemCreateDto dto)
         {
             var boardId = await _itemService.GetBoardIdByColumnId(dto.ColumnId);
+
             if (!await BoardAuthorizationHelper.HasBoardPermissionAsync(
-                    User, boardId, new[] { "admin", "editor" }, _boardMemberRepo))
-            {
-                return Forbid("No tienes permisos suficientes para crear un item en este board.");
-            }
+                    User, boardId, new[] { "admin", "editor" }, _memberRepo))
+                return Forbid("No tienes permisos para crear ítems en este tablero.");
+
+            if (dto.AssigneeId.HasValue
+                && !await BoardAuthorizationHelper.HasBoardPermissionAsync(
+                        User, boardId, new[] { "admin" }, _memberRepo))
+                return Forbid("Solo el admin puede asignar responsables.");
 
             var created = await _itemService.CreateAsync(dto);
             return CreatedAtAction(nameof(GetItem), new { id = created.Id }, created);
         }
 
         /// <summary>
-        /// Actualiza los datos de un ítem.
+        /// Actualiza un ítem existente.
+        /// Admin puede editar todo; editor asignado solo estado.
         /// </summary>
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateItem(Guid id, [FromBody] ItemUpdateDto dto)
@@ -77,35 +83,39 @@ namespace Simpled.Controllers
                 return BadRequest("ID mismatch.");
 
             var boardId = await _itemService.GetBoardIdByColumnId(dto.ColumnId);
-            if (!await BoardAuthorizationHelper.HasBoardPermissionAsync(
-                    User, boardId, new[] { "admin", "editor" }, _boardMemberRepo))
-            {
-                return Forbid("No tienes permisos suficientes para editar este item.");
-            }
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var member = await _memberRepo.GetByIdsAsync(boardId, userId);
 
-            try
+            if (member == null)
+                return Forbid("No eres miembro de este tablero.");
+
+            if (member.Role == "admin")
             {
                 await _itemService.UpdateAsync(dto);
                 return NoContent();
             }
-            catch (NotFoundException)
+            else if (member.Role == "editor" && dto.AssigneeId == userId)
             {
-                return NotFound("Item no encontrado.");
+                await _itemService.UpdateStatusAsync(id, dto.Status);
+                return NoContent();
+            }
+            else
+            {
+                return Forbid("No tienes permisos para modificar este ítem.");
             }
         }
 
         /// <summary>
-        /// Elimina un ítem existente (requiere rol admin).
+        /// Elimina un ítem existente (solo rol admin).
         /// </summary>
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteItem(Guid id)
         {
             var boardId = await _itemService.GetBoardIdByItemId(id);
+
             if (!await BoardAuthorizationHelper.HasBoardPermissionAsync(
-                    User, boardId, new[] { "admin" }, _boardMemberRepo))
-            {
-                return Forbid("No tienes permisos suficientes para eliminar este item.");
-            }
+                    User, boardId, new[] { "admin" }, _memberRepo))
+                return Forbid("No tienes permisos para eliminar este ítem.");
 
             try
             {
@@ -114,22 +124,21 @@ namespace Simpled.Controllers
             }
             catch (NotFoundException)
             {
-                return NotFound("Item no encontrado.");
+                return NotFound("Ítem no encontrado.");
             }
         }
 
         /// <summary>
-        /// Sube un archivo (imagen) a un ítem determinado.
+        /// Sube un archivo (imagen) a un ítem.
         /// </summary>
         [HttpPost("{id}/upload")]
         public async Task<IActionResult> UploadFile(Guid id, IFormFile file)
         {
             var boardId = await _itemService.GetBoardIdByItemId(id);
+
             if (!await BoardAuthorizationHelper.HasBoardPermissionAsync(
-                    User, boardId, new[] { "admin", "editor" }, _boardMemberRepo))
-            {
-                return Forbid("No tienes permisos suficientes para subir archivos en este item.");
-            }
+                    User, boardId, new[] { "admin", "editor" }, _memberRepo))
+                return Forbid("No tienes permisos para subir archivos en este ítem.");
 
             var content = await _itemService.UploadFileAsync(id, file);
             return content == null
