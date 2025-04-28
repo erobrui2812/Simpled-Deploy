@@ -18,6 +18,10 @@ namespace Simpled.Models
 
         public DateTime? DueDate { get; set; }
 
+        [Required]
+        [RegularExpression("pending|in-progress|completed|delayed")]
+        public string Status { get; set; } = "pending";
+
         public BoardColumn? Column { get; set; }
         public List<Content> Contents { get; set; } = new();
     }

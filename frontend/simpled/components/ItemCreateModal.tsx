@@ -13,20 +13,21 @@ type Props = {
 };
 
 export default function ItemCreateModal({ columnId, onClose, onCreated }: Props) {
+  const { auth } = useAuth();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [dueDate, setDueDate] = useState<string>('');
+  const [status, setStatus] = useState<'pending' | 'in-progress' | 'completed' | 'delayed'>(
+    'pending',
+  );
   const [loading, setLoading] = useState(false);
-  const { auth } = useAuth();
 
   const handleCreate = async () => {
     if (!title.trim()) {
       toast.warning('El título es obligatorio.');
       return;
     }
-
     setLoading(true);
-
     try {
       const response = await fetch(`${API}/api/Items`, {
         method: 'POST',
@@ -36,19 +37,17 @@ export default function ItemCreateModal({ columnId, onClose, onCreated }: Props)
         },
         body: JSON.stringify({
           title: title.trim(),
-          description: description?.trim() || null,
+          description: description.trim() || null,
           dueDate: dueDate ? new Date(dueDate).toISOString() : null,
-          columnId: columnId,
+          columnId,
+          status,
         }),
       });
-
-      if (!response.ok) throw new Error('No se pudo crear la tarea.');
-
+      if (!response.ok) throw new Error();
       toast.success('Tarea creada correctamente.');
       onCreated();
       onClose();
-    } catch (err) {
-      console.error(err);
+    } catch {
       toast.error('Error al crear tarea.');
     } finally {
       setLoading(false);
@@ -59,7 +58,6 @@ export default function ItemCreateModal({ columnId, onClose, onCreated }: Props)
     <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black">
       <div className="w-full max-w-sm rounded bg-white p-6 shadow dark:bg-neutral-900">
         <h2 className="mb-4 text-xl font-semibold">Nueva tarea</h2>
-
         <input
           type="text"
           placeholder="Título"
@@ -67,7 +65,6 @@ export default function ItemCreateModal({ columnId, onClose, onCreated }: Props)
           onChange={(e) => setTitle(e.target.value)}
           className="mb-3 w-full rounded border px-3 py-2"
         />
-
         <textarea
           placeholder="Descripción (opcional)"
           value={description}
@@ -75,7 +72,6 @@ export default function ItemCreateModal({ columnId, onClose, onCreated }: Props)
           className="mb-3 w-full rounded border px-3 py-2"
           rows={3}
         />
-
         <label htmlFor="dueDate" className="mb-1 block text-sm font-medium">
           Fecha de vencimiento
         </label>
@@ -87,7 +83,20 @@ export default function ItemCreateModal({ columnId, onClose, onCreated }: Props)
           className="mb-4 w-full rounded border px-3 py-2"
           title="Selecciona una fecha de vencimiento"
         />
-
+        <label htmlFor="status" className="mb-1 block text-sm font-medium">
+          Estado
+        </label>
+        <select
+          id="status"
+          className="mb-4 w-full rounded border px-3 py-2"
+          value={status}
+          onChange={(e) => setStatus(e.target.value as any)}
+        >
+          <option value="pending">Pendiente</option>
+          <option value="in-progress">En progreso</option>
+          <option value="completed">Completada</option>
+          <option value="delayed">Retrasada</option>
+        </select>
         <div className="flex justify-end gap-2">
           <button onClick={onClose} className="rounded bg-gray-300 px-4 py-2 dark:bg-gray-700">
             Cancelar

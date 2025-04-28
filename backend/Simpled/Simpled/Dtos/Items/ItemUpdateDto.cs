@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿
+using System.ComponentModel.DataAnnotations;
 
 namespace Simpled.Dtos.Items
 {
@@ -18,5 +19,10 @@ namespace Simpled.Dtos.Items
 
         [Required]
         public Guid ColumnId { get; set; }
+
+        [Required]
+        [RegularExpression("pending|in-progress|completed|delayed",
+            ErrorMessage = "El estado debe ser pending, in-progress, completed o delayed.")]
+        public string Status { get; set; } = "pending";
     }
 }

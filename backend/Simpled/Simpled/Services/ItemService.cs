@@ -1,10 +1,11 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿
 using Microsoft.EntityFrameworkCore;
 using Simpled.Data;
 using Simpled.Dtos.Items;
+using Simpled.Exception;
 using Simpled.Models;
 using Simpled.Repository;
-using Simpled.Exception;
+
 
 namespace Simpled.Services
 {
@@ -20,21 +21,21 @@ namespace Simpled.Services
         public async Task<IEnumerable<ItemReadDto>> GetAllAsync()
         {
             return await _context.Items
-                .Include(i => i.Contents)
                 .Select(i => new ItemReadDto
                 {
                     Id = i.Id,
                     Title = i.Title,
                     Description = i.Description,
                     DueDate = i.DueDate,
-                    ColumnId = i.ColumnId
+                    ColumnId = i.ColumnId,
+                    Status = i.Status
                 })
                 .ToListAsync();
         }
 
         public async Task<ItemReadDto?> GetByIdAsync(Guid id)
         {
-            var item = await _context.Items.Include(i => i.Contents).FirstOrDefaultAsync(i => i.Id == id);
+            var item = await _context.Items.FindAsync(id);
             if (item == null)
                 throw new NotFoundException("Ítem no encontrado.");
 
@@ -44,7 +45,8 @@ namespace Simpled.Services
                 Title = item.Title,
                 Description = item.Description,
                 DueDate = item.DueDate,
-                ColumnId = item.ColumnId
+                ColumnId = item.ColumnId,
+                Status = item.Status
             };
         }
 
@@ -56,7 +58,8 @@ namespace Simpled.Services
                 Title = dto.Title,
                 Description = dto.Description,
                 DueDate = dto.DueDate,
-                ColumnId = dto.ColumnId
+                ColumnId = dto.ColumnId,
+                Status = dto.Status
             };
 
             _context.Items.Add(newItem);
@@ -68,7 +71,8 @@ namespace Simpled.Services
                 Title = newItem.Title,
                 Description = newItem.Description,
                 DueDate = newItem.DueDate,
-                ColumnId = newItem.ColumnId
+                ColumnId = newItem.ColumnId,
+                Status = newItem.Status
             };
         }
 
@@ -82,6 +86,7 @@ namespace Simpled.Services
             existing.Description = dto.Description;
             existing.DueDate = dto.DueDate;
             existing.ColumnId = dto.ColumnId;
+            existing.Status = dto.Status;
 
             await _context.SaveChangesAsync();
             return true;
@@ -113,10 +118,8 @@ namespace Simpled.Services
             var fileName = Guid.NewGuid() + Path.GetExtension(file.FileName);
             var filePath = Path.Combine(uploadsPath, fileName);
 
-            using (var stream = new FileStream(filePath, FileMode.Create))
-            {
-                await file.CopyToAsync(stream);
-            }
+            await using var stream = new FileStream(filePath, FileMode.Create);
+            await file.CopyToAsync(stream);
 
             var content = new Content
             {
@@ -131,7 +134,6 @@ namespace Simpled.Services
 
             return content;
         }
-
 
         public async Task<Guid> GetBoardIdByColumnId(Guid columnId)
         {
@@ -154,6 +156,5 @@ namespace Simpled.Services
 
             return column.BoardId;
         }
-
     }
 }

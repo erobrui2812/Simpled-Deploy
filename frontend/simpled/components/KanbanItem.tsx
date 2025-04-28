@@ -14,28 +14,39 @@ interface KanbanItemProps {
     readonly title: string;
     readonly description?: string;
     readonly dueDate?: string;
+    readonly status?: 'pending' | 'in-progress' | 'completed' | 'delayed';
   };
   readonly onClick?: () => void;
   readonly isOverlay?: boolean;
 }
 
+const statusClasses: Record<string, string> = {
+  pending: 'bg-amber-200 text-amber-800',
+  'in-progress': 'bg-blue-200  text-blue-800',
+  completed: 'bg-emerald-200 text-emerald-800',
+  delayed: 'bg-rose-200   text-rose-800',
+};
+
+const statusLabels: Record<string, string> = {
+  pending: 'Pendiente',
+  'in-progress': 'En progreso',
+  completed: 'Completada',
+  delayed: 'Retrasada',
+};
+
 export default function KanbanItem({ item, onClick, isOverlay = false }: KanbanItemProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: item.id,
-    data: {
-      type: 'item',
-      item,
-    },
+    data: { type: 'item', item },
   });
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  };
-
+  const style = { transform: CSS.Transform.toString(transform), transition };
   const formattedDate = item.dueDate
     ? format(new Date(item.dueDate), 'd MMM yyyy', { locale: es })
     : null;
+
+  const cls = statusClasses[item.status || 'pending'] ?? statusClasses.pending;
+  const label = statusLabels[item.status || 'pending'] ?? statusLabels.pending;
 
   return (
     <Card
@@ -50,15 +61,14 @@ export default function KanbanItem({ item, onClick, isOverlay = false }: KanbanI
         isOverlay && 'rotate-3 shadow-lg',
       )}
     >
-      <CardContent className="p-3">
-        <CardTitle className="mb-1 text-base font-medium">{item.title}</CardTitle>
-
+      <CardContent className="space-y-2 p-3">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-base font-medium">{item.title}</CardTitle>
+          <span className={cn('rounded-full px-2 py-0.5 text-xs font-semibold', cls)}>{label}</span>
+        </div>
         {item.description && (
-          <CardDescription className="mb-2 line-clamp-2 text-sm">
-            {item.description}
-          </CardDescription>
+          <CardDescription className="line-clamp-2 text-sm">{item.description}</CardDescription>
         )}
-
         {formattedDate && (
           <div className="text-muted-foreground flex items-center text-xs">
             <CalendarIcon className="mr-1 h-3 w-3" />

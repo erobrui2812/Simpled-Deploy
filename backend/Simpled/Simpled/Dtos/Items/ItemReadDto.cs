@@ -1,4 +1,7 @@
-﻿namespace Simpled.Dtos.Items
+﻿
+using System;
+
+namespace Simpled.Dtos.Items
 {
     public class ItemReadDto
     {
@@ -7,5 +10,7 @@
         public string? Description { get; set; }
         public DateTime? DueDate { get; set; }
         public Guid? ColumnId { get; set; }
+
+        public string Status { get; set; } = default!;
     }
 }
