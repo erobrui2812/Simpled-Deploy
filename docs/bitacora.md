@@ -59,6 +59,11 @@ Registro de tareas realizadas durante el desarrollo del proyecto **Simpled**.
 | 2025-04-26  | Elías Robles     | Modificar perfil en backend |
 | 2025-04-27  | Elías Robles     | Actualizar con las recomendaciones de la reunion del viernes, arreglos menores y nueva seccion del Navbar |
 | 2025-04-27  | Adrián Jiménez   | Implementación de autenticación con GitHub y Google; mejoras en la vista de Gantt |
+| 2025-04-28  | Adrián Jiménez   | Corrección de problemas detectados por SonarLint en frontend (uso de keys, accesibilidad, props readonly) |
+| 2025-04-28  | Adrián Jiménez   | Refactorización y optimización de Gantt Chart (uso de `useMemo`, teclas accesibles, mejores keys) |
+| 2025-04-28  | Adrián Jiménez   | Corrección de Contexts (`AuthContext`, `BoardsContext`) asegurando performance con `useMemo` |
+| 2025-04-28  | Adrián Jiménez   | Refactorización de `Navbar` separando NavItems y solucionando problemas de tipos (`string | null`) |
+| 2025-04-28  | Adrián Jiménez   | Mejoras visuales y de accesibilidad en componentes (role="button", tabindex, keydown handlers) |
 
 
 
