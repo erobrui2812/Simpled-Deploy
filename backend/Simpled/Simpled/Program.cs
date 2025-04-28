@@ -2,11 +2,9 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.OAuth.Claims;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.Security.Claims;
-using AspNet.Security.OAuth.GitHub;
 using Simpled.Hubs;
 using FluentValidation;
 using FluentValidation.AspNetCore;
@@ -136,7 +134,7 @@ builder.Services.AddSwaggerGen(options =>
         Scheme = "bearer",
         BearerFormat = "JWT",
         In = ParameterLocation.Header,
-        Description = "Introduce 'Bearer <TOKEN>'"
+        Description = "Introduce '<TOKEN>'"
     });
     options.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
@@ -175,7 +173,7 @@ builder.Services.AddSingleton<IUserIdProvider, EmailBasedUserIdHelper>();
 var app = builder.Build();
 
 // --------------------------------------------------
-//  Crear DB si no existe
+//  Crear DB
 // --------------------------------------------------
 using (var scope = app.Services.CreateScope())
 {

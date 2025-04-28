@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using Simpled.Dtos.Teams;
+﻿using Simpled.Dtos.Teams;
 
 namespace Simpled.Dtos.Users
 {

@@ -1,8 +1,4 @@
-﻿// IColumnRepository.cs
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Simpled.Dtos.Columns;
+﻿using Simpled.Dtos.Columns;
 
 namespace Simpled.Repository
 {

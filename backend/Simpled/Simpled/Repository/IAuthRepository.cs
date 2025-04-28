@@ -1,5 +1,4 @@
 ﻿using Simpled.Dtos.Auth;
-using System.Threading.Tasks;
 
 namespace Simpled.Repository
 {

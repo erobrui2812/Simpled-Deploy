@@ -7,9 +7,6 @@ namespace Simpled.Dtos.Boards
         [Required]
         [MaxLength(100)]
         public string Name { get; set; } = default!;
-
-    
-
         public bool IsPublic { get; set; }
     }
 }

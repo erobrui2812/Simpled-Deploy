@@ -10,7 +10,6 @@ namespace Simpled.Dtos.Columns
         [Required]
         [MaxLength(100)]
         public string Title { get; set; } = default!;
-
         public int Order { get; set; }
     }
 }

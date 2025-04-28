@@ -1,10 +1,8 @@
 ﻿
-using System;
+
 using System.Security.Claims;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Http;
 using Simpled.Dtos.Items;
 using Simpled.Exception;
 using Simpled.Helpers;

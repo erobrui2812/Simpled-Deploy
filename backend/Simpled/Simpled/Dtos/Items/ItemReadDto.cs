@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Simpled.Dtos.Items
+﻿namespace Simpled.Dtos.Items
 {
     public class ItemReadDto
     {

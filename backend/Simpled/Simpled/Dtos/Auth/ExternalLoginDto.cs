@@ -1,5 +1,4 @@
-﻿
-namespace Simpled.Dtos.Auth
+﻿namespace Simpled.Dtos.Auth
 {
     public class ExternalLoginDto
     {
