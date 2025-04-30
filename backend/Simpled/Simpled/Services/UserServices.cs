@@ -26,7 +26,7 @@ namespace Simpled.Services
                 Name = u.Name,
                 Email = u.Email,
                 ImageUrl = u.ImageUrl,
-                achievementsCompleted = u.Achievements.Count,
+                AchievementsCompleted = u.Achievements.Count,
                 CreatedAt = u.CreatedAt,
                 Roles = u.Roles.Select(r => r.Role).ToList()
             });
@@ -42,21 +42,37 @@ namespace Simpled.Services
             if (user == null)
                 throw new NotFoundException("Usuario no encontrado.");
 
-            Console.WriteLine(user.Achievements);
+
+            var teams = await _context.TeamMembers
+                .Include(tm => tm.Team).ThenInclude(t => t.Owner)
+                .Where(tm => tm.UserId == id)
+                .Select(tm => tm.Team)
+                .ToListAsync();
+
+            var teamDtos = teams.Select(t => new TeamReadDto
+            {
+                Id = t.Id,
+                Name = t.Name,
+                OwnerId = t.OwnerId,
+                OwnerName = t.Owner!.Name,
+                Members = t.Members.Select(m => new TeamMemberDto
+                {
+                    UserId = m.UserId,
+                    UserName = m.User!.Name,
+                    Role = m.Role
+                })
+            });
+
             return new UserReadDto
             {
                 Id = user.Id,
                 Name = user.Name,
                 Email = user.Email,
                 ImageUrl = user.ImageUrl,
-                achievementsCompleted = user.Achievements.Count,
-                Teams = new List<TeamDto>
-    {
-                    new TeamDto { Key = "1" ,Name = "Equipo Alpha", Role = "Admin" },
-                    new TeamDto { Key = "2" ,Name = "Equipo Beta", Role = "Miembro" }
-                },
+                AchievementsCompleted = user.Achievements.Count,
                 CreatedAt = user.CreatedAt,
-                Roles = user.Roles.Select(r => r.Role).ToList()
+                Roles = user.Roles.Select(r => r.Role).ToList(),
+                Teams = teamDtos.ToList()
             };
         }
 

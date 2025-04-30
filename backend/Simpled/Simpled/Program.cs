@@ -169,6 +169,9 @@ builder.Services.AddScoped<IBoardMemberRepository, BoardMemberService>();
 builder.Services.AddScoped<IBoardInvitationRepository, BoardInvitationService>();
 builder.Services.AddScoped<AchievementsService>();
 builder.Services.AddSingleton<IUserIdProvider, EmailBasedUserIdHelper>();
+builder.Services.AddScoped<ITeamRepository, TeamService>();
+builder.Services.AddScoped<ITeamMemberRepository, TeamService>();
+
 
 var app = builder.Build();
 
