@@ -8,6 +8,8 @@ import Navbar from '@/components/Navbar';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { BoardsProvider } from '@/contexts/BoardsContext';
 import { SignalRProvider } from '@/contexts/SignalRContext';
+import { TeamsProvider } from '@/contexts/TeamsContext';
+
 import { Slide, ToastContainer } from 'react-toastify';
 
 const figtree = Figtree({
@@ -30,28 +32,30 @@ export default function RootLayout({
   return (
     <AuthProvider>
       <BoardsProvider>
-        <SignalRProvider>
-          <html lang="es">
-            <body className={`${figtree.variable} antialiased`}>
-              <ToastContainer
-                position="top-right"
-                autoClose={5000}
-                hideProgressBar={false}
-                newestOnTop={false}
-                closeOnClick={false}
-                rtl={false}
-                pauseOnFocusLoss
-                draggable={false}
-                pauseOnHover
-                theme="dark"
-                transition={Slide}
-              />
-              <Navbar />
-              {children}
-              <Footer />
-            </body>
-          </html>
-        </SignalRProvider>
+        <TeamsProvider>
+          <SignalRProvider>
+            <html lang="es">
+              <body className={`${figtree.variable} antialiased`}>
+                <ToastContainer
+                  position="top-right"
+                  autoClose={5000}
+                  hideProgressBar={false}
+                  newestOnTop={false}
+                  closeOnClick={false}
+                  rtl={false}
+                  pauseOnFocusLoss
+                  draggable={false}
+                  pauseOnHover
+                  theme="dark"
+                  transition={Slide}
+                />
+                <Navbar />
+                {children}
+                <Footer />
+              </body>
+            </html>
+          </SignalRProvider>
+        </TeamsProvider>
       </BoardsProvider>
     </AuthProvider>
   );

@@ -5,46 +5,16 @@ import TeamDetailModal from '@/components/TeamDetailModal';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTeams } from '@/contexts/TeamsContext';
 import { Users } from 'lucide-react';
 import { notFound } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { toast } from 'react-toastify';
-
-interface Team {
-  id: string;
-  name: string;
-  ownerId: string;
-  ownerName: string;
-  members: { userId: string; userName: string; role: string }[];
-}
+import { useState } from 'react';
 
 export default function TeamsPage() {
   const { auth } = useAuth();
-  const [teams, setTeams] = useState<Team[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { teams, loading, fetchTeams } = useTeams();
   const [showCreate, setShowCreate] = useState(false);
-  const [activeTeam, setActiveTeam] = useState<Team | null>(null);
-
-  const API = 'http://localhost:5193';
-
-  const fetchTeams = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch(`${API}/api/Teams`, {
-        headers: { Authorization: `Bearer ${auth.token}` },
-      });
-      if (!res.ok) throw new Error();
-      setTeams(await res.json());
-    } catch {
-      toast.error('No se pudieron cargar los equipos.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchTeams();
-  }, [auth.token]);
+  const [activeTeam, setActiveTeam] = useState<(typeof teams)[0] | null>(null);
 
   if (!auth.id) notFound();
 

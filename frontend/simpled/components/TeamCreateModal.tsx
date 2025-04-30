@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useAuth } from '@/contexts/AuthContext';
+import { useTeams } from '@/contexts/TeamsContext';
 import { useState } from 'react';
 import { toast } from 'react-toastify';
 
@@ -13,31 +13,21 @@ type Props = {
 };
 
 export default function TeamCreateModal({ onClose, onCreated }: Props) {
-  const { auth } = useAuth();
+  const { createTeam } = useTeams();
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
-  const API = 'http://localhost:5193';
 
   const handleCreate = async () => {
     if (!name.trim()) {
       toast.warning('El nombre no puede estar vacío.');
       return;
     }
+
     setLoading(true);
     try {
-      const res = await fetch(`${API}/api/Teams`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${auth.token}`,
-        },
-        body: JSON.stringify({ name: name.trim() }),
-      });
-      if (!res.ok) throw new Error();
-      toast.success('Equipo creado.');
+      await createTeam(name.trim());
       onCreated();
     } catch {
-      toast.error('Error al crear equipo.');
     } finally {
       setLoading(false);
     }
@@ -55,6 +45,7 @@ export default function TeamCreateModal({ onClose, onCreated }: Props) {
               placeholder="Escribe el nombre del equipo"
               value={name}
               onChange={(e) => setName(e.target.value)}
+              disabled={loading}
             />
           </div>
           <div className="flex justify-end gap-2">

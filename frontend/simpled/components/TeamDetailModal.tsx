@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useAuth } from '@/contexts/AuthContext';
+import { useTeams } from '@/contexts/TeamsContext';
 import { XIcon } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'react-toastify';
@@ -23,35 +23,23 @@ interface Props {
 }
 
 export default function TeamDetailModal({ team, isOwner, onClose, onUpdated }: Props) {
-  const { auth } = useAuth();
-  const token = auth.token;
-  const API = 'http://localhost:5193';
-
+  const { inviteToTeam, removeMember } = useTeams();
   const [email, setEmail] = useState('');
   const [processing, setProcessing] = useState(false);
 
   const handleInvite = async () => {
     const trimmed = email.trim().toLowerCase();
     if (!trimmed) {
-      return toast.warning('Escribe un correo válido.');
+      toast.warning('Escribe un correo válido.');
+      return;
     }
 
     setProcessing(true);
     try {
-      const res = await fetch(`${API}/api/TeamInvitations`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ teamId: team.id, email: trimmed }),
-      });
-      if (!res.ok) throw new Error();
-      toast.success('Invitación enviada.');
+      await inviteToTeam(team.id, trimmed);
       setEmail('');
       onUpdated();
     } catch {
-      toast.error('Error al enviar invitación.');
     } finally {
       setProcessing(false);
     }
@@ -60,15 +48,9 @@ export default function TeamDetailModal({ team, isOwner, onClose, onUpdated }: P
   const handleRemove = async (userId: string) => {
     setProcessing(true);
     try {
-      const res = await fetch(`${API}/api/Teams/${team.id}/members/${userId}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error();
-      toast.success('Miembro eliminado.');
+      await removeMember(team.id, userId);
       onUpdated();
     } catch {
-      toast.error('No se pudo eliminar el miembro.');
     } finally {
       setProcessing(false);
     }
