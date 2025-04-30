@@ -64,6 +64,14 @@ Registro de tareas realizadas durante el desarrollo del proyecto **Simpled**.
 | 2025-04-28  | Adrián Jiménez   | Corrección de Contexts (`AuthContext`, `BoardsContext`) asegurando performance con `useMemo` |
 | 2025-04-28  | Adrián Jiménez   | Refactorización de `Navbar` separando NavItems y solucionando problemas de tipos (`string | null`) |
 | 2025-04-28  | Adrián Jiménez   | Mejoras visuales y de accesibilidad en componentes (role="button", tabindex, keydown handlers) |
+| 2025-04-30  | Adrián Jiménez   | Implementación de gestión de **Teams**: modelos, DTOs, repositorios y servicios en backend |
+| 2025-04-30  | Adrián Jiménez   | Endpoints de **Team** y **TeamMember** (CRUD, control de permisos) |
+| 2025-04-30  | Adrián Jiménez   | Sistema de **TeamInvitations**: Create/Get/Accept/Reject y notificaciones en tiempo real con SignalR |
+| 2025-04-30  | Adrián Jiménez   | Ajustes en `BoardHub` para eventos relacionados con invitaciones a equipos |
+| 2025-04-30  | Adrián Jiménez   | Frontend de **Teams**: vista `/equipos`, componentes `TeamsList`, `TeamsPage`, `TeamCreateModal`, `TeamDetailModal` |
+| 2025-04-30  | Adrián Jiménez   | Integración de flujos de invitación, aceptación y rechazo + contexto de Teams en React/Next.js |
+| 2025-04-30  | Adrián Jiménez   | Maquetación con ShadCN, manejo de estados, mensajes de vacío y consistencia visual en vista de equipos |
+
 
 
 
