@@ -7,9 +7,9 @@ import { toast } from 'react-toastify';
 const API = 'http://localhost:5193';
 
 type Props = {
-  boardId: string;
-  onClose: () => void;
-  onInvited: () => void;
+  readonly boardId: string;
+  readonly onClose: () => void;
+  readonly onInvited: () => void;
 };
 
 export default function BoardInviteModal({ boardId, onClose, onInvited }: Props) {

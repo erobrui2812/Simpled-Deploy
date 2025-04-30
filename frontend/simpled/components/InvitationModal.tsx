@@ -22,9 +22,9 @@ type TeamInvite = {
   createdAt: string;
 };
 
-type Props = {
+type Props = Readonly<{
   onClose: () => void;
-};
+}>;
 
 export default function InvitationsModal({ onClose }: Props) {
   const { auth } = useAuth();

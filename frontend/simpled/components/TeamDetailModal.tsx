@@ -11,15 +11,15 @@ import { toast } from 'react-toastify';
 type Member = { userId: string; userName: string; role: string };
 
 interface Props {
-  team: {
-    id: string;
-    name: string;
-    ownerId: string;
-    members: Member[];
+  readonly team: {
+    readonly id: string;
+    readonly name: string;
+    readonly ownerId: string;
+    readonly members: readonly Member[];
   };
-  isOwner: boolean;
-  onClose: () => void;
-  onUpdated: () => void;
+  readonly isOwner: boolean;
+  readonly onClose: () => void;
+  readonly onUpdated: () => void;
 }
 
 export default function TeamDetailModal({ team, isOwner, onClose, onUpdated }: Props) {
@@ -62,6 +62,8 @@ export default function TeamDetailModal({ team, isOwner, onClose, onUpdated }: P
         <button
           onClick={onClose}
           className="text-muted-foreground hover:text-foreground absolute top-4 right-4"
+          title="Cerrar"
+          aria-label="Cerrar"
         >
           <XIcon className="size-5" />
         </button>

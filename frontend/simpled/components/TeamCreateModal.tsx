@@ -7,10 +7,10 @@ import { useTeams } from '@/contexts/TeamsContext';
 import { useState } from 'react';
 import { toast } from 'react-toastify';
 
-type Props = {
+type Props = Readonly<{
   onClose: () => void;
   onCreated: () => void;
-};
+}>;
 
 export default function TeamCreateModal({ onClose, onCreated }: Props) {
   const { createTeam } = useTeams();
