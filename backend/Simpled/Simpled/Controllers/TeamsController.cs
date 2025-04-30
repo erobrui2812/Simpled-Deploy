@@ -1,8 +1,13 @@
-﻿using System.Security.Claims;
+﻿using System;
+using System.Collections.Generic;
+using System.Security.Claims;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Simpled.Dtos.Teams;
 using Simpled.Exception;
+using Simpled.Hubs;
 using Simpled.Repository;
 
 namespace Simpled.Controllers
@@ -14,11 +19,19 @@ namespace Simpled.Controllers
     {
         private readonly ITeamRepository _teamRepo;
         private readonly ITeamMemberRepository _memberRepo;
+        private readonly IUserRepository _userRepo;
+        private readonly IHubContext<BoardHub> _hub;
 
-        public TeamsController(ITeamRepository teamRepo, ITeamMemberRepository memberRepo)
+        public TeamsController(
+            ITeamRepository teamRepo,
+            ITeamMemberRepository memberRepo,
+            IUserRepository userRepo,
+            IHubContext<BoardHub> hub)
         {
             _teamRepo = teamRepo;
             _memberRepo = memberRepo;
+            _userRepo = userRepo;
+            _hub = hub;
         }
 
         private Guid CurrentUserId =>
@@ -128,7 +141,7 @@ namespace Simpled.Controllers
         }
 
         /// <summary>
-        /// Agrega un miembro a un equipo (solo owner).
+        /// Agrega un miembro a un equipo (solo owner) y notifica en tiempo real.
         /// </summary>
         [HttpPost("{teamId}/members")]
         [ProducesResponseType(200)]
@@ -142,7 +155,21 @@ namespace Simpled.Controllers
             try
             {
                 await _memberRepo.AddMemberAsync(dto, CurrentUserId);
-                return Ok("Miembro agregado.");
+
+                var team = await _teamRepo.GetByIdAsync(teamId);
+                var invited = await _userRepo.GetUserByIdAsync(dto.UserId);
+                if (team is null) return NotFound("Equipo no encontrado.");
+                if (invited is null) return NotFound("Usuario no encontrado.");
+
+                await _hub.Clients
+                    .User(invited.Email.ToLower())
+                    .SendAsync("TeamInvitationReceived", new
+                    {
+                        teamName = team.Name,
+                        role = dto.Role
+                    });
+
+                return Ok("Miembro agregado e invitación enviada.");
             }
             catch (ForbiddenException)
             {

@@ -28,17 +28,24 @@ export const SignalRProvider = ({ children }: { children: React.ReactNode }) => 
         .withAutomaticReconnect()
         .build();
 
+      // Invitaciones de tablero
       connection.on(
         'InvitationReceived',
         (data: { boardName: string; role: string; invitationToken: string }) => {
           toast.info(`📩 Has sido invitado al tablero "${data.boardName}" como ${data.role}`, {
             toastId: `invitation-${data.invitationToken}`,
-            onClick: () => {
-              window.location.href = `/invitations/${data.invitationToken}`;
-            },
+            onClick: () => void (window.location.href = `/invitations/${data.invitationToken}`),
           });
         },
       );
+
+      // Invitaciones de equipo
+      connection.on('TeamInvitationReceived', (data: { teamName: string; role: string }) => {
+        toast.info(`👥 Has sido invitado al equipo "${data.teamName}" como ${data.role}`, {
+          toastId: `team-invite-${data.teamName}-${data.role}`,
+          onClick: () => void (window.location.href = `/teams`),
+        });
+      });
 
       connection.on('BoardUpdated', (boardId: string) => {
         console.log('Tablero actualizado:', boardId);
@@ -54,16 +61,15 @@ export const SignalRProvider = ({ children }: { children: React.ReactNode }) => 
     };
 
     connect();
-
     return () => {
       connectionRef.current?.stop();
     };
   }, [auth.token]);
 
-  const contextValue = React.useMemo(
+  const value = React.useMemo(
     () => ({ connection: connectionRef.current }),
     [connectionRef.current],
   );
 
-  return <SignalRContext.Provider value={contextValue}>{children}</SignalRContext.Provider>;
+  return <SignalRContext.Provider value={value}>{children}</SignalRContext.Provider>;
 };
