@@ -69,8 +69,8 @@ Registro de tareas realizadas durante el desarrollo del proyecto **Simpled**.
 | 2025-04-30  | Adrián Jiménez   | Sistema de **TeamInvitations**: Create/Get/Accept/Reject y notificaciones en tiempo real con SignalR |
 | 2025-04-30  | Adrián Jiménez   | Ajustes en `BoardHub` para eventos relacionados con invitaciones a equipos |
 | 2025-04-30  | Adrián Jiménez   | Frontend de **Teams**: vista `/equipos`, componentes `TeamsList`, `TeamsPage`, `TeamCreateModal`, `TeamDetailModal` |
-| 2025-04-30  | Adrián Jiménez   | Integración de flujos de invitación, aceptación y rechazo + contexto de Teams en React/Next.js |
-| 2025-04-30  | Adrián Jiménez   | Maquetación con ShadCN, manejo de estados, mensajes de vacío y consistencia visual en vista de equipos |
+| 2025-04-30  | Adrián Jiménez   | Integración de flujos de invitación, aceptación y rechazo + TeamContext |
+| 2025-04-30  | Adrián Jiménez   | Maquetación con ShadCN, manejo de estados, mensajes de vacío y consistencia visual en la vista de equipos |
 
 
 
