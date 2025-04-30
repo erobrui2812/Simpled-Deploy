@@ -1,4 +1,4 @@
-﻿using Simpled.Dtos.Teams;
+﻿using Simpled.Dtos.Teams.TeamMembers;
 
 namespace Simpled.Repository
 {

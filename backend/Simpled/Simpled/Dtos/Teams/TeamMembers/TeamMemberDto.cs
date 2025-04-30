@@ -1,4 +1,4 @@
-﻿namespace Simpled.Dtos.Teams
+﻿namespace Simpled.Dtos.Teams.TeamMembers
 {
     public class TeamMemberDto
     {

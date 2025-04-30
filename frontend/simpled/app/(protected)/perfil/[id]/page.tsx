@@ -1,7 +1,7 @@
 'use client';
 
 import AchievementCounter from '@/components/AchievementCounter';
-import InvitationModal from '@/components/InvitationModal';
+import InvitationsModal from '@/components/InvitationModal';
 import ProfileHeader from '@/components/ProfileHeader';
 import TeamsList from '@/components/TeamsList';
 import { useAuth } from '@/contexts/AuthContext';
@@ -76,7 +76,7 @@ export default function ProfilePage({ params }: { readonly params: Promise<{ id:
         </div>
       </div>
 
-      {showInvites && <InvitationModal onClose={() => setShowInvites(false)} />}
+      {showInvites && <InvitationsModal onClose={() => setShowInvites(false)} />}
     </div>
   );
 }

@@ -171,6 +171,8 @@ builder.Services.AddScoped<AchievementsService>();
 builder.Services.AddSingleton<IUserIdProvider, EmailBasedUserIdHelper>();
 builder.Services.AddScoped<ITeamRepository, TeamService>();
 builder.Services.AddScoped<ITeamMemberRepository, TeamService>();
+builder.Services.AddScoped<ITeamInvitationRepository, TeamInvitationService>();
+
 
 
 var app = builder.Build();

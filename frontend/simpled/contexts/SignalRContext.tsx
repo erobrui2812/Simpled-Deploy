@@ -21,55 +21,58 @@ export const SignalRProvider = ({ children }: { children: React.ReactNode }) => 
     if (!auth.token || connectionRef.current) return;
 
     const connect = async () => {
-      const connection = new signalR.HubConnectionBuilder()
+      const conn = new signalR.HubConnectionBuilder()
         .withUrl('http://localhost:5193/hubs/board', {
           accessTokenFactory: () => auth.token!,
         })
         .withAutomaticReconnect()
         .build();
 
-      // Invitaciones de tablero
-      connection.on(
+      // Invitaciones a tableros
+      conn.on(
         'InvitationReceived',
         (data: { boardName: string; role: string; invitationToken: string }) => {
-          toast.info(`📩 Has sido invitado al tablero "${data.boardName}" como ${data.role}`, {
-            toastId: `invitation-${data.invitationToken}`,
-            onClick: () => void (window.location.href = `/invitations/${data.invitationToken}`),
+          toast.info(`📩 Invitación al tablero "${data.boardName}" como ${data.role}`, {
+            toastId: `board-invite-${data.invitationToken}`,
+            onClick: () => (window.location.href = `/invitations/${data.invitationToken}`),
           });
         },
       );
 
-      // Invitaciones de equipo
-      connection.on('TeamInvitationReceived', (data: { teamName: string; role: string }) => {
-        toast.info(`👥 Has sido invitado al equipo "${data.teamName}" como ${data.role}`, {
-          toastId: `team-invite-${data.teamName}-${data.role}`,
-          onClick: () => void (window.location.href = `/teams`),
-        });
-      });
+      // Invitaciones a equipos
+      conn.on(
+        'TeamInvitationReceived',
+        (data: { teamName: string; role: string; invitationToken: string }) => {
+          toast.info(`📩 Has sido invitado al equipo "${data.teamName}" como ${data.role}`, {
+            toastId: `team-invite-${data.invitationToken}`,
+            onClick: () => (window.location.href = `/equipos/invitacion/${data.invitationToken}`),
+          });
+        },
+      );
 
-      connection.on('BoardUpdated', (boardId: string) => {
+      conn.on('BoardUpdated', (boardId: string) => {
         console.log('Tablero actualizado:', boardId);
       });
 
       try {
-        await connection.start();
-        console.log('✅ Conectado a SignalR');
-        connectionRef.current = connection;
+        await conn.start();
+        connectionRef.current = conn;
+        console.log('✅ SignalR conectado');
       } catch (err) {
-        console.error('❌ Error al conectar a SignalR', err);
+        console.error('❌ Error al conectar SignalR', err);
       }
     };
 
     connect();
+
     return () => {
       connectionRef.current?.stop();
     };
   }, [auth.token]);
 
-  const value = React.useMemo(
-    () => ({ connection: connectionRef.current }),
-    [connectionRef.current],
+  return (
+    <SignalRContext.Provider value={{ connection: connectionRef.current }}>
+      {children}
+    </SignalRContext.Provider>
   );
-
-  return <SignalRContext.Provider value={value}>{children}</SignalRContext.Provider>;
 };

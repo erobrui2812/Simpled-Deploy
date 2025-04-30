@@ -5,6 +5,8 @@ using Simpled.Models;
 using Simpled.Repository;
 using Simpled.Exception;
 using Simpled.Dtos.Teams;
+using Simpled.Dtos.Teams.TeamMembers;
+
 
 namespace Simpled.Services
 {
@@ -42,20 +44,23 @@ namespace Simpled.Services
             if (user == null)
                 throw new NotFoundException("Usuario no encontrado.");
 
-
-            var teams = await _context.TeamMembers
-                .Include(tm => tm.Team).ThenInclude(t => t.Owner)
+            var memberships = await _context.TeamMembers
+                .Include(tm => tm.Team)
+                    .ThenInclude(t => t.Owner)
+                .Include(tm => tm.Team)
+                    .ThenInclude(t => t.Members)
+                        .ThenInclude(m => m.User)
                 .Where(tm => tm.UserId == id)
-                .Select(tm => tm.Team)
                 .ToListAsync();
 
-            var teamDtos = teams.Select(t => new TeamReadDto
+            var teamDtos = memberships.Select(tm => new TeamReadDto
             {
-                Id = t.Id,
-                Name = t.Name,
-                OwnerId = t.OwnerId,
-                OwnerName = t.Owner!.Name,
-                Members = t.Members.Select(m => new TeamMemberDto
+                Id = tm.TeamId,
+                Name = tm.Team!.Name,
+                OwnerId = tm.Team.OwnerId,
+                OwnerName = tm.Team.Owner!.Name,
+                Role = tm.Role,  
+                Members = tm.Team.Members.Select(m => new TeamMemberDto
                 {
                     UserId = m.UserId,
                     UserName = m.User!.Name,
@@ -75,6 +80,7 @@ namespace Simpled.Services
                 Teams = teamDtos.ToList()
             };
         }
+
 
         public async Task<UserReadDto> RegisterAsync(UserRegisterDto userDto, IFormFile ?image)
         {

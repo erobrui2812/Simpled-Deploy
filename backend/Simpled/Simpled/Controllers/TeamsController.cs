@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Simpled.Dtos.Teams;
+using Simpled.Dtos.Teams.TeamMembers;
 using Simpled.Exception;
 using Simpled.Hubs;
 using Simpled.Repository;

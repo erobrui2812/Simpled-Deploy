@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Simpled.Data;
 using Simpled.Dtos.Teams;
+using Simpled.Dtos.Teams.TeamMembers;
 using Simpled.Exception;
 using Simpled.Models;
 using Simpled.Repository;

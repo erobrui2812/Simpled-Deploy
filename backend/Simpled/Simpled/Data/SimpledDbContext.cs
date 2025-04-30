@@ -20,9 +20,10 @@ namespace Simpled.Data
         public DbSet<BoardInvitation> BoardInvitations => Set<BoardInvitation>();
         public DbSet<UserAchievement> UserAchievements => Set<UserAchievement>();
 
-        // Nuevas tablas para Teams
         public DbSet<Team> Teams => Set<Team>();
         public DbSet<TeamMember> TeamMembers => Set<TeamMember>();
+
+        public DbSet<TeamInvitation> TeamInvitations => Set<TeamInvitation>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -93,16 +94,25 @@ namespace Simpled.Data
             
             modelBuilder.Entity<TeamMember>()
                 .HasKey(tm => new { tm.TeamId, tm.UserId });
+
             modelBuilder.Entity<TeamMember>()
                 .HasOne(tm => tm.Team)
                 .WithMany(t => t.Members)
                 .HasForeignKey(tm => tm.TeamId)
                 .OnDelete(DeleteBehavior.Cascade);
+
             modelBuilder.Entity<TeamMember>()
                 .HasOne(tm => tm.User)
                 .WithMany(u => u.TeamMembers)
                 .HasForeignKey(tm => tm.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+
+            modelBuilder.Entity<TeamInvitation>()
+                .HasOne(i => i.Team)
+                .WithMany()
+                .HasForeignKey(i => i.TeamId);
         }
+
     }
 }
