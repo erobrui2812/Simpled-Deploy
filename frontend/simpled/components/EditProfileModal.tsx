@@ -36,6 +36,7 @@ export default function EditProfileModal({ isOpen, onClose, user }: EditProfileM
   const [formData, setFormData] = useState({
     name: user.name,
     email: user.email,
+    imageUrl: user.imageUrl,
   });
 
   const [image, setImage] = useState<File | null>(null);
@@ -53,13 +54,20 @@ export default function EditProfileModal({ isOpen, onClose, user }: EditProfileM
         return;
       }
       setImage(selectedImage);
+      formData.imageUrl = '';
     }
+  };
+
+  const handleDefaultImage = () => {
+    setImage(null);
+
+    formData.imageUrl = 'default';
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await updateUser(user.id, formData.name, formData.email, image);
+      await updateUser(user.id, formData.name, formData.email, formData.imageUrl, image);
       onClose();
     } catch (error) {
       console.error('Error actualizando perfil:', error);
@@ -104,6 +112,10 @@ export default function EditProfileModal({ isOpen, onClose, user }: EditProfileM
                 accept="image/*"
                 onChange={handleImageChange}
               />
+              
+              <Button type="button" onClick={handleDefaultImage} className="w-full">
+                Seleccionar imagen por defecto
+              </Button>
             </div>
           </div>
 

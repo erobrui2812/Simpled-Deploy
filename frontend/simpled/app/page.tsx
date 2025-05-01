@@ -1,4 +1,4 @@
-import Banner from '@/components/Banner';
+import Banner from '@/components/ABanner';
 import FeatureCard from '@/components/FeatureCard';
 import { Button } from '@/components/ui/button';
 import { Calendar, CheckCircle2, Layers, Users } from 'lucide-react';

@@ -162,31 +162,55 @@ namespace Simpled.Services
                 }
             }
 
-            if (image != null)
+            if (!string.IsNullOrWhiteSpace(updatedDto.ImageUrl))
             {
-                string uploadsFolder = Path.Combine("wwwroot", "images", existing.Id.ToString());
-
-                if (!Directory.Exists(uploadsFolder))
+                if (!existing.ImageUrl.Contains("avatar-default.jpg"))
                 {
-                    Directory.CreateDirectory(uploadsFolder);
-                    Console.WriteLine($"Carpeta creada: {uploadsFolder}");
+                    string oldImagePath = Path.Combine("wwwroot", existing.ImageUrl.TrimStart('/'));
+                    
+                    if (File.Exists(oldImagePath))
+                    {
+                        File.Delete(oldImagePath);
+                    }
+
+                    var directory = Path.GetDirectoryName(oldImagePath);
+                    
+                    if (Directory.Exists(directory) && Directory.GetFiles(directory).Length == 0)
+                    {
+                        Directory.Delete(directory);
+                    }
                 }
 
-                string filePath = Path.Combine(uploadsFolder, "image.jpg");
+                existing.ImageUrl = "/images/default/avatar-default.jpg";
+            
+            } else {
 
-                if (File.Exists(filePath))
+                if (image != null)
                 {
-                    File.Delete(filePath);
-                }
+                    string uploadsFolder = Path.Combine("wwwroot", "images", existing.Id.ToString());
 
-                using (var fileStream = new FileStream(filePath, FileMode.Create))
-                {
-                    await image.CopyToAsync(fileStream);
-                }
+                    if (!Directory.Exists(uploadsFolder))
+                    {
+                        Directory.CreateDirectory(uploadsFolder);
+                        Console.WriteLine($"Carpeta creada: {uploadsFolder}");
+                    }
 
-                existing.ImageUrl = $"/images/{existing.Id.ToString()}/image.jpg";
-                _context.Users.Update(existing);
-                await _context.SaveChangesAsync();
+                    string filePath = Path.Combine(uploadsFolder, "image.jpg");
+
+                    if (File.Exists(filePath))
+                    {
+                        File.Delete(filePath);
+                    }
+
+                    using (var fileStream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await image.CopyToAsync(fileStream);
+                    }
+
+                    existing.ImageUrl = $"/images/{existing.Id.ToString()}/image.jpg";
+                    _context.Users.Update(existing);
+                    await _context.SaveChangesAsync();
+                }
             }
 
             await _context.SaveChangesAsync();

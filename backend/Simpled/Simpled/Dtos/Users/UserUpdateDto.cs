@@ -15,5 +15,6 @@ namespace Simpled.Dtos.Users
         public string Email { get; set; } = default!;
 
         public string? Password { get; set; }
+        public string? ImageUrl { get; set; }
     }
 }

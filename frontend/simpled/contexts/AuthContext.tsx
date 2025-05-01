@@ -39,7 +39,13 @@ type AuthContextType = {
     password: string,
     image: File | null,
   ) => Promise<void>;
-  updateUser: (id: string, name: string, email: string, image: File | null) => Promise<void>;
+  updateUser: (
+    id: string,
+    name: string,
+    email: string,
+    imageUrl: string,
+    image: File | null,
+  ) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
   fetchUserProfile: (userId: string) => Promise<User | null>;
@@ -156,12 +162,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const updateUser = async (id: string, name: string, email: string, image: File | null) => {
+  const updateUser = async (
+    id: string,
+    name: string,
+    email: string,
+    imageUrl: string,
+    image: File | null,
+  ) => {
     try {
       const formData = new FormData();
       formData.append('id', id);
       formData.append('name', name);
       formData.append('email', email);
+      formData.append('imageUrl', imageUrl);
       if (image) formData.append('image', image);
 
       const response = await fetch(`${API_URL}/api/Users/${id}`, {
