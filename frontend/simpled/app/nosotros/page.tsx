@@ -1,4 +1,4 @@
-import Banner from '@/components/ABanner';
+import Banner from '@/components/Banner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
