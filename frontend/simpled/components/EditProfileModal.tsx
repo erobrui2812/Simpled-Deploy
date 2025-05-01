@@ -12,7 +12,7 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import { useAuth } from '@/contexts/AuthContext';
-import { Image } from 'lucide-react';
+import { Image, ArrowBigDown } from 'lucide-react';
 import type React from 'react';
 import { useState } from 'react';
 import { toast } from 'react-toastify';
@@ -22,6 +22,7 @@ interface User {
   name: string;
   email: string;
   imageUrl: string;
+  password: string;
 }
 
 interface EditProfileModalProps {
@@ -31,12 +32,15 @@ interface EditProfileModalProps {
 }
 
 export default function EditProfileModal({ isOpen, onClose, user }: EditProfileModalProps) {
-  const { updateUser } = useAuth();
+  const { updateUser, logout } = useAuth();
+
+  const [modifyPassword, setModifyPassword] = useState(false);
 
   const [formData, setFormData] = useState({
     name: user.name,
     email: user.email,
-    imageUrl: user.imageUrl,
+    imageUrl: user.imageUrl || '',
+    password: user.password || '',
   });
 
   const [image, setImage] = useState<File | null>(null);
@@ -67,8 +71,23 @@ export default function EditProfileModal({ isOpen, onClose, user }: EditProfileM
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await updateUser(user.id, formData.name, formData.email, formData.imageUrl, image);
+      if (!modifyPassword) {
+        formData.password = '';
+      }
+
+      await updateUser(
+        user.id,
+        formData.name,
+        formData.email,
+        formData.imageUrl,
+        formData.password,
+        image,
+      );
       onClose();
+
+      if (formData.password.trim() !== '') {
+        logout();
+      }
     } catch (error) {
       console.error('Error actualizando perfil:', error);
       toast.error('Error al actualizar el perfil.');
@@ -112,10 +131,50 @@ export default function EditProfileModal({ isOpen, onClose, user }: EditProfileM
                 accept="image/*"
                 onChange={handleImageChange}
               />
-              
-              <Button type="button" onClick={handleDefaultImage} className="w-full">
-                Seleccionar imagen por defecto
-              </Button>
+            </div>
+            <Button type="button" onClick={handleDefaultImage} className="w-full">
+              Seleccionar imagen por defecto
+            </Button>
+          </div>
+
+          <div className="space-y-2">
+            <Button
+              type="button"
+              onClick={() => setModifyPassword(!modifyPassword)}
+              className="w-full"
+            >
+              <span>Modificar contraseña</span>
+              <div
+                className={`transition-transform duration-300 ${
+                  modifyPassword ? 'rotate-180' : ''
+                }`}
+              >
+                <ArrowBigDown className="h-4 w-4 transform" />
+              </div>
+            </Button>
+            <p className="text-muted-foreground text-sm">
+              Si este campo está abierto durante el envío se cerrará sesión, si está cerrado se
+              perderán los cambios.
+            </p>
+
+            <div
+              className={`overflow-hidden transition-all duration-500 ease-in-out ${
+                modifyPassword ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+              }`}
+            >
+              {modifyPassword && (
+                <div className="space-y-2">
+                  <Label htmlFor="password">Contraseña</Label>
+                  <Input
+                    id="password"
+                    name="password"
+                    type="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    minLength={6}
+                  />
+                </div>
+              )}
             </div>
           </div>
 

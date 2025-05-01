@@ -58,9 +58,7 @@ export default function Navbar() {
   const { isAuthenticated, logout, auth } = useAuth();
 
   useEffect(() => {
-    if (isAuthenticated) {
-      setMostrarLogin(false);
-    }
+    setMostrarLogin(!isAuthenticated);
   }, [isAuthenticated]);
 
   return (

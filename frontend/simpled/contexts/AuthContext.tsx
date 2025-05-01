@@ -44,6 +44,7 @@ type AuthContextType = {
     name: string,
     email: string,
     imageUrl: string,
+    password: string,
     image: File | null,
   ) => Promise<void>;
   logout: () => void;
@@ -167,6 +168,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     name: string,
     email: string,
     imageUrl: string,
+    password: string,
     image: File | null,
   ) => {
     try {
@@ -175,6 +177,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       formData.append('name', name);
       formData.append('email', email);
       formData.append('imageUrl', imageUrl);
+      formData.append('password', password);
       if (image) formData.append('image', image);
 
       const response = await fetch(`${API_URL}/api/Users/${id}`, {
