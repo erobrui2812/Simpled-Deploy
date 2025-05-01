@@ -7,7 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTeams } from '@/contexts/TeamsContext';
 import { Users } from 'lucide-react';
-import { notFound } from 'next/navigation';
 import { useState } from 'react';
 
 export default function TeamsPage() {
@@ -15,8 +14,6 @@ export default function TeamsPage() {
   const { teams, loading, fetchTeams } = useTeams();
   const [showCreate, setShowCreate] = useState(false);
   const [activeTeam, setActiveTeam] = useState<(typeof teams)[0] | null>(null);
-
-  if (!auth.id) notFound();
 
   return (
     <div className="container mx-auto p-4">
