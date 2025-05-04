@@ -1,15 +1,16 @@
 'use client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Board, useBoards } from '@/contexts/BoardsContext';
-import { NotebookPen, Trash2Icon } from 'lucide-react';
+import { NotebookPen, Star, StarOff, Trash2Icon } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 import BoardEditModal from './BoardEditModal';
 
 export default function BoardCard({ board }: { readonly board: Board }) {
-  const { auth } = useAuth();
+  const { auth, toggleFavoriteBoard } = useAuth();
   const { deleteBoard } = useBoards();
   const [showEdit, setShowEdit] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(board.isFavorite);
 
   const userId = getUserIdFromToken(auth.token);
   const isOwner = userId === board.ownerId;
@@ -20,35 +21,50 @@ export default function BoardCard({ board }: { readonly board: Board }) {
     }
   };
 
+  const toggleFavorite = async () => {
+    if (confirm('¿Seguro que deseas añadir este tablero a favorito?')) {
+      await toggleFavoriteBoard(board.id);
+    }
+  };
+
   return (
     <>
-      <div className="relative rounded border bg-white p-4 hover:shadow-md dark:bg-neutral-800">
+      <div className="flex rounded border bg-white p-4 transition-shadow hover:shadow-md dark:bg-neutral-800">
         <Link href={`/tableros/${board.id}`}>
-          <h2 className="mb-1 text-lg font-bold">{board.name}</h2>
-        </Link>
-        <p className="text-sm text-gray-500 dark:text-gray-400">
-          {board.isPublic ? 'Público' : 'Privado'}
-        </p>
-
-        {isOwner && (
-          <div className="absolute top-2 right-2 flex gap-2">
-            <button
-              onClick={() => setShowEdit(true)}
-              title="Editar"
-              className="text-sm text-blue-500 hover:cursor-pointer hover:text-blue-700 hover:underline"
-            >
-              <NotebookPen className="size-6" />
-            </button>
-            <div className="h-7 w-px bg-gray-300" />
-            <button
-              onClick={handleDelete}
-              title="Eliminar"
-              className="text-sm text-red-500 hover:cursor-pointer hover:text-red-700 hover:underline"
-            >
-              <Trash2Icon className="size-6" />
-            </button>
+          <div className="mr-4 flex flex-col justify-center">
+            <div>
+              <h2 className="mb-1 text-lg font-bold">{board.name}</h2>
+            </div>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {board.isPublic ? 'Público' : 'Privado'}
+            </p>
           </div>
-        )}
+        </Link>
+
+        <div className="ml-auto flex flex-col items-center justify-between gap-2">
+          <button
+            onClick={toggleFavorite}
+            title={isFavorite ? 'Quitar de favoritos' : 'Marcar como favorito'}
+            className="text-yellow-500 transition-transform hover:scale-110"
+          >
+            {isFavorite ? (
+              <Star className="size-5 fill-yellow-500" />
+            ) : (
+              <StarOff className="size-5" />
+            )}
+          </button>
+
+          {isOwner && (
+            <div className="flex flex-col gap-2">
+              <button onClick={() => setShowEdit(true)} title="Editar">
+                <NotebookPen className="size-5 text-blue-500 transition-transform hover:scale-110 hover:text-blue-700" />
+              </button>
+              <button onClick={handleDelete} title="Eliminar">
+                <Trash2Icon className="size-5 text-red-500 transition-transform hover:scale-110 hover:text-red-700" />
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {showEdit && <BoardEditModal board={board} onClose={() => setShowEdit(false)} />}

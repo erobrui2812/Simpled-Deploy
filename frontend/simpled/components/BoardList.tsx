@@ -5,9 +5,9 @@ import BoardCard from './BoardCard';
 export default function BoardList() {
   const { boards, loading } = useBoards();
 
-  if (loading) return <p>Cargando tableros...</p>;
+  if (loading) return <p className="min-h-screen">Cargando tableros...</p>;
 
-  if (!boards.length) return <p>No tienes tableros todavía.</p>;
+  if (!boards.length) return <p className="min-h-screen">No tienes tableros todavía.</p>;
 
   return (
     <div className="min-h-screen">

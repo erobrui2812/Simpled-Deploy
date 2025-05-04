@@ -25,6 +25,8 @@ namespace Simpled.Data
 
         public DbSet<TeamInvitation> TeamInvitations => Set<TeamInvitation>();
 
+        public DbSet<FavoriteBoards> FavoriteBoards => Set<FavoriteBoards>();
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -112,7 +114,10 @@ namespace Simpled.Data
                 .HasOne(i => i.Team)
                 .WithMany()
                 .HasForeignKey(i => i.TeamId);
-        }
 
+            // User ↔ Favorite Boards
+            modelBuilder.Entity<FavoriteBoards>()
+                .HasKey(f => new { f.UserId, f.BoardId });
+        }
     }
 }

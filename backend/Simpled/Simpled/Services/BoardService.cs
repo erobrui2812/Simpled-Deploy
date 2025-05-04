@@ -35,7 +35,10 @@ namespace Simpled.Services
                             .Where(m => m.BoardId == b.Id && m.UserId == userId)
                             .Select(m => m.Role)
                             .FirstOrDefault()
-                        : null
+                        : null,
+                    IsFavorite = userId != null &&
+                    _context.FavoriteBoards
+                        .Any(f => f.BoardId == b.Id && f.UserId == userId)
                 })
                 .ToListAsync();
 

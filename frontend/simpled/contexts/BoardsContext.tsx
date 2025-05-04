@@ -11,6 +11,7 @@ export type Board = {
   isPublic: boolean;
   ownerId?: string;
   userRole?: 'admin' | 'editor' | 'viewer';
+  isFavorite: boolean;
 };
 
 type BoardsContextType = {

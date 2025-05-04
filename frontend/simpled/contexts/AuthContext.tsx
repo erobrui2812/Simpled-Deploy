@@ -50,6 +50,9 @@ type AuthContextType = {
   logout: () => void;
   isAuthenticated: boolean;
   fetchUserProfile: (userId: string) => Promise<User | null>;
+  fetchFavoriteBoards: () => void;
+  checkFavoriteBoard: (boardId: string) => void;
+  toggleFavoriteBoard: (boardId: string) => void;
   externalLogin: (provider: string) => void;
 };
 
@@ -206,6 +209,60 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     toast.info('Sesión cerrada.');
   };
 
+  const fetchFavoriteBoards = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/favorite-boards`);
+      if (!response.ok) throw new Error('Error al obtener la lista de favoritos.');
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error al obtener la lista de favoritos:', error);
+      return null;
+    }
+  };
+
+  const toggleFavoriteBoard = async (boardId: string) => {
+    try {
+      const response = await fetch(`${API_URL}/api/favorite-boards/toggle`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ boardId }),
+      });
+
+      if (!response.ok) throw new Error('Error al actualizar favorito.');
+
+      const data = await response.json();
+
+      toast.success(
+        data.favorite ? 'Tablero añadido a favoritos.' : 'Tablero eliminado de favoritos.',
+      );
+
+      return data.favorite;
+    } catch (error) {
+      console.error('Error modificando el estado del board', error);
+      toast.error('No se pudo actualizar el estado del favorito.');
+      return null;
+    }
+  };
+
+  const checkFavoriteBoard = async (boardId: string): Promise<boolean | null> => {
+    try {
+      const response = await fetch(`${API_URL}/api/favorite-boards/check-favorite/${boardId}`, {
+        method: 'GET',
+      });
+
+      if (!response.ok) throw new Error('Error al comprobar favorito.');
+
+      const data = await response.json();
+      return data.favorite;
+    } catch (error) {
+      console.error('Error comprobando si es favorito:', error);
+      return null;
+    }
+  };
+
   const authContextValue = useMemo(
     () => ({
       auth,
@@ -216,6 +273,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       isAuthenticated,
       userData,
       fetchUserProfile,
+      fetchFavoriteBoards,
+      toggleFavoriteBoard,
+      checkFavoriteBoard,
       externalLogin: (provider: string) => {
         const redirectUrl = `${API_URL}/api/Auth/external-login/${provider}`;
         window.location.href = redirectUrl;
