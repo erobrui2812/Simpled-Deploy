@@ -71,8 +71,10 @@ Registro de tareas realizadas durante el desarrollo del proyecto **Simpled**.
 | 2025-04-30  | Adrián Jiménez   | Frontend de **Teams**: vista `/equipos`, componentes `TeamsList`, `TeamsPage`, `TeamCreateModal`, `TeamDetailModal` |
 | 2025-04-30  | Adrián Jiménez   | Integración de flujos de invitación, aceptación y rechazo + TeamContext |
 | 2025-04-30  | Adrián Jiménez   | Maquetación con ShadCN, manejo de estados, mensajes de vacío y consistencia visual en la vista de equipos |
-
-
+| 2025-05-01  | Elías Robles     | Arreglos de los que hablamos en el video (modificar perfil) |
+| 2025-05-01  | Elías Robles     | Arreglar ruta de equipo, fallo al desloguearte |
+| 2025-05-01  | Elías Robles     | Inicio `/login-callback` de backend |
+| 2025-05-01  | Elías Robles     | Inicio react-count-up para la vista de nosotros |
 
 
 ---
