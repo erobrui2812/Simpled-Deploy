@@ -76,6 +76,8 @@ Registro de tareas realizadas durante el desarrollo del proyecto **Simpled**.
 | 2025-05-01  | Elías Robles     | Inicio `/login-callback` de backend |
 | 2025-05-01  | Elías Robles     | Inicio react-count-up para la vista de nosotros |
 | 2025-05-04  | Elías Robles     | Finalizacion `/login-callback` de frontend |
+| 2025-05-04  | Elías Robles     | Frontend y backend sistema de favoritos |
+
 
 ---
 
