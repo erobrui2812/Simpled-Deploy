@@ -94,11 +94,14 @@ namespace Simpled.Controllers
             if (loginResult == null)
                 return BadRequest("No se pudo autenticar con el proveedor externo");
 
-            return Ok(new
-            {
-                token = loginResult.Token,
-                id = loginResult.UserId
-            });
+            var frontendUrl = Environment.GetEnvironmentVariable("URL_FRONTEND");
+
+            if (string.IsNullOrEmpty(frontendUrl))
+                return StatusCode(500, "URL del frontend no está configurada");
+
+            var redirectUrl = $"{frontendUrl}/autenticacion-completada?token={loginResult.Token}&id={loginResult.UserId}";
+
+            return Redirect(redirectUrl);
         }
     }
 }
