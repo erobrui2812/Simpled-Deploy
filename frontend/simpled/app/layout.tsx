@@ -24,18 +24,14 @@ export const metadata: Metadata = {
   description: 'Plataforma estilo Trello/Notion para gestionar tareas en equipo.',
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: { readonly children: React.ReactNode }) {
   return (
-    <AuthProvider>
-      <BoardsProvider>
-        <TeamsProvider>
-          <SignalRProvider>
-            <html lang="es">
-              <body className={`${figtree.variable} antialiased`}>
+    <html lang="es">
+      <body className={`${figtree.variable} antialiased`}>
+        <AuthProvider>
+          <BoardsProvider>
+            <TeamsProvider>
+              <SignalRProvider>
                 <ToastContainer
                   position="top-right"
                   autoClose={5000}
@@ -52,11 +48,11 @@ export default function RootLayout({
                 <Navbar />
                 {children}
                 <Footer />
-              </body>
-            </html>
-          </SignalRProvider>
-        </TeamsProvider>
-      </BoardsProvider>
-    </AuthProvider>
+              </SignalRProvider>
+            </TeamsProvider>
+          </BoardsProvider>
+        </AuthProvider>
+      </body>
+    </html>
   );
 }

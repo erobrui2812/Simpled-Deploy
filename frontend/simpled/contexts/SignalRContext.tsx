@@ -1,7 +1,7 @@
 'use client';
 
 import * as signalR from '@microsoft/signalr';
-import React, { createContext, useContext, useEffect, useMemo, useRef } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useAuth } from './AuthContext';
 
@@ -13,84 +13,88 @@ const SignalRContext = createContext<SignalRContextType>({ connection: null });
 
 export const useSignalR = () => useContext(SignalRContext);
 
-const showToast = (() => {
-  const cache = new Set<string>();
-  return (message: string, id: string) => {
-    if (cache.has(id)) return;
-    cache.add(id);
-    toast.info(message, {
-      toastId: id,
-      onClose: () => cache.delete(id),
-    });
-  };
-})();
-
-const handleBoardInvitation = (data: {
-  boardName: string;
-  role: string;
-  invitationToken: string;
-}) => {
-  showToast(
-    `📩 Invitación al tablero "${data.boardName}" como ${data.role}`,
-    `board-invite-${data.invitationToken}`,
-  );
-};
-
-const handleTeamInvitation = (data: {
-  teamName: string;
-  role: string;
-  invitationToken: string;
-}) => {
-  showToast(
-    `📩 Has sido invitado al equipo "${data.teamName}" como ${data.role}`,
-    `team-invite-${data.invitationToken}`,
-  );
-};
-
-const handleBoardUpdated = (boardId: string, action: string, payload: any) => {
-  console.log('[SignalR] BoardUpdated', { boardId, action, payload });
-};
-
 export const SignalRProvider = ({ children }: { children: React.ReactNode }) => {
   const { auth } = useAuth();
-  const connectionRef = useRef<signalR.HubConnection | null>(null);
+  const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
 
   useEffect(() => {
-    if (!auth.token || connectionRef.current) return;
+    if (!auth.token) return;
+    if (connection) return; // ya conectado
 
-    const connect = async () => {
-      const conn = new signalR.HubConnectionBuilder()
-        .withUrl('http://localhost:5193/hubs/board', {
-          accessTokenFactory: () => auth.token!,
-        })
-        .withAutomaticReconnect()
-        .build();
+    // Construir la conexión
+    const conn = new signalR.HubConnectionBuilder()
+      .withUrl('http://localhost:5193/hubs/board', {
+        accessTokenFactory: () => auth.token!,
+      })
+      .withAutomaticReconnect()
+      .build();
 
-      conn.on('InvitationReceived', handleBoardInvitation);
-      conn.on('TeamInvitationReceived', handleTeamInvitation);
-      conn.on('BoardUpdated', handleBoardUpdated);
+    // Feedback de reconexión
+    conn.onreconnecting((error) => {
+      console.warn('SignalR reconectando', error);
+      toast.info('Reconectando a notificaciones…', {
+        toastId: 'sigr-reconnecting',
+      });
+    });
+    conn.onreconnected(() => {
+      toast.dismiss('sigr-reconnecting');
+      toast.success('Reconectado a notificaciones', {
+        toastId: 'sigr-reconnected',
+      });
+    });
+    conn.onclose((error) => {
+      console.error('SignalR cerrado', error);
+      toast.error('Se perdió conexión de notificaciones', {
+        toastId: 'sigr-closed',
+      });
+    });
 
-      try {
-        await conn.start();
-        connectionRef.current = conn;
+    // Suscripciones de mensajes
+    conn.on('InvitationReceived', (data) => {
+      toast.info(`📩 Invitación al tablero "${data.boardName}" como ${data.role}`, {
+        toastId: `board-invite-${data.invitationToken}`,
+      });
+    });
+    conn.on('TeamInvitationReceived', (data) => {
+      toast.info(`📩 Invitado al equipo "${data.teamName}" como ${data.role}`, {
+        toastId: `team-invite-${data.invitationToken}`,
+      });
+    });
+    conn.on('BoardUpdated', (_boardId, action, payload) => {
+      console.log('📡 BoardUpdated', { action, payload });
+    });
+
+    // Iniciar conexión
+    conn
+      .start()
+      .then(() => {
+        setConnection(conn);
         console.log('✅ SignalR conectado');
-      } catch (err) {
+      })
+      .catch((err) => {
         console.error('❌ Error al conectar SignalR', err);
-      }
-    };
+        toast.error('No se pudo conectar a notificaciones');
+      });
 
-    connect();
+    // Manejar cierre de pestaña / reload
+    const handleUnload = () => conn.stop();
+    window.addEventListener('beforeunload', handleUnload);
 
     return () => {
-      connectionRef.current?.stop();
-      connectionRef.current = null;
+      window.removeEventListener('beforeunload', handleUnload);
+      // No paramos conn aquí para mantener viva la conexión en navegación interna
     };
-  }, [auth.token]);
+  }, [auth.token, connection]);
 
-  const contextValue = useMemo(
-    () => ({ connection: connectionRef.current }),
-    [connectionRef.current],
-  );
+  // Detener conexión al hacer logout
+  useEffect(() => {
+    if (!auth.token && connection) {
+      connection.stop();
+      setConnection(null);
+    }
+  }, [auth.token, connection]);
 
-  return <SignalRContext.Provider value={contextValue}>{children}</SignalRContext.Provider>;
+  const value = useMemo(() => ({ connection }), [connection]);
+
+  return <SignalRContext.Provider value={value}>{children}</SignalRContext.Provider>;
 };

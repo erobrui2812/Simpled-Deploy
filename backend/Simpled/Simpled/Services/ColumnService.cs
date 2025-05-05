@@ -69,8 +69,10 @@ namespace Simpled.Services
                 Order = newColumn.Order
             };
 
-            await _hubContext.Clients.Group(dto.BoardId.ToString())
-                .SendAsync("BoardUpdated", dto.BoardId, "ColumnCreated", columnDto);
+            
+            await _hubContext.Clients
+                .Group(dto.BoardId.ToString())
+                .SendAsync("BoardUpdated", dto.BoardId.ToString(), "ColumnCreated", columnDto);
 
             return columnDto;
         }
@@ -81,18 +83,19 @@ namespace Simpled.Services
             if (column == null)
                 throw new NotFoundException("Columna no encontrada.");
 
-            column.BoardId = dto.BoardId;
             column.Title = dto.Title;
             column.Order = dto.Order;
 
             await _context.SaveChangesAsync();
 
-            await _hubContext.Clients.Group(dto.BoardId.ToString())
-                .SendAsync("BoardUpdated", dto.BoardId, "ColumnUpdated", new
+          
+            await _hubContext.Clients
+                .Group(dto.BoardId.ToString())
+                .SendAsync("BoardUpdated", dto.BoardId.ToString(), "ColumnUpdated", new
                 {
-                    dto.Id,
-                    dto.Title,
-                    dto.Order
+                    Id = dto.Id,
+                    Title = dto.Title,
+                    Order = dto.Order
                 });
 
             return true;
@@ -100,6 +103,7 @@ namespace Simpled.Services
 
         public Task<bool> DeleteAsync(Guid id)
         {
+           
             return DeleteAsync(id, cascadeItems: false, targetColumnId: null);
         }
 
@@ -139,8 +143,13 @@ namespace Simpled.Services
             _context.BoardColumns.Remove(column);
             await _context.SaveChangesAsync();
 
-            await _hubContext.Clients.Group(boardId.ToString())
-                .SendAsync("BoardUpdated", boardId, "ColumnDeleted", new { columnId });
+     
+            await _hubContext.Clients
+                .Group(boardId.ToString())
+                .SendAsync("BoardUpdated", boardId.ToString(), "ColumnDeleted", new
+                {
+                    ColumnId = columnId
+                });
 
             return true;
         }

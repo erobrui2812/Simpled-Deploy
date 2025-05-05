@@ -1,4 +1,10 @@
-﻿using Microsoft.AspNetCore.SignalR;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Simpled.Data;
 using Simpled.Dtos.Items;
@@ -21,7 +27,8 @@ namespace Simpled.Services
         }
 
         public async Task<IEnumerable<ItemReadDto>> GetAllAsync()
-            => await _context.Items
+        {
+            return await _context.Items
                 .Select(i => new ItemReadDto
                 {
                     Id = i.Id,
@@ -33,6 +40,7 @@ namespace Simpled.Services
                     AssigneeId = i.AssigneeId
                 })
                 .ToListAsync();
+        }
 
         public async Task<ItemReadDto?> GetByIdAsync(Guid id)
         {
@@ -52,7 +60,7 @@ namespace Simpled.Services
 
         public async Task<ItemReadDto> CreateAsync(ItemCreateDto dto)
         {
-            var i = new Item
+            var item = new Item
             {
                 Id = Guid.NewGuid(),
                 Title = dto.Title,
@@ -62,22 +70,23 @@ namespace Simpled.Services
                 Status = dto.Status,
                 AssigneeId = dto.AssigneeId
             };
-            _context.Items.Add(i);
+            _context.Items.Add(item);
             await _context.SaveChangesAsync();
 
             var result = new ItemReadDto
             {
-                Id = i.Id,
-                Title = i.Title,
-                Description = i.Description,
-                DueDate = i.DueDate,
-                ColumnId = i.ColumnId,
-                Status = i.Status,
-                AssigneeId = i.AssigneeId
+                Id = item.Id,
+                Title = item.Title,
+                Description = item.Description,
+                DueDate = item.DueDate,
+                ColumnId = item.ColumnId,
+                Status = item.Status,
+                AssigneeId = item.AssigneeId
             };
 
-            var boardId = await GetBoardIdByColumnId(dto.ColumnId);
-            await _hubContext.Clients.Group(boardId.ToString())
+            var boardId = (await GetBoardIdByColumnId(dto.ColumnId)).ToString();
+            await _hubContext.Clients
+                .Group(boardId)
                 .SendAsync("BoardUpdated", boardId, "ItemCreated", result);
 
             return result;
@@ -85,18 +94,19 @@ namespace Simpled.Services
 
         public async Task<bool> UpdateAsync(ItemUpdateDto dto)
         {
-            var i = await _context.Items.FindAsync(dto.Id)
+            var item = await _context.Items.FindAsync(dto.Id)
                 ?? throw new NotFoundException("Ítem no encontrado.");
-            i.Title = dto.Title;
-            i.Description = dto.Description;
-            i.DueDate = dto.DueDate;
-            i.ColumnId = dto.ColumnId;
-            i.Status = dto.Status;
-            i.AssigneeId = dto.AssigneeId;
+            item.Title = dto.Title;
+            item.Description = dto.Description;
+            item.DueDate = dto.DueDate;
+            item.ColumnId = dto.ColumnId;
+            item.Status = dto.Status;
+            item.AssigneeId = dto.AssigneeId;
             await _context.SaveChangesAsync();
 
-            var boardId = await GetBoardIdByItemId(dto.Id);
-            await _hubContext.Clients.Group(boardId.ToString())
+            var boardId = (await GetBoardIdByItemId(dto.Id)).ToString();
+            await _hubContext.Clients
+                .Group(boardId)
                 .SendAsync("BoardUpdated", boardId, "ItemUpdated", new
                 {
                     dto.Id,
@@ -113,13 +123,14 @@ namespace Simpled.Services
 
         public async Task<bool> UpdateStatusAsync(Guid id, string status)
         {
-            var i = await _context.Items.FindAsync(id)
+            var item = await _context.Items.FindAsync(id)
                 ?? throw new NotFoundException("Ítem no encontrado.");
-            i.Status = status;
+            item.Status = status;
             await _context.SaveChangesAsync();
 
-            var boardId = await GetBoardIdByItemId(id);
-            await _hubContext.Clients.Group(boardId.ToString())
+            var boardId = (await GetBoardIdByItemId(id)).ToString();
+            await _hubContext.Clients
+                .Group(boardId)
                 .SendAsync("BoardUpdated", boardId, "ItemStatusChanged", new { id, status });
 
             return true;
@@ -127,14 +138,15 @@ namespace Simpled.Services
 
         public async Task<bool> DeleteAsync(Guid id)
         {
-            var i = await _context.Items.FindAsync(id)
+            var item = await _context.Items.FindAsync(id)
                 ?? throw new NotFoundException("Ítem no encontrado.");
-            var boardId = await GetBoardIdByItemId(id);
+            var boardId = (await GetBoardIdByItemId(id)).ToString();
 
-            _context.Items.Remove(i);
+            _context.Items.Remove(item);
             await _context.SaveChangesAsync();
 
-            await _hubContext.Clients.Group(boardId.ToString())
+            await _hubContext.Clients
+                .Group(boardId)
                 .SendAsync("BoardUpdated", boardId, "ItemDeleted", new { id });
 
             return true;
@@ -142,7 +154,7 @@ namespace Simpled.Services
 
         public async Task<Content?> UploadFileAsync(Guid itemId, IFormFile file)
         {
-            var i = await _context.Items.FindAsync(itemId)
+            var item = await _context.Items.FindAsync(itemId)
                 ?? throw new NotFoundException("Ítem no encontrado para subir archivo.");
             if (file == null || file.Length == 0)
                 throw new ApiException("El archivo es inválido o está vacío.", 400);
@@ -164,8 +176,9 @@ namespace Simpled.Services
             _context.Contents.Add(content);
             await _context.SaveChangesAsync();
 
-            var boardId = await GetBoardIdByItemId(itemId);
-            await _hubContext.Clients.Group(boardId.ToString())
+            var boardId = (await GetBoardIdByItemId(itemId)).ToString();
+            await _hubContext.Clients
+                .Group(boardId)
                 .SendAsync("BoardUpdated", boardId, "ItemFileUploaded", new
                 {
                     itemId,
@@ -178,18 +191,18 @@ namespace Simpled.Services
 
         public async Task<Guid> GetBoardIdByColumnId(Guid columnId)
         {
-            var c = await _context.BoardColumns.FindAsync(columnId)
+            var column = await _context.BoardColumns.FindAsync(columnId)
                 ?? throw new NotFoundException("Columna no encontrada.");
-            return c.BoardId;
+            return column.BoardId;
         }
 
         public async Task<Guid> GetBoardIdByItemId(Guid itemId)
         {
-            var i = await _context.Items.FindAsync(itemId)
+            var item = await _context.Items.FindAsync(itemId)
                 ?? throw new NotFoundException("Ítem no encontrado.");
-            var c = await _context.BoardColumns.FindAsync(i.ColumnId)
+            var column = await _context.BoardColumns.FindAsync(item.ColumnId)
                 ?? throw new NotFoundException("Columna del ítem no encontrada.");
-            return c.BoardId;
+            return column.BoardId;
         }
     }
 }

@@ -1,4 +1,3 @@
-// KanbanBoard.tsx
 'use client';
 
 import { Button } from '@/components/ui/button';
@@ -19,7 +18,7 @@ import {
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { Calendar } from 'lucide-react';
 import Link from 'next/link';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 import BoardInviteModal from './BoardInviteModal';
 import ColumnCreateModal from './ColumnCreateModal';
@@ -40,7 +39,7 @@ type User = {
 export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
   const { auth } = useAuth();
   const { connection } = useSignalR();
-  const lastActionRef = useRef<string | null>(null);
+  const lastRef = useRef<string | null>(null);
 
   const [board, setBoard] = useState<any>(null);
   const [columns, setColumns] = useState<any[]>([]);
@@ -73,12 +72,7 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
-  const assignees: User[] = members
-    .filter((m) => m.role === 'editor')
-    .map((m) => users.find((u) => u.id === m.userId))
-    .filter(Boolean) as User[];
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       const [bR, cR, iR, mR, uR] = await Promise.all([
@@ -88,9 +82,7 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
         fetch(`${API}/api/BoardMembers/board/${boardId}`, { headers }),
         fetch(`${API}/api/Users`, { headers }),
       ]);
-
       if (!bR.ok) throw new Error('Error al cargar el tablero');
-
       const [bd, allCols, allItems, mem, us] = await Promise.all([
         bR.json(),
         cR.json(),
@@ -98,10 +90,8 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
         mR.json(),
         uR.json(),
       ]);
-
       const cols = allCols.filter((c: any) => c.boardId === boardId);
       const its = allItems.filter((i: any) => cols.some((c: any) => c.id === i.columnId));
-
       setBoard(bd);
       setColumns(cols);
       setItems(its);
@@ -113,39 +103,20 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    fetchData();
   }, [boardId, auth.token]);
 
   useEffect(() => {
-    if (!connection) return;
-    const join = async () => {
-      try {
-        await connection.invoke('JoinBoardGroup', boardId);
-      } catch (e) {
-        console.error('Error JoinBoardGroup', e);
-      }
-    };
-    const leave = async () => {
-      try {
-        await connection.invoke('LeaveBoardGroup', boardId);
-      } catch (e) {
-        console.error('Error LeaveBoardGroup', e);
-      }
-    };
-    join();
-    return () => leave();
-  }, [connection, boardId]);
+    fetchData();
+  }, [fetchData]);
 
   useEffect(() => {
     if (!connection) return;
-    const handler = (id: string, action: string) => {
+    const handler = (id: string, action: string, payload: any) => {
       if (id !== boardId) return;
-      if (lastActionRef.current === action) return;
-      lastActionRef.current = action;
-      const label: Record<string, string> = {
+      const key = `${action}:${payload.id ?? payload.columnId}`;
+      if (lastRef.current === key) return;
+      lastRef.current = key;
+      const labels: Record<string, string> = {
         ColumnCreated: '📌 Nueva columna añadida',
         ColumnUpdated: '✏️ Columna actualizada',
         ColumnDeleted: '🗑️ Columna eliminada',
@@ -155,12 +126,49 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
         ItemStatusChanged: '📍 Estado actualizado',
         ItemFileUploaded: '📎 Archivo subido',
       };
-      toast.info(label[action] ?? `🔔 Cambio en el tablero: ${action}`);
-      fetchData();
+      toast.info(labels[action] ?? `🔔 Cambio en el tablero: ${action}`);
+      switch (action) {
+        case 'ColumnCreated':
+          setColumns((c) => [...c, payload]);
+          break;
+        case 'ColumnUpdated':
+          setColumns((c) =>
+            c.map((col) =>
+              col.id === payload.id ? { ...col, title: payload.title, order: payload.order } : col,
+            ),
+          );
+          break;
+        case 'ColumnDeleted':
+          setColumns((c) => c.filter((col) => col.id !== payload.columnId));
+          setItems((i) => i.filter((it) => it.columnId !== payload.columnId));
+          break;
+        case 'ItemCreated':
+          setItems((i) => [...i, payload]);
+          break;
+        case 'ItemUpdated':
+          setItems((i) => i.map((it) => (it.id === payload.id ? { ...it, ...payload } : it)));
+          break;
+        case 'ItemDeleted':
+          setItems((i) => i.filter((it) => it.id !== payload.id));
+          break;
+        case 'ItemStatusChanged':
+          setItems((i) =>
+            i.map((it) => (it.id === payload.id ? { ...it, status: payload.status } : it)),
+          );
+          break;
+        default:
+          fetchData();
+      }
     };
     connection.on('BoardUpdated', handler);
+    return () => void connection.off('BoardUpdated', handler);
+  }, [connection, boardId, fetchData]);
+
+  useEffect(() => {
+    if (!connection) return;
+    connection.invoke('JoinBoardGroup', boardId).catch(console.error);
     return () => {
-      connection.off('BoardUpdated', handler);
+      connection.invoke('LeaveBoardGroup', boardId).catch(console.error);
     };
   }, [connection, boardId]);
 
@@ -200,6 +208,7 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
     }
     resetDrag();
   };
+
   const handleDeleteColumn = async (colId: string) => {
     const tareas = items.filter((i) => i.columnId === colId);
     const confirmDelete = tareas.length
@@ -222,6 +231,7 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
       fetchData();
     }
   };
+
   const resetDrag = () => {
     setActiveId(null);
     setActiveItem(null);
@@ -249,8 +259,7 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
           {canEdit && <Button onClick={() => setShowCreateColumn(true)}>Añadir columna</Button>}
           <Link href={`/tableros/${boardId}/gantt`}>
             <Button variant="outline">
-              <Calendar className="mr-2 h-4 w-4" />
-              Vista Gantt
+              <Calendar className="mr-2 h-4 w-4" /> Vista Gantt
             </Button>
           </Link>
         </div>
@@ -312,7 +321,12 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
           columnId={createItemColumnId}
           onClose={() => setCreateItemColumnId(null)}
           onCreated={fetchData}
-          assignees={assignees}
+          assignees={
+            members
+              .filter((m) => m.role === 'editor')
+              .map((m) => users.find((u) => u.id === m.userId))
+              .filter(Boolean) as User[]
+          }
           userRole={userRole}
         />
       )}
@@ -331,7 +345,12 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
           item={editItem}
           onClose={() => setEditItem(null)}
           onUpdated={fetchData}
-          assignees={assignees}
+          assignees={
+            members
+              .filter((m) => m.role === 'editor')
+              .map((m) => users.find((u) => u.id === m.userId))
+              .filter(Boolean) as User[]
+          }
           userRole={userRole}
           currentUserId={userId!}
         />
