@@ -59,6 +59,16 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
 
   const [showInvite, setShowInvite] = useState(false);
 
+  const getUserIdFromToken = (token: string | null): string | null => {
+    if (!token) return null;
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'];
+    } catch {
+      return null;
+    }
+  };
+
   const userId = getUserIdFromToken(auth.token);
   const userMember = members.find((m) => m.userId === userId);
   const userRole = userMember?.role;
@@ -116,60 +126,88 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
       const key = `${action}:${payload.id ?? payload.columnId}`;
       if (lastRef.current === key) return;
       lastRef.current = key;
-      const labels: Record<string, string> = {
-        ColumnCreated: '📌 Nueva columna añadida',
-        ColumnUpdated: '✏️ Columna actualizada',
-        ColumnDeleted: '🗑️ Columna eliminada',
-        ItemCreated: '✅ Tarea creada',
-        ItemUpdated: '🔁 Tarea actualizada',
-        ItemDeleted: '🗑️ Tarea eliminada',
-        ItemStatusChanged: '📍 Estado actualizado',
-        ItemFileUploaded: '📎 Archivo subido',
-      };
-      toast.info(labels[action] ?? `🔔 Cambio en el tablero: ${action}`);
+      const currentUserId = userId;
+
       switch (action) {
         case 'ColumnCreated':
+          toast.info('📌 Nueva columna añadida');
           setColumns((c) => [...c, payload]);
           break;
+
         case 'ColumnUpdated':
+          toast.info('✏️ Columna actualizada');
           setColumns((c) =>
             c.map((col) =>
               col.id === payload.id ? { ...col, title: payload.title, order: payload.order } : col,
             ),
           );
           break;
+
         case 'ColumnDeleted':
+          toast.info('🗑️ Columna eliminada');
           setColumns((c) => c.filter((col) => col.id !== payload.columnId));
           setItems((i) => i.filter((it) => it.columnId !== payload.columnId));
           break;
+
         case 'ItemCreated':
           setItems((i) => [...i, payload]);
+          if (payload.assigneeId === currentUserId) {
+            toast.info(`✅ Te han asignado la tarea "${payload.title}"`, {
+              toastId: `item-assigned-${payload.id}`,
+            });
+          }
           break;
+
         case 'ItemUpdated':
           setItems((i) => i.map((it) => (it.id === payload.id ? { ...it, ...payload } : it)));
+          if (payload.assigneeId === currentUserId) {
+            toast.info(`🔁 La tarea "${payload.title}" ha sido modificada`, {
+              toastId: `item-updated-${payload.id}`,
+            });
+          }
           break;
+
         case 'ItemDeleted':
           setItems((i) => i.filter((it) => it.id !== payload.id));
+          if (payload.assigneeId === currentUserId) {
+            toast.info(`🗑️ Tu tarea "${payload.title}" ha sido eliminada`, {
+              toastId: `item-deleted-${payload.id}`,
+            });
+          }
           break;
+
         case 'ItemStatusChanged':
           setItems((i) =>
             i.map((it) => (it.id === payload.id ? { ...it, status: payload.status } : it)),
           );
+          if (payload.assigneeId === currentUserId) {
+            toast.info(`📍 Estado actualizado de "${payload.title}"`, {
+              toastId: `item-status-${payload.id}`,
+            });
+          }
           break;
+
+        case 'ItemFileUploaded':
+          if (payload.assigneeId === currentUserId) {
+            toast.info(`📎 Se ha subido un archivo a "${payload.title}"`, {
+              toastId: `item-file-${payload.id}`,
+            });
+          }
+          break;
+
         default:
           fetchData();
       }
     };
+
     connection.on('BoardUpdated', handler);
     return () => void connection.off('BoardUpdated', handler);
-  }, [connection, boardId, fetchData]);
+  }, [connection, boardId, fetchData, userId]);
 
   useEffect(() => {
     if (!connection) return;
     connection.invoke('JoinBoardGroup', boardId).catch(console.error);
-    return () => {
-      connection.invoke('LeaveBoardGroup', boardId).catch(console.error);
-    };
+    return () => connection.invoke('LeaveBoardGroup', boardId).catch(console.error);
   }, [connection, boardId]);
 
   const findActiveItem = (id: string) => items.find((it) => it.id === id);
@@ -179,7 +217,9 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
     const it = findActiveItem(active.id as string);
     if (it) setActiveItem(it);
   };
+
   const handleDragOver = (_: DragOverEvent) => {};
+
   const handleDragEnd = async ({ active, over }: DragEndEvent) => {
     if (!over) return resetDrag();
     const aId = active.id as string;
@@ -243,6 +283,7 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
         <div className="spinner" />
       </div>
     );
+
   if (!board) return <div className="p-8 text-red-600">Tablero no encontrado</div>;
 
   return (
@@ -357,14 +398,4 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
       )}
     </div>
   );
-}
-
-function getUserIdFromToken(token: string | null): string | null {
-  if (!token) return null;
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    return payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'];
-  } catch {
-    return null;
-  }
 }
