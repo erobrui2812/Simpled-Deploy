@@ -15,14 +15,14 @@ interface User {
 }
 
 interface KanbanColumnProps {
-  column: { id: string; title: string };
-  items: any[];
-  users: User[]; // ← añadimos aquí
-  canEdit: boolean;
-  onAddItem: () => void;
-  onEditColumn: () => void;
-  onEditItem: (item: any) => void;
-  onDeleteColumn: () => void;
+  readonly column: { id: string; title: string };
+  readonly items: any[];
+  readonly users: User[];
+  readonly canEdit: boolean;
+  readonly onAddItem: () => void;
+  readonly onEditColumn: () => void;
+  readonly onEditItem: (item: any) => void;
+  readonly onDeleteColumn: () => void;
 }
 
 export default function KanbanColumn({

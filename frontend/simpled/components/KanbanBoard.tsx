@@ -206,8 +206,12 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
 
   useEffect(() => {
     if (!connection) return;
+
     connection.invoke('JoinBoardGroup', boardId).catch(console.error);
-    return () => connection.invoke('LeaveBoardGroup', boardId).catch(console.error);
+
+    return () => {
+      void connection.invoke('LeaveBoardGroup', boardId).catch(console.error);
+    };
   }, [connection, boardId]);
 
   const findActiveItem = (id: string) => items.find((it) => it.id === id);
