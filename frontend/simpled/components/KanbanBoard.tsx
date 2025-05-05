@@ -59,6 +59,29 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
 
   const [showInvite, setShowInvite] = useState(false);
 
+  useEffect(() => {
+    if (
+      'Notification' in window &&
+      Notification.permission !== 'granted' &&
+      Notification.permission !== 'denied'
+    ) {
+      Notification.requestPermission();
+    }
+  }, []);
+
+  const showDesktopNotification = useCallback((title: string, options?: NotificationOptions) => {
+    if (!('Notification' in window)) return;
+    if (Notification.permission === 'granted') {
+      new Notification(title, options);
+    } else if (Notification.permission !== 'denied') {
+      Notification.requestPermission().then((permission) => {
+        if (permission === 'granted') {
+          new Notification(title, options);
+        }
+      });
+    }
+  }, []);
+
   const getUserIdFromToken = (token: string | null): string | null => {
     if (!token) return null;
     try {
@@ -110,10 +133,13 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
     } catch (err) {
       console.error('[fetchData] Error:', err);
       toast.error('Error cargando datos');
+      showDesktopNotification('Error cargando datos', {
+        body: err instanceof Error ? err.message : String(err),
+      });
     } finally {
       setLoading(false);
     }
-  }, [boardId, auth.token]);
+  }, [boardId, auth.token, showDesktopNotification]);
 
   useEffect(() => {
     fetchData();
@@ -131,11 +157,13 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
       switch (action) {
         case 'ColumnCreated':
           toast.info('📌 Nueva columna añadida');
+          showDesktopNotification('📌 Nueva columna añadida', { body: payload.title });
           setColumns((c) => [...c, payload]);
           break;
 
         case 'ColumnUpdated':
           toast.info('✏️ Columna actualizada');
+          showDesktopNotification('✏️ Columna actualizada', { body: payload.title });
           setColumns((c) =>
             c.map((col) =>
               col.id === payload.id ? { ...col, title: payload.title, order: payload.order } : col,
@@ -145,6 +173,7 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
 
         case 'ColumnDeleted':
           toast.info('🗑️ Columna eliminada');
+          showDesktopNotification('🗑️ Columna eliminada', { body: `ID: ${payload.columnId}` });
           setColumns((c) => c.filter((col) => col.id !== payload.columnId));
           setItems((i) => i.filter((it) => it.columnId !== payload.columnId));
           break;
@@ -152,27 +181,27 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
         case 'ItemCreated':
           setItems((i) => [...i, payload]);
           if (payload.assigneeId === currentUserId) {
-            toast.info(`✅ Te han asignado la tarea "${payload.title}"`, {
-              toastId: `item-assigned-${payload.id}`,
-            });
+            const msg = `Te han asignado la tarea "${payload.title}"`;
+            toast.info(`✅ ${msg}`, { toastId: `item-assigned-${payload.id}` });
+            showDesktopNotification('✅ Nueva tarea asignada', { body: payload.title });
           }
           break;
 
         case 'ItemUpdated':
           setItems((i) => i.map((it) => (it.id === payload.id ? { ...it, ...payload } : it)));
           if (payload.assigneeId === currentUserId) {
-            toast.info(`🔁 La tarea "${payload.title}" ha sido modificada`, {
-              toastId: `item-updated-${payload.id}`,
-            });
+            const msg = `La tarea "${payload.title}" ha sido modificada`;
+            toast.info(`🔁 ${msg}`, { toastId: `item-updated-${payload.id}` });
+            showDesktopNotification('🔁 Tarea modificada', { body: payload.title });
           }
           break;
 
         case 'ItemDeleted':
           setItems((i) => i.filter((it) => it.id !== payload.id));
           if (payload.assigneeId === currentUserId) {
-            toast.info(`🗑️ Tu tarea "${payload.title}" ha sido eliminada`, {
-              toastId: `item-deleted-${payload.id}`,
-            });
+            const msg = `Tu tarea "${payload.title}" ha sido eliminada`;
+            toast.info(`🗑️ ${msg}`, { toastId: `item-deleted-${payload.id}` });
+            showDesktopNotification('🗑️ Tarea eliminada', { body: payload.title });
           }
           break;
 
@@ -181,17 +210,19 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
             i.map((it) => (it.id === payload.id ? { ...it, status: payload.status } : it)),
           );
           if (payload.assigneeId === currentUserId) {
-            toast.info(`📍 Estado actualizado de "${payload.title}"`, {
-              toastId: `item-status-${payload.id}`,
+            const msg = `Estado actualizado de "${payload.title}"`;
+            toast.info(`📍 ${msg}`, { toastId: `item-status-${payload.id}` });
+            showDesktopNotification('📍 Estado de tarea', {
+              body: `${payload.title}: ${payload.status}`,
             });
           }
           break;
 
         case 'ItemFileUploaded':
           if (payload.assigneeId === currentUserId) {
-            toast.info(`📎 Se ha subido un archivo a "${payload.title}"`, {
-              toastId: `item-file-${payload.id}`,
-            });
+            const msg = `Se ha subido un archivo a "${payload.title}"`;
+            toast.info(`📎 ${msg}`, { toastId: `item-file-${payload.id}` });
+            showDesktopNotification('📎 Archivo subido', { body: payload.title });
           }
           break;
 
@@ -202,13 +233,11 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
 
     connection.on('BoardUpdated', handler);
     return () => void connection.off('BoardUpdated', handler);
-  }, [connection, boardId, fetchData, userId]);
+  }, [connection, boardId, fetchData, userId, showDesktopNotification]);
 
   useEffect(() => {
     if (!connection) return;
-
     connection.invoke('JoinBoardGroup', boardId).catch(console.error);
-
     return () => {
       void connection.invoke('LeaveBoardGroup', boardId).catch(console.error);
     };
@@ -245,8 +274,10 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
         if (!res.ok) throw new Error();
         setItems((prev) => prev.map((i) => (i.id === aId ? { ...i, columnId: oId } : i)));
         toast.success('Tarea movida');
+        showDesktopNotification('✅ Tarea movida', { body: it.title });
       } catch {
         toast.error('Error moviendo');
+        showDesktopNotification('⚠️ Error moviendo tarea', { body: it.title });
         fetchData();
       }
     }
@@ -270,8 +301,10 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
       setColumns((p) => p.filter((c) => c.id !== colId));
       setItems((p) => p.filter((i) => i.columnId !== colId));
       toast.success('Columna eliminada');
+      showDesktopNotification('🗑️ Columna eliminada', { body: `ID: ${colId}` });
     } catch (e: any) {
       toast.error(e.message);
+      showDesktopNotification('⚠️ Error eliminando columna', { body: e.message });
       fetchData();
     }
   };
@@ -299,6 +332,7 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
             {board.isPublic ? 'Público' : 'Privado'} • Miembros: {members.length}
           </p>
         </div>
+
         <div className="flex gap-2">
           {userRole === 'admin' && <Button onClick={() => setShowInvite(true)}>Invitar</Button>}
           {canEdit && <Button onClick={() => setShowCreateColumn(true)}>Añadir columna</Button>}
