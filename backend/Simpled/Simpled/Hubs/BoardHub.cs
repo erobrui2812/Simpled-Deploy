@@ -45,5 +45,17 @@ namespace Simpled.Hubs
             }
             await base.OnConnectedAsync();
         }
+
+        public async Task JoinBoardGroup(Guid boardId)
+        {
+            await Groups.AddToGroupAsync(Context.ConnectionId, boardId.ToString());
+            Console.WriteLine($"[Hub] Usuario unido al grupo del board {boardId}");
+        }
+
+        public async Task LeaveBoardGroup(Guid boardId)
+        {
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, boardId.ToString());
+            Console.WriteLine($"[Hub] Usuario salió del grupo del board {boardId}");
+        }
     }
 }

@@ -32,7 +32,7 @@ export default function BoardDetails({ boardId }: Readonly<{ boardId: string }>)
   const [inviteRole, setInviteRole] = useState('editor');
 
   const userId = getUserIdFromToken(auth.token);
-  const userMember = Array.isArray(members) ? members.find((m) => m.userId === userId) : null;
+  const userMember = members.find((m) => m.userId === userId);
   const userRole = userMember?.role;
   const canEdit = userRole === 'admin' || userRole === 'editor';
 
@@ -40,6 +40,7 @@ export default function BoardDetails({ boardId }: Readonly<{ boardId: string }>)
   if (auth.token) headers['Authorization'] = `Bearer ${auth.token}`;
 
   const fetchData = async () => {
+    setLoading(true);
     try {
       const [boardRes, columnRes, itemRes, membersRes] = await Promise.all([
         fetch(`${API}/api/Boards/${boardId}`, { headers }),
@@ -53,14 +54,7 @@ export default function BoardDetails({ boardId }: Readonly<{ boardId: string }>)
       const boardData = await boardRes.json();
       const columnData = (await columnRes.json()).filter((c: any) => c.boardId === boardId);
       const itemData = await itemRes.json();
-
-      let membersData: any[] = [];
-      try {
-        const raw = await membersRes.text();
-        membersData = raw ? JSON.parse(raw) : [];
-      } catch {
-        membersData = [];
-      }
+      const membersData = await membersRes.json();
 
       setBoard(boardData);
       setColumns(columnData);
@@ -68,10 +62,18 @@ export default function BoardDetails({ boardId }: Readonly<{ boardId: string }>)
       setMembers(membersData);
     } catch (err) {
       console.error('Error al cargar el tablero:', err);
+      toast.error('No se pudieron cargar los datos del tablero.');
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchData();
+  }, [boardId, auth.token]);
+
+  if (loading) return <div className="p-8">Cargando tablero...</div>;
+  if (!board) return <div className="p-8 text-red-600">Tablero no encontrado</div>;
 
   const sendInvitation = async () => {
     try {
@@ -94,18 +96,12 @@ export default function BoardDetails({ boardId }: Readonly<{ boardId: string }>)
       setShowInviteModal(false);
       setInviteEmail('');
       setInviteRole('editor');
+      fetchData();
     } catch (err) {
       console.error(err);
       toast.error('Error al enviar la invitación.');
     }
   };
-
-  useEffect(() => {
-    fetchData();
-  }, [boardId, auth.token]);
-
-  if (loading) return <div className="p-8">Cargando tablero...</div>;
-  if (!board) return <div className="p-8 text-red-600">Tablero no encontrado</div>;
 
   return (
     <div className="mx-auto max-w-6xl p-8">
@@ -113,11 +109,11 @@ export default function BoardDetails({ boardId }: Readonly<{ boardId: string }>)
         <h1 className="text-2xl font-bold">{board.name}</h1>
         <span className="rounded bg-gray-200 p-2 text-sm dark:bg-gray-700">
           {board.isPublic ? (
-            <div className="inline-flex items-center gap-1 align-middle">
+            <div className="inline-flex items-center gap-1">
               <LockOpen className="h-5 w-5" /> Público
             </div>
           ) : (
-            <div className="inline-flex items-center gap-1 align-middle">
+            <div className="inline-flex items-center gap-1">
               <Lock className="h-5 w-5" /> Privado
             </div>
           )}
@@ -125,34 +121,29 @@ export default function BoardDetails({ boardId }: Readonly<{ boardId: string }>)
       </div>
 
       {userRole === 'admin' && (
-        <div className="mb-3 flex flex-wrap gap-2">
+        <div className="mb-3 flex gap-2">
           <button
             onClick={() => setShowCreateColumn(true)}
-            className="rounded bg-blue-600 p-2 px-3 text-sm text-white hover:bg-blue-700"
+            className="rounded bg-blue-600 px-3 py-2 text-white hover:bg-blue-700"
           >
-            <div className="inline-flex items-center gap-1 align-middle">
-              <Plus className="h-5 w-5" /> Añadir columna
-            </div>
+            <Plus className="mr-1 inline-block h-4 w-4" /> Añadir columna
           </button>
-
           <button
             onClick={() => setShowInviteModal(true)}
-            className="rounded bg-green-600 p-2 px-3 text-sm text-white hover:bg-green-700"
+            className="rounded bg-green-600 px-3 py-2 text-white hover:bg-green-700"
           >
-            <div className="inline-flex items-center gap-1 align-middle">
-              <UserPlus className="h-5 w-5" /> Invitar usuarios
-            </div>
+            <UserPlus className="mr-1 inline-block h-4 w-4" /> Invitar usuarios
           </button>
         </div>
       )}
 
-      <p className="mb-6 inline-flex items-center gap-1 align-middle text-sm text-gray-500 dark:text-gray-400">
+      <p className="mb-6 flex items-center gap-1 text-sm text-gray-500">
         <BookUser className="h-5 w-5" /> Miembros: {members.length}
       </p>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         {columns.map((col) => (
-          <div key={col.id} className="rounded bg-white p-4 shadow dark:bg-neutral-800">
+          <div key={col.id} className="rounded bg-white p-4 shadow">
             <div className="mb-2 flex items-center justify-between">
               <h2 className="text-lg font-semibold">{col.title}</h2>
               {canEdit && (
@@ -161,38 +152,32 @@ export default function BoardDetails({ boardId }: Readonly<{ boardId: string }>)
                     setEditColumnId(col.id);
                     setEditColumnTitle(col.title);
                   }}
-                  className="rounded bg-blue-600 p-1.5 text-sm text-white hover:bg-blue-700"
+                  className="rounded bg-blue-600 px-2 py-1 text-white hover:bg-blue-700"
                 >
-                  <div className="inline-flex items-center gap-1 align-middle">
-                    <PenLine className="h-4 w-4" /> Editar
-                  </div>
+                  <PenLine className="mr-1 inline-block h-4 w-4" /> Editar
                 </button>
               )}
             </div>
-            <div className="mb-2.5 flex flex-col gap-2">
+            <div className="mb-2 flex flex-col gap-2">
               {items
                 .filter((item) => item.columnId === col.id)
                 .map((item) => (
                   <button
                     key={item.id}
-                    className="cursor-pointer rounded border bg-neutral-50 p-2 text-left dark:bg-neutral-900"
+                    className="rounded border bg-gray-50 p-2 text-left"
                     onClick={() => canEdit && setEditItem(item)}
                   >
                     <strong>{item.title}</strong>
-                    {item.description && (
-                      <p className="text-sm text-gray-500">{item.description}</p>
-                    )}
+                    {item.description && <p className="text-sm">{item.description}</p>}
                   </button>
                 ))}
             </div>
             {canEdit && (
               <button
                 onClick={() => setCreateItemColumnId(col.id)}
-                className="rounded bg-blue-600 p-1.5 text-sm text-white hover:bg-blue-700"
+                className="rounded bg-blue-600 px-2 py-1 text-white hover:bg-blue-700"
               >
-                <div className="inline-flex items-center gap-1 align-middle">
-                  <Plus className="h-5 w-5" /> Añadir tarea
-                </div>
+                <Plus className="mr-1 inline-block h-4 w-4" /> Añadir tarea
               </button>
             )}
           </div>
@@ -206,7 +191,6 @@ export default function BoardDetails({ boardId }: Readonly<{ boardId: string }>)
           onCreated={fetchData}
         />
       )}
-
       {createItemColumnId && (
         <ItemCreateModal
           columnId={createItemColumnId}
@@ -214,7 +198,6 @@ export default function BoardDetails({ boardId }: Readonly<{ boardId: string }>)
           onCreated={fetchData}
         />
       )}
-
       {editColumnId && (
         <ColumnEditModal
           columnId={editColumnId}
@@ -222,36 +205,26 @@ export default function BoardDetails({ boardId }: Readonly<{ boardId: string }>)
           boardId={boardId}
           onClose={() => setEditColumnId(null)}
           onUpdated={fetchData}
-          token={auth.token!}
         />
       )}
-
       {editItem && (
         <ItemEditModal item={editItem} onClose={() => setEditItem(null)} onUpdated={fetchData} />
       )}
 
       {showInviteModal && (
-        <div className="bg-opacity-40 fixed inset-0 z-50 flex items-center justify-center bg-black backdrop-blur-sm">
-          <div className="w-full max-w-md rounded bg-white p-6 shadow-lg dark:bg-neutral-800">
+        <div className="bg-opacity-40 fixed inset-0 flex items-center justify-center bg-black">
+          <div className="w-full max-w-md rounded bg-white p-6 shadow-lg">
             <h2 className="mb-4 text-lg font-semibold">Invitar a un usuario</h2>
-
-            <label htmlFor="inviteEmail" className="mb-1 block text-sm">
-              Correo electrónico
-            </label>
+            <label className="mb-1 block">Correo electrónico</label>
             <input
-              id="inviteEmail"
               type="email"
               className="mb-4 w-full rounded border p-2"
               value={inviteEmail}
               onChange={(e) => setInviteEmail(e.target.value)}
-              placeholder="Introduce el correo electrónico"
+              placeholder="email@ejemplo.com"
             />
-
-            <label htmlFor="inviteRole" className="mb-1 block text-sm">
-              Rol asignado
-            </label>
+            <label className="mb-1 block">Rol asignado</label>
             <select
-              id="inviteRole"
               className="mb-4 w-full rounded border p-2"
               value={inviteRole}
               onChange={(e) => setInviteRole(e.target.value)}
@@ -259,7 +232,6 @@ export default function BoardDetails({ boardId }: Readonly<{ boardId: string }>)
               <option value="editor">Editor</option>
               <option value="viewer">Visualizador</option>
             </select>
-
             <div className="flex justify-end gap-2">
               <button
                 className="rounded bg-gray-400 px-4 py-2 text-white hover:bg-gray-500"
@@ -283,8 +255,8 @@ export default function BoardDetails({ boardId }: Readonly<{ boardId: string }>)
   function getUserIdFromToken(token: string | null): string | null {
     if (!token) return null;
     try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      return payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'];
+      const pl = JSON.parse(atob(token.split('.')[1]));
+      return pl['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'];
     } catch {
       return null;
     }

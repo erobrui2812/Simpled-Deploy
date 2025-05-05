@@ -1,19 +1,23 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 using Simpled.Data;
 using Simpled.Dtos.Boards;
+using Simpled.Exception;
+using Simpled.Hubs;
 using Simpled.Models;
 using Simpled.Repository;
-using Simpled.Exception;
 
 namespace Simpled.Services
 {
     public class BoardService : IBoardRepository
     {
         private readonly SimpledDbContext _context;
+        private readonly IHubContext<BoardHub> _hubContext;
 
-        public BoardService(SimpledDbContext context)
+        public BoardService(SimpledDbContext context, IHubContext<BoardHub> hubContext)
         {
             _context = context;
+            _hubContext = hubContext;
         }
 
         public async Task<IEnumerable<BoardReadDto>> GetAllAsync(Guid? userId = null)
@@ -44,7 +48,6 @@ namespace Simpled.Services
 
             return boards;
         }
-
 
         public async Task<BoardReadDto?> GetByIdAsync(Guid id)
         {
@@ -82,13 +85,19 @@ namespace Simpled.Services
 
             await _context.SaveChangesAsync();
 
-            return new BoardReadDto
+            var dtoResult = new BoardReadDto
             {
                 Id = newBoard.Id,
                 Name = newBoard.Name,
                 OwnerId = newBoard.OwnerId,
                 IsPublic = newBoard.IsPublic
             };
+
+            // Emitir notificación general si estás en una vista global
+            await _hubContext.Clients.User(userId.ToString())
+                .SendAsync("BoardUpdated", newBoard.Id, "BoardCreated", dtoResult);
+
+            return dtoResult;
         }
 
         public async Task<bool> UpdateAsync(BoardUpdateDto dto)
@@ -101,9 +110,16 @@ namespace Simpled.Services
             board.IsPublic = dto.IsPublic;
 
             await _context.SaveChangesAsync();
+
+            await _hubContext.Clients.Group(dto.Id.ToString())
+                .SendAsync("BoardUpdated", dto.Id, "BoardUpdated", new
+                {
+                    dto.Name,
+                    dto.IsPublic
+                });
+
             return true;
         }
-
 
         public async Task<bool> DeleteAsync(Guid id)
         {
@@ -113,6 +129,10 @@ namespace Simpled.Services
 
             _context.Boards.Remove(board);
             await _context.SaveChangesAsync();
+
+            await _hubContext.Clients.Group(id.ToString())
+                .SendAsync("BoardUpdated", id, "BoardDeleted", new { id });
+
             return true;
         }
 

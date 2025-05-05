@@ -1,8 +1,9 @@
-﻿
+﻿using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Simpled.Data;
 using Simpled.Dtos.Items;
 using Simpled.Exception;
+using Simpled.Hubs;
 using Simpled.Models;
 using Simpled.Repository;
 
@@ -11,7 +12,13 @@ namespace Simpled.Services
     public class ItemService : IItemRepository
     {
         private readonly SimpledDbContext _context;
-        public ItemService(SimpledDbContext context) => _context = context;
+        private readonly IHubContext<BoardHub> _hubContext;
+
+        public ItemService(SimpledDbContext context, IHubContext<BoardHub> hubContext)
+        {
+            _context = context;
+            _hubContext = hubContext;
+        }
 
         public async Task<IEnumerable<ItemReadDto>> GetAllAsync()
             => await _context.Items
@@ -57,7 +64,8 @@ namespace Simpled.Services
             };
             _context.Items.Add(i);
             await _context.SaveChangesAsync();
-            return new ItemReadDto
+
+            var result = new ItemReadDto
             {
                 Id = i.Id,
                 Title = i.Title,
@@ -67,6 +75,12 @@ namespace Simpled.Services
                 Status = i.Status,
                 AssigneeId = i.AssigneeId
             };
+
+            var boardId = await GetBoardIdByColumnId(dto.ColumnId);
+            await _hubContext.Clients.Group(boardId.ToString())
+                .SendAsync("BoardUpdated", boardId, "ItemCreated", result);
+
+            return result;
         }
 
         public async Task<bool> UpdateAsync(ItemUpdateDto dto)
@@ -80,6 +94,20 @@ namespace Simpled.Services
             i.Status = dto.Status;
             i.AssigneeId = dto.AssigneeId;
             await _context.SaveChangesAsync();
+
+            var boardId = await GetBoardIdByItemId(dto.Id);
+            await _hubContext.Clients.Group(boardId.ToString())
+                .SendAsync("BoardUpdated", boardId, "ItemUpdated", new
+                {
+                    dto.Id,
+                    dto.Title,
+                    dto.Description,
+                    dto.DueDate,
+                    dto.ColumnId,
+                    dto.Status,
+                    dto.AssigneeId
+                });
+
             return true;
         }
 
@@ -89,6 +117,11 @@ namespace Simpled.Services
                 ?? throw new NotFoundException("Ítem no encontrado.");
             i.Status = status;
             await _context.SaveChangesAsync();
+
+            var boardId = await GetBoardIdByItemId(id);
+            await _hubContext.Clients.Group(boardId.ToString())
+                .SendAsync("BoardUpdated", boardId, "ItemStatusChanged", new { id, status });
+
             return true;
         }
 
@@ -96,8 +129,14 @@ namespace Simpled.Services
         {
             var i = await _context.Items.FindAsync(id)
                 ?? throw new NotFoundException("Ítem no encontrado.");
+            var boardId = await GetBoardIdByItemId(id);
+
             _context.Items.Remove(i);
             await _context.SaveChangesAsync();
+
+            await _hubContext.Clients.Group(boardId.ToString())
+                .SendAsync("BoardUpdated", boardId, "ItemDeleted", new { id });
+
             return true;
         }
 
@@ -124,6 +163,16 @@ namespace Simpled.Services
             };
             _context.Contents.Add(content);
             await _context.SaveChangesAsync();
+
+            var boardId = await GetBoardIdByItemId(itemId);
+            await _hubContext.Clients.Group(boardId.ToString())
+                .SendAsync("BoardUpdated", boardId, "ItemFileUploaded", new
+                {
+                    itemId,
+                    contentId = content.Id,
+                    content.Value
+                });
+
             return content;
         }
 

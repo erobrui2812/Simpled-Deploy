@@ -1,8 +1,9 @@
-﻿
+﻿using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Simpled.Data;
 using Simpled.Dtos.Columns;
 using Simpled.Exception;
+using Simpled.Hubs;
 using Simpled.Models;
 using Simpled.Repository;
 
@@ -11,10 +12,12 @@ namespace Simpled.Services
     public class ColumnService : IColumnRepository
     {
         private readonly SimpledDbContext _context;
+        private readonly IHubContext<BoardHub> _hubContext;
 
-        public ColumnService(SimpledDbContext context)
+        public ColumnService(SimpledDbContext context, IHubContext<BoardHub> hubContext)
         {
             _context = context;
+            _hubContext = hubContext;
         }
 
         public async Task<IEnumerable<BoardColumnReadDto>> GetAllAsync()
@@ -58,13 +61,18 @@ namespace Simpled.Services
             _context.BoardColumns.Add(newColumn);
             await _context.SaveChangesAsync();
 
-            return new BoardColumnReadDto
+            var columnDto = new BoardColumnReadDto
             {
                 Id = newColumn.Id,
                 BoardId = newColumn.BoardId,
                 Title = newColumn.Title,
                 Order = newColumn.Order
             };
+
+            await _hubContext.Clients.Group(dto.BoardId.ToString())
+                .SendAsync("BoardUpdated", dto.BoardId, "ColumnCreated", columnDto);
+
+            return columnDto;
         }
 
         public async Task<bool> UpdateAsync(BoardColumnUpdateDto dto)
@@ -78,9 +86,17 @@ namespace Simpled.Services
             column.Order = dto.Order;
 
             await _context.SaveChangesAsync();
+
+            await _hubContext.Clients.Group(dto.BoardId.ToString())
+                .SendAsync("BoardUpdated", dto.BoardId, "ColumnUpdated", new
+                {
+                    dto.Id,
+                    dto.Title,
+                    dto.Order
+                });
+
             return true;
         }
-
 
         public Task<bool> DeleteAsync(Guid id)
         {
@@ -95,6 +111,8 @@ namespace Simpled.Services
 
             if (column == null)
                 throw new NotFoundException("Columna no encontrada.");
+
+            var boardId = column.BoardId;
 
             if (column.Items.Any())
             {
@@ -120,6 +138,10 @@ namespace Simpled.Services
 
             _context.BoardColumns.Remove(column);
             await _context.SaveChangesAsync();
+
+            await _hubContext.Clients.Group(boardId.ToString())
+                .SendAsync("BoardUpdated", boardId, "ColumnDeleted", new { columnId });
+
             return true;
         }
 

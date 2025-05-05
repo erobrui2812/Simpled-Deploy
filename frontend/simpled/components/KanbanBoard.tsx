@@ -1,7 +1,9 @@
+// KanbanBoard.tsx
 'use client';
 
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSignalR } from '@/contexts/SignalRContext';
 import {
   DndContext,
   DragOverlay,
@@ -17,7 +19,7 @@ import {
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { Calendar } from 'lucide-react';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 import BoardInviteModal from './BoardInviteModal';
 import ColumnCreateModal from './ColumnCreateModal';
@@ -37,6 +39,9 @@ type User = {
 
 export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
   const { auth } = useAuth();
+  const { connection } = useSignalR();
+  const lastActionRef = useRef<string | null>(null);
+
   const [board, setBoard] = useState<any>(null);
   const [columns, setColumns] = useState<any[]>([]);
   const [items, setItems] = useState<any[]>([]);
@@ -57,7 +62,7 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
 
   const userId = getUserIdFromToken(auth.token);
   const userMember = members.find((m) => m.userId === userId);
-  const userRole = userMember?.role; // 'admin' | 'editor' | 'viewer'
+  const userRole = userMember?.role;
   const canEdit = userRole === 'admin' || userRole === 'editor';
 
   const headers: HeadersInit = {};
@@ -68,13 +73,11 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
-  // solo 'admin' puede asignar
   const assignees: User[] = members
     .filter((m) => m.role === 'editor')
     .map((m) => users.find((u) => u.id === m.userId))
     .filter(Boolean) as User[];
 
-  // fetch initial
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -85,22 +88,27 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
         fetch(`${API}/api/BoardMembers/board/${boardId}`, { headers }),
         fetch(`${API}/api/Users`, { headers }),
       ]);
-      if (!bR.ok) throw new Error();
-      const [bd, allCols, allItems, memText, us] = await Promise.all([
+
+      if (!bR.ok) throw new Error('Error al cargar el tablero');
+
+      const [bd, allCols, allItems, mem, us] = await Promise.all([
         bR.json(),
         cR.json(),
         iR.json(),
-        mR.text(),
+        mR.json(),
         uR.json(),
       ]);
+
       const cols = allCols.filter((c: any) => c.boardId === boardId);
       const its = allItems.filter((i: any) => cols.some((c: any) => c.id === i.columnId));
+
       setBoard(bd);
       setColumns(cols);
       setItems(its);
-      setMembers(memText ? JSON.parse(memText) : []);
+      setMembers(mem);
       setUsers(us);
-    } catch {
+    } catch (err) {
+      console.error('[fetchData] Error:', err);
       toast.error('Error cargando datos');
     } finally {
       setLoading(false);
@@ -111,6 +119,51 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
     fetchData();
   }, [boardId, auth.token]);
 
+  useEffect(() => {
+    if (!connection) return;
+    const join = async () => {
+      try {
+        await connection.invoke('JoinBoardGroup', boardId);
+      } catch (e) {
+        console.error('Error JoinBoardGroup', e);
+      }
+    };
+    const leave = async () => {
+      try {
+        await connection.invoke('LeaveBoardGroup', boardId);
+      } catch (e) {
+        console.error('Error LeaveBoardGroup', e);
+      }
+    };
+    join();
+    return () => leave();
+  }, [connection, boardId]);
+
+  useEffect(() => {
+    if (!connection) return;
+    const handler = (id: string, action: string) => {
+      if (id !== boardId) return;
+      if (lastActionRef.current === action) return;
+      lastActionRef.current = action;
+      const label: Record<string, string> = {
+        ColumnCreated: '📌 Nueva columna añadida',
+        ColumnUpdated: '✏️ Columna actualizada',
+        ColumnDeleted: '🗑️ Columna eliminada',
+        ItemCreated: '✅ Tarea creada',
+        ItemUpdated: '🔁 Tarea actualizada',
+        ItemDeleted: '🗑️ Tarea eliminada',
+        ItemStatusChanged: '📍 Estado actualizado',
+        ItemFileUploaded: '📎 Archivo subido',
+      };
+      toast.info(label[action] ?? `🔔 Cambio en el tablero: ${action}`);
+      fetchData();
+    };
+    connection.on('BoardUpdated', handler);
+    return () => {
+      connection.off('BoardUpdated', handler);
+    };
+  }, [connection, boardId]);
+
   const findActiveItem = (id: string) => items.find((it) => it.id === id);
 
   const handleDragStart = ({ active }: DragStartEvent) => {
@@ -118,9 +171,7 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
     const it = findActiveItem(active.id as string);
     if (it) setActiveItem(it);
   };
-
   const handleDragOver = (_: DragOverEvent) => {};
-
   const handleDragEnd = async ({ active, over }: DragEndEvent) => {
     if (!over) return resetDrag();
     const aId = active.id as string;
@@ -149,26 +200,20 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
     }
     resetDrag();
   };
-
   const handleDeleteColumn = async (colId: string) => {
     const tareas = items.filter((i) => i.columnId === colId);
-    let cascade = false;
-    if (tareas.length) {
-      cascade = confirm(`La columna tiene ${tareas.length} tareas. ¿Eliminar también?`);
-    } else if (!confirm('¿Eliminar columna?')) {
-      return;
-    }
+    const confirmDelete = tareas.length
+      ? confirm(`La columna tiene ${tareas.length} tareas. ¿Eliminar también?`)
+      : confirm('¿Eliminar columna?');
+    if (!confirmDelete) return;
     try {
       const url = new URL(`${API}/api/Columns/${colId}`);
-      if (cascade) url.searchParams.set('cascadeItems', 'true');
+      if (tareas.length) url.searchParams.set('cascadeItems', 'true');
       const res = await fetch(url.toString(), {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${auth.token}` },
       });
-      if (!res.ok) {
-        const txt = await res.text();
-        throw new Error(txt || 'Error al borrar');
-      }
+      if (!res.ok) throw new Error(await res.text());
       setColumns((p) => p.filter((c) => c.id !== colId));
       setItems((p) => p.filter((i) => i.columnId !== colId));
       toast.success('Columna eliminada');
@@ -177,7 +222,6 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
       fetchData();
     }
   };
-
   const resetDrag = () => {
     setActiveId(null);
     setActiveItem(null);
@@ -233,7 +277,6 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
                 setEditColumnTitle(col.title);
               }}
               onEditItem={(it) => {
-                // sólo admin o si yo soy el assignee
                 if (userRole === 'admin' || it.assigneeId === userId) {
                   setEditItem(it);
                 }
@@ -300,8 +343,8 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
 function getUserIdFromToken(token: string | null): string | null {
   if (!token) return null;
   try {
-    const pl = JSON.parse(atob(token.split('.')[1]));
-    return pl['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'];
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'];
   } catch {
     return null;
   }

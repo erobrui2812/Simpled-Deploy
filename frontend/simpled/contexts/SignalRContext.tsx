@@ -13,17 +13,27 @@ const SignalRContext = createContext<SignalRContextType>({ connection: null });
 
 export const useSignalR = () => useContext(SignalRContext);
 
+const showToast = (() => {
+  const cache = new Set<string>();
+  return (message: string, id: string) => {
+    if (cache.has(id)) return;
+    cache.add(id);
+    toast.info(message, {
+      toastId: id,
+      onClose: () => cache.delete(id),
+    });
+  };
+})();
+
 const handleBoardInvitation = (data: {
   boardName: string;
   role: string;
   invitationToken: string;
 }) => {
-  toast.info(`📩 Invitación al tablero "${data.boardName}" como ${data.role}`, {
-    toastId: `board-invite-${data.invitationToken}`,
-    onClick: () => {
-      window.location.href = `/invitations/${data.invitationToken}`;
-    },
-  });
+  showToast(
+    `📩 Invitación al tablero "${data.boardName}" como ${data.role}`,
+    `board-invite-${data.invitationToken}`,
+  );
 };
 
 const handleTeamInvitation = (data: {
@@ -31,16 +41,14 @@ const handleTeamInvitation = (data: {
   role: string;
   invitationToken: string;
 }) => {
-  toast.info(`📩 Has sido invitado al equipo "${data.teamName}" como ${data.role}`, {
-    toastId: `team-invite-${data.invitationToken}`,
-    onClick: () => {
-      window.location.href = `/equipos/invitacion/${data.invitationToken}`;
-    },
-  });
+  showToast(
+    `📩 Has sido invitado al equipo "${data.teamName}" como ${data.role}`,
+    `team-invite-${data.invitationToken}`,
+  );
 };
 
-const handleBoardUpdated = (boardId: string) => {
-  console.log('Tablero actualizado:', boardId);
+const handleBoardUpdated = (boardId: string, action: string, payload: any) => {
+  console.log('[SignalR] BoardUpdated', { boardId, action, payload });
 };
 
 export const SignalRProvider = ({ children }: { children: React.ReactNode }) => {
@@ -75,6 +83,7 @@ export const SignalRProvider = ({ children }: { children: React.ReactNode }) => 
 
     return () => {
       connectionRef.current?.stop();
+      connectionRef.current = null;
     };
   }, [auth.token]);
 
