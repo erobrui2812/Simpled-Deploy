@@ -49,7 +49,7 @@ namespace Simpled.Services
             return boards;
         }
 
-        public async Task<BoardReadDto?> GetByIdAsync(Guid id)
+        public async Task<BoardReadDto?> GetByIdAsync(Guid id, Guid userId)
         {
             var b = await _context.Boards.FindAsync(id);
             if (b == null)
@@ -60,7 +60,9 @@ namespace Simpled.Services
                 Id = b.Id,
                 Name = b.Name,
                 OwnerId = b.OwnerId,
-                IsPublic = b.IsPublic
+                IsPublic = b.IsPublic,
+                IsFavorite = _context.FavoriteBoards
+                                .Any(f => f.BoardId == b.Id && f.UserId == userId)
             };
         }
 

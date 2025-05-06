@@ -17,7 +17,7 @@ import {
   type DragStartEvent,
 } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
-import { Calendar, Plus, Users } from 'lucide-react';
+import { Calendar, Plus, Star, StarOff, Users } from 'lucide-react';
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
@@ -32,11 +32,12 @@ import KanbanItem from './KanbanItem';
 const API = 'http://localhost:5193';
 
 export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
-  const { auth } = useAuth();
+  const { auth, toggleFavoriteBoard } = useAuth();
   const { connection } = useSignalR();
   const lastRef = useRef<string | null>(null);
 
   const [board, setBoard] = useState<any>(null);
+  console.log(board);
   const [columns, setColumns] = useState<Column[]>([]);
   const [items, setItems] = useState<Item[]>([]);
   const [members, setMembers] = useState<any[]>([]);
@@ -53,6 +54,13 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
   const [editItem, setEditItem] = useState<Item | null>(null);
 
   const [showInvite, setShowInvite] = useState(false);
+
+  const [isFavoriteToggling, setIsFavoriteToggling] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
+
+  useEffect(() => {
+    if (board) setIsFavorite(board.isFavorite);
+  }, [board]);
 
   useEffect(() => {
     if (
@@ -394,6 +402,19 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
     setActiveItem(null);
   };
 
+  const toggleFavorite = async () => {
+    setIsFavoriteToggling(true);
+    try {
+      toggleFavoriteBoard(board.id);
+      setIsFavorite(!isFavorite);
+    } catch (error) {
+      console.error('Error al actualizar favorito:', error);
+      toast.error('No se pudo actualizar el estado de favorito');
+    } finally {
+      setIsFavoriteToggling(false);
+    }
+  };
+
   if (loading)
     return (
       <div className="flex h-[80vh] items-center justify-center">
@@ -407,7 +428,21 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
     <div className="mx-auto p-4">
       <div className="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <h1 className="text-2xl font-bold">{board.name}</h1>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={toggleFavorite}
+              disabled={isFavoriteToggling}
+              title={isFavorite ? 'Quitar de favoritos' : 'Marcar como favorito'}
+              className="text-yellow-500 transition-all duration-300 hover:scale-110 disabled:opacity-50"
+            >
+              {isFavorite ? (
+                <Star className="size-6 fill-yellow-500" />
+              ) : (
+                <StarOff className="size-6" />
+              )}
+            </button>
+            <h1 className="align-middle text-2xl font-bold">{board.name}</h1>
+          </div>
           <p className="text-muted-foreground text-sm">
             {board.isPublic ? 'Público' : 'Privado'} • Miembros: {members.length}
           </p>

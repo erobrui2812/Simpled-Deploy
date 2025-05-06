@@ -11,7 +11,7 @@ import BoardEditModal from './BoardEditModal';
 
 export default function BoardCard({ board }: { readonly board: Board }) {
   const { auth, toggleFavoriteBoard } = useAuth();
-  const { deleteBoard } = useBoards();
+  const { deleteBoard, fetchBoards } = useBoards();
   const [showEdit, setShowEdit] = useState(false);
   const [isFavorite, setIsFavorite] = useState(board.isFavorite);
   const [isDeleting, setIsDeleting] = useState(false);

@@ -39,7 +39,12 @@ namespace Simpled.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetBoard(Guid id)
         {
-            var board = await _boardService.GetByIdAsync(id);
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdClaim))
+                return Unauthorized("No se pudo identificar al usuario.");
+
+            Guid userId = Guid.Parse(userIdClaim);
+            var board = await _boardService.GetByIdAsync(id, userId);
             return board == null ? NotFound("No se ha encontrado el tablero.") : Ok(board);
         }
 
