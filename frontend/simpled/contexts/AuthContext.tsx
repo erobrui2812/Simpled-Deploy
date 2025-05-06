@@ -227,6 +227,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${auth.token}`,
         },
         body: JSON.stringify({ boardId }),
       });
@@ -234,7 +235,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (!response.ok) throw new Error('Error al actualizar favorito.');
 
       const data = await response.json();
-
       toast.success(
         data.favorite ? 'Tablero añadido a favoritos.' : 'Tablero eliminado de favoritos.',
       );

@@ -24,7 +24,6 @@ export default function BoardCard({ board }: { readonly board: Board }) {
     if (confirm('¿Seguro que deseas eliminar este tablero?')) {
       setIsDeleting(true);
       try {
-        // deleteBoard no es async, por tanto se quita el await
         deleteBoard(board.id);
         toast.success('Tablero eliminado con éxito');
       } catch (error) {
