@@ -1,15 +1,15 @@
 'use client';
 
-import { DialogFooter } from '@/components/ui/dialog';
-
-import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -38,6 +38,7 @@ export default function BoardInviteModal({ boardId, onClose, onInvited }: Props)
   const [loading, setLoading] = useState(false);
   const { auth } = useAuth();
 
+  // Envía la invitación al backend
   const handleInvite = async () => {
     if (!email.trim()) {
       toast.warning('El email es obligatorio.');

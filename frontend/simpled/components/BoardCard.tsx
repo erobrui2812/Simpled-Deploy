@@ -24,7 +24,8 @@ export default function BoardCard({ board }: { readonly board: Board }) {
     if (confirm('¿Seguro que deseas eliminar este tablero?')) {
       setIsDeleting(true);
       try {
-        await deleteBoard(board.id);
+        // deleteBoard no es async, por tanto se quita el await
+        deleteBoard(board.id);
         toast.success('Tablero eliminado con éxito');
       } catch (error) {
         console.error('Error al eliminar el tablero:', error);
@@ -38,7 +39,7 @@ export default function BoardCard({ board }: { readonly board: Board }) {
   const toggleFavorite = async () => {
     setIsFavoriteToggling(true);
     try {
-      await toggleFavoriteBoard(board.id);
+      toggleFavoriteBoard(board.id);
       setIsFavorite(!isFavorite);
     } catch (error) {
       console.error('Error al actualizar favorito:', error);
@@ -110,6 +111,7 @@ export default function BoardCard({ board }: { readonly board: Board }) {
   );
 }
 
+// Decodificación del token para obtener el ID del usuario
 function getUserIdFromToken(token: string | null): string | null {
   if (!token) return null;
   try {
