@@ -80,7 +80,7 @@ Registro de tareas realizadas durante el desarrollo del proyecto **Simpled**.
 | 2025-05-05  | Adrián Jiménez   | Implementación de WS relaciadas con Columnas e Items, actualización a tiempo real de Items para todos los usuarios |
 | 2025-05-05  | Adrián Jiménez   | Implementación de notificaciones de escritorio a través de la API `Notification` del navegador. |
 | 2025-05-06  | Elías Robles     | Arreglo calendario  |
-
+| 2025-05-06  | Elías Robles     | Finalizacion lista de tableros favoritos  |
 
 ---
 
