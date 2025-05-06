@@ -29,10 +29,16 @@ interface Team {
   role: string;
 }
 
+interface FavoriteBoard {
+  id: string;
+  name: string;
+}
+
 type AuthContextType = {
   auth: { token: string | null; id: string | null };
   loginUser: (email: string, password: string, keepUserLoggedIn: boolean) => Promise<void>;
   userData: User | null;
+  favoriteBoards: FavoriteBoard[] | undefined;
   registerUser: (
     name: string,
     email: string,
@@ -65,6 +71,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   });
   const [isAuthenticated, setAuthenticated] = useState(false);
   const [userData, setUserData] = useState<User | null>(null);
+  const [favoriteBoards, setFavoriteBoards] = useState<FavoriteBoard[]>([]);
   const router = useRouter();
 
   useEffect(() => {
@@ -107,6 +114,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     };
     getUserData();
+    fetchFavoriteBoards();
   }, [auth.id, userData]);
 
   const loginUser = async (email: string, password: string, keepUserLoggedIn: boolean) => {
@@ -211,10 +219,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const fetchFavoriteBoards = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/favorite-boards`);
+      const response = await fetch(`${API_URL}/api/favorite-boards`, {
+        headers: {
+          Authorization: `Bearer ${auth.token}`,
+        },
+      });
       if (!response.ok) throw new Error('Error al obtener la lista de favoritos.');
       const data = await response.json();
-      return data;
+      setFavoriteBoards(data);
     } catch (error) {
       console.error('Error al obtener la lista de favoritos:', error);
       return null;
@@ -272,6 +284,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       logout,
       isAuthenticated,
       userData,
+      favoriteBoards,
       fetchUserProfile,
       fetchFavoriteBoards,
       toggleFavoriteBoard,

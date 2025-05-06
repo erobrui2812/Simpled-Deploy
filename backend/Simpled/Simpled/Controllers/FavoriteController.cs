@@ -1,4 +1,5 @@
-﻿using System.Security.Claims;
+﻿using System.Linq;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -81,13 +82,17 @@ namespace Simpled.Controllers
             Guid? userId = string.IsNullOrEmpty(userIdClaim) ? null : Guid.Parse(userIdClaim);
             if (userId == null) return Unauthorized();
 
-            var names = await _context.FavoriteBoards
+            var list = await _context.FavoriteBoards
                 .Where(f => f.UserId == userId)
                 .Include(f => f.Board)
-                .Select(f => f.Board!.Name)
+                .Select(f => new {
+                    Id = f.Board!.Id,
+                    Name = f.Board!.Name
+                })
                 .ToListAsync();
 
-            return Ok(names);
+
+            return Ok(list);
         }
     }
 }
