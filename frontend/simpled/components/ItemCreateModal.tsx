@@ -1,12 +1,32 @@
 'use client';
 
+import { DatePicker } from '@/components/DatePicker';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
+import type { User } from '@/types';
+import { Check, Loader2, Trash2, X } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'react-toastify';
 
 const API = 'http://localhost:5193';
-
-type User = { id: string; name: string };
 
 type Props = Readonly<{
   columnId: string;
@@ -26,12 +46,16 @@ export default function ItemCreateModal({
   const { auth } = useAuth();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [dueDate, setDueDate] = useState('');
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
   const [status, setStatus] = useState<'pending' | 'in-progress' | 'completed' | 'delayed'>(
     'pending',
   );
   const [assigneeId, setAssigneeId] = useState<string | null>(null);
+  const [subtasks, setSubtasks] = useState<string[]>([]);
+  const [newSubtask, setNewSubtask] = useState('');
   const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState('details');
 
   const handleCreate = async () => {
     if (!title.trim()) {
@@ -43,7 +67,8 @@ export default function ItemCreateModal({
       const payload: any = {
         title: title.trim(),
         description: description.trim() || null,
-        dueDate: dueDate ? new Date(dueDate).toISOString() : null,
+        startDate: startDate ? startDate.toISOString() : null,
+        dueDate: dueDate ? dueDate.toISOString() : null,
         columnId,
         status,
       };
@@ -60,7 +85,28 @@ export default function ItemCreateModal({
         },
         body: JSON.stringify(payload),
       });
+
       if (!res.ok) throw new Error();
+
+      const createdItem = await res.json();
+
+      // Create subtasks if any
+      if (subtasks.length > 0) {
+        for (const subtaskTitle of subtasks) {
+          await fetch(`${API}/api/items/${createdItem.id}/subtasks`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${auth.token}`,
+            },
+            body: JSON.stringify({
+              itemId: createdItem.id,
+              title: subtaskTitle,
+            }),
+          });
+        }
+      }
+
       toast.success('Tarea creada');
       onCreated();
       onClose();
@@ -71,106 +117,193 @@ export default function ItemCreateModal({
     }
   };
 
+  const handleAddSubtask = () => {
+    if (newSubtask.trim()) {
+      setSubtasks([...subtasks, newSubtask.trim()]);
+      setNewSubtask('');
+    }
+  };
+
+  const handleRemoveSubtask = (index: number) => {
+    setSubtasks(subtasks.filter((_, i) => i !== index));
+  };
+
   return (
-    <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black">
-      <div className="w-full max-w-sm rounded bg-white p-6 shadow-lg dark:bg-neutral-900">
-        <h2 className="mb-4 text-xl font-semibold">Nueva tarea</h2>
-        <form className="space-y-4">
-          <div>
-            <label htmlFor="item-title" className="mb-1 block text-sm font-medium">
-              Título
-            </label>
-            <input
-              id="item-title"
-              type="text"
-              className="mb-1 w-full rounded border px-3 py-2"
-              placeholder="Título de la tarea"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-            />
-          </div>
+    <Dialog open={true} onOpenChange={onClose}>
+      <DialogContent className="animate-scaleIn sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Nueva tarea</DialogTitle>
+        </DialogHeader>
 
-          <div>
-            <label htmlFor="item-description" className="mb-1 block text-sm font-medium">
-              Descripción
-            </label>
-            <textarea
-              id="item-description"
-              className="mb-1 w-full rounded border px-3 py-2"
-              rows={3}
-              placeholder="Descripción de la tarea"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
-          </div>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="details">Detalles</TabsTrigger>
+            <TabsTrigger value="subtasks">Subtareas ({subtasks.length})</TabsTrigger>
+          </TabsList>
 
-          <div>
-            <label htmlFor="item-dueDate" className="mb-1 block text-sm font-medium">
-              Fecha de vencimiento
-            </label>
-            <input
-              id="item-dueDate"
-              type="date"
-              className="mb-1 w-full rounded border px-3 py-2"
-              value={dueDate}
-              onChange={(e) => setDueDate(e.target.value)}
-            />
-          </div>
-
-          <div>
-            <label htmlFor="item-status" className="mb-1 block text-sm font-medium">
-              Estado
-            </label>
-            <select
-              id="item-status"
-              className="mb-1 w-full rounded border px-3 py-2"
-              value={status}
-              onChange={(e) => setStatus(e.target.value as any)}
-            >
-              <option value="pending">Pendiente</option>
-              <option value="in-progress">En progreso</option>
-              <option value="completed">Completada</option>
-              <option value="delayed">Retrasada</option>
-            </select>
-          </div>
-
-          {userRole === 'admin' && (
-            <div>
-              <label htmlFor="item-assignee" className="mb-1 block text-sm font-medium">
-                Asignar a
-              </label>
-              <select
-                id="item-assignee"
-                className="mb-1 w-full rounded border px-3 py-2"
-                value={assigneeId ?? ''}
-                onChange={(e) => setAssigneeId(e.target.value || null)}
-              >
-                <option value="">Sin asignar</option>
-                {assignees.map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.name}
-                  </option>
-                ))}
-              </select>
+          <TabsContent value="details" className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="item-title">Título</Label>
+              <Input
+                id="item-title"
+                placeholder="Título de la tarea"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                autoFocus
+              />
             </div>
-          )}
 
-          {/* Botones */}
-          <div className="flex justify-end gap-2">
-            <button type="button" onClick={onClose} className="rounded bg-gray-300 px-4 py-2">
-              Cancelar
-            </button>
-            <button
-              type="button"
-              onClick={handleCreate}
-              disabled={loading}
-              className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
-            >
-              {loading ? 'Creando...' : 'Crear'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+            <div className="space-y-2">
+              <Label htmlFor="item-description">Descripción</Label>
+              <Textarea
+                id="item-description"
+                placeholder="Descripción de la tarea"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                rows={3}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="item-startDate">Fecha de inicio</Label>
+                <DatePicker
+                  date={startDate}
+                  onDateChange={setStartDate}
+                  placeholder="Fecha inicio"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="item-dueDate">Fecha de vencimiento</Label>
+                <DatePicker date={dueDate} onDateChange={setDueDate} placeholder="Fecha fin" />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="item-status">Estado</Label>
+              <Select value={status} onValueChange={(value) => setStatus(value as any)}>
+                <SelectTrigger id="item-status">
+                  <SelectValue placeholder="Seleccionar estado" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pending">
+                    <div className="flex items-center">
+                      <div className="mr-2 h-2 w-2 rounded-full bg-amber-500"></div>
+                      Pendiente
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="in-progress">
+                    <div className="flex items-center">
+                      <div className="mr-2 h-2 w-2 rounded-full bg-blue-500"></div>
+                      En progreso
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="completed">
+                    <div className="flex items-center">
+                      <div className="mr-2 h-2 w-2 rounded-full bg-emerald-500"></div>
+                      Completada
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="delayed">
+                    <div className="flex items-center">
+                      <div className="mr-2 h-2 w-2 rounded-full bg-rose-500"></div>
+                      Retrasada
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {userRole === 'admin' && assignees.length > 0 && (
+              <div className="space-y-2">
+                <Label htmlFor="item-assignee">Asignar a</Label>
+                <Select
+                  value={assigneeId ?? 'not-assigned'}
+                  onValueChange={(value) => setAssigneeId(value === 'not-assigned' ? null : value)}
+                >
+                  <SelectTrigger id="item-assignee">
+                    <SelectValue placeholder="Sin asignar" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="not-assigned">Sin asignar</SelectItem>
+                    {assignees.map((u) => (
+                      <SelectItem key={u.id} value={u.id}>
+                        {u.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="subtasks" className="py-4">
+            <div className="space-y-3">
+              <h3 className="text-sm font-medium">Subtareas</h3>
+
+              {subtasks.length > 0 ? (
+                <ul className="scrollbar-thin max-h-[200px] space-y-2 overflow-y-auto pr-1">
+                  {subtasks.map((subtask, index) => (
+                    <li key={index} className="group flex items-center gap-2">
+                      <div className="border-primary h-4 w-4 flex-shrink-0 rounded-sm border" />
+                      <span className="flex-1 text-sm">{subtask}</span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 opacity-0 transition-opacity group-hover:opacity-100"
+                        onClick={() => handleRemoveSubtask(index)}
+                      >
+                        <Trash2 className="text-muted-foreground h-4 w-4" />
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-muted-foreground text-sm italic">No hay subtareas</p>
+              )}
+
+              <div className="flex gap-2 pt-1">
+                <Input
+                  placeholder="Nueva subtarea"
+                  value={newSubtask}
+                  onChange={(e) => setNewSubtask(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && newSubtask.trim()) {
+                      e.preventDefault();
+                      handleAddSubtask();
+                    }
+                  }}
+                  className="text-sm"
+                />
+                <Button onClick={handleAddSubtask} disabled={!newSubtask.trim()} size="sm">
+                  Añadir
+                </Button>
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
+
+        <DialogFooter className="flex sm:justify-between">
+          <Button variant="outline" onClick={onClose} disabled={loading}>
+            <X className="mr-2 h-4 w-4" />
+            Cancelar
+          </Button>
+          <Button onClick={handleCreate} disabled={loading}>
+            {loading ? (
+              <span className="inline-flex items-center">
+                <Loader2 className="mr-2 -ml-1 h-4 w-4 animate-spin" />
+                Creando...
+              </span>
+            ) : (
+              <>
+                <Check className="mr-2 h-4 w-4" />
+                Crear
+              </>
+            )}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

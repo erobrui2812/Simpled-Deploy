@@ -1,6 +1,13 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useTeams } from '@/contexts/TeamsContext';
@@ -34,9 +41,11 @@ export default function TeamCreateModal({ onClose, onCreated }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="w-full max-w-md rounded bg-white p-6 shadow-lg dark:bg-neutral-900">
-        <h2 className="mb-4 text-xl font-semibold">Nuevo Equipo</h2>
+    <Dialog open={true} onOpenChange={onClose}>
+      <DialogContent className="animate-scaleIn sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Nuevo Equipo</DialogTitle>
+        </DialogHeader>
         <div className="space-y-3">
           <div>
             <Label htmlFor="team-name">Nombre</Label>
@@ -48,16 +57,16 @@ export default function TeamCreateModal({ onClose, onCreated }: Props) {
               disabled={loading}
             />
           </div>
-          <div className="flex justify-end gap-2">
+          <DialogFooter className="flex sm:justify-between">
             <Button variant="outline" onClick={onClose} disabled={loading}>
               Cancelar
             </Button>
             <Button onClick={handleCreate} disabled={loading}>
               {loading ? 'Creando…' : 'Crear'}
             </Button>
-          </div>
+          </DialogFooter>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -19,9 +19,8 @@ export const SignalRProvider = ({ children }: { children: React.ReactNode }) => 
 
   useEffect(() => {
     if (!auth.token) return;
-    if (connection) return; // ya conectado
+    if (connection) return;
 
-    // Construir la conexión
     const conn = new signalR.HubConnectionBuilder()
       .withUrl('http://localhost:5193/hubs/board', {
         accessTokenFactory: () => auth.token!,
@@ -29,7 +28,6 @@ export const SignalRProvider = ({ children }: { children: React.ReactNode }) => 
       .withAutomaticReconnect()
       .build();
 
-    // Feedback de reconexión
     conn.onreconnecting((error) => {
       console.warn('SignalR reconectando', error);
       toast.info('Reconectando a notificaciones…', {
@@ -49,7 +47,6 @@ export const SignalRProvider = ({ children }: { children: React.ReactNode }) => 
       });
     });
 
-    // Suscripciones de mensajes
     conn.on('InvitationReceived', (data) => {
       toast.info(`📩 Invitación al tablero "${data.boardName}" como ${data.role}`, {
         toastId: `board-invite-${data.invitationToken}`,
@@ -64,7 +61,6 @@ export const SignalRProvider = ({ children }: { children: React.ReactNode }) => 
       console.log('📡 BoardUpdated', { action, payload });
     });
 
-    // Iniciar conexión
     conn
       .start()
       .then(() => {
@@ -76,17 +72,14 @@ export const SignalRProvider = ({ children }: { children: React.ReactNode }) => 
         toast.error('No se pudo conectar a notificaciones');
       });
 
-    // Manejar cierre de pestaña / reload
     const handleUnload = () => conn.stop();
     window.addEventListener('beforeunload', handleUnload);
 
     return () => {
       window.removeEventListener('beforeunload', handleUnload);
-      // No paramos conn aquí para mantener viva la conexión en navegación interna
     };
   }, [auth.token, connection]);
 
-  // Detener conexión al hacer logout
   useEffect(() => {
     if (!auth.token && connection) {
       connection.stop();

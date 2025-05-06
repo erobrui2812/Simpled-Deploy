@@ -3,6 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSignalR } from '@/contexts/SignalRContext';
+import type { Column, Item, User } from '@/types';
 import {
   DndContext,
   DragOverlay,
@@ -16,7 +17,7 @@ import {
   type DragStartEvent,
 } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
-import { Calendar } from 'lucide-react';
+import { Calendar, Plus, Users } from 'lucide-react';
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
@@ -30,32 +31,26 @@ import KanbanItem from './KanbanItem';
 
 const API = 'http://localhost:5193';
 
-type User = {
-  id: string;
-  name: string;
-  imageUrl: string;
-};
-
 export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
   const { auth } = useAuth();
   const { connection } = useSignalR();
   const lastRef = useRef<string | null>(null);
 
   const [board, setBoard] = useState<any>(null);
-  const [columns, setColumns] = useState<any[]>([]);
-  const [items, setItems] = useState<any[]>([]);
+  const [columns, setColumns] = useState<Column[]>([]);
+  const [items, setItems] = useState<Item[]>([]);
   const [members, setMembers] = useState<any[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [activeItem, setActiveItem] = useState<any>(null);
+  const [activeItem, setActiveItem] = useState<Item | null>(null);
 
   const [showCreateColumn, setShowCreateColumn] = useState(false);
   const [createItemColumnId, setCreateItemColumnId] = useState<string | null>(null);
   const [editColumnId, setEditColumnId] = useState<string | null>(null);
   const [editColumnTitle, setEditColumnTitle] = useState<string>('');
-  const [editItem, setEditItem] = useState<any>(null);
+  const [editItem, setEditItem] = useState<Item | null>(null);
 
   const [showInvite, setShowInvite] = useState(false);
 
@@ -101,7 +96,7 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
   if (auth.token) headers['Authorization'] = `Bearer ${auth.token}`;
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 0 } }),
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
@@ -125,9 +120,32 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
       ]);
       const cols = allCols.filter((c: any) => c.boardId === boardId);
       const its = allItems.filter((i: any) => cols.some((c: any) => c.id === i.columnId));
+
+      const itemsWithSubtasks = await Promise.all(
+        its.map(async (item: Item) => {
+          try {
+            const subtasksRes = await fetch(`${API}/api/items/${item.id}/subtasks`, { headers });
+            if (subtasksRes.ok) {
+              const subtasks = await subtasksRes.json();
+
+              const subtasksCount = subtasks.length;
+              const completedSubtasks = subtasks.filter((st: any) => st.isCompleted).length;
+              const progress =
+                subtasksCount > 0 ? Math.round((completedSubtasks / subtasksCount) * 100) : 0;
+
+              return { ...item, subtasks, progress };
+            }
+            return item;
+          } catch (error) {
+            console.error(`Error fetching subtasks for item ${item.id}:`, error);
+            return item;
+          }
+        }),
+      );
+
       setBoard(bd);
       setColumns(cols);
-      setItems(its);
+      setItems(itemsWithSubtasks);
       setMembers(mem);
       setUsers(us);
     } catch (err) {
@@ -226,6 +244,63 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
           }
           break;
 
+        case 'SubtaskCreated':
+          setItems((items) => {
+            return items.map((item) => {
+              if (item.id === payload.itemId) {
+                const subtasks = item.subtasks || [];
+                const newSubtasks = [...subtasks, payload];
+
+                const subtasksCount = newSubtasks.length;
+                const completedSubtasks = newSubtasks.filter((st) => st.isCompleted).length;
+                const progress =
+                  subtasksCount > 0 ? Math.round((completedSubtasks / subtasksCount) * 100) : 0;
+
+                return { ...item, subtasks: newSubtasks, progress };
+              }
+              return item;
+            });
+          });
+          break;
+
+        case 'SubtaskUpdated':
+          setItems((items) => {
+            return items.map((item) => {
+              if (item.id === payload.itemId) {
+                const subtasks = item.subtasks || [];
+                const updatedSubtasks = subtasks.map((st) => (st.id === payload.id ? payload : st));
+
+                const subtasksCount = updatedSubtasks.length;
+                const completedSubtasks = updatedSubtasks.filter((st) => st.isCompleted).length;
+                const progress =
+                  subtasksCount > 0 ? Math.round((completedSubtasks / subtasksCount) * 100) : 0;
+
+                return { ...item, subtasks: updatedSubtasks, progress };
+              }
+              return item;
+            });
+          });
+          break;
+
+        case 'SubtaskDeleted':
+          setItems((items) => {
+            return items.map((item) => {
+              if (item.id === payload.itemId) {
+                const subtasks = item.subtasks || [];
+                const updatedSubtasks = subtasks.filter((st) => st.id !== payload.id);
+
+                const subtasksCount = updatedSubtasks.length;
+                const completedSubtasks = updatedSubtasks.filter((st) => st.isCompleted).length;
+                const progress =
+                  subtasksCount > 0 ? Math.round((completedSubtasks / subtasksCount) * 100) : 0;
+
+                return { ...item, subtasks: updatedSubtasks, progress };
+              }
+              return item;
+            });
+          });
+          break;
+
         default:
           fetchData();
       }
@@ -316,8 +391,8 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
 
   if (loading)
     return (
-      <div className="flex justify-center p-8">
-        <div className="spinner" />
+      <div className="flex h-[80vh] items-center justify-center">
+        <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-blue-600"></div>
       </div>
     );
 
@@ -325,7 +400,7 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
 
   return (
     <div className="mx-auto p-4">
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <h1 className="text-2xl font-bold">{board.name}</h1>
           <p className="text-muted-foreground text-sm">
@@ -333,12 +408,28 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
           </p>
         </div>
 
-        <div className="flex gap-2">
-          {userRole === 'admin' && <Button onClick={() => setShowInvite(true)}>Invitar</Button>}
-          {canEdit && <Button onClick={() => setShowCreateColumn(true)}>Añadir columna</Button>}
+        <div className="flex flex-wrap gap-2">
+          {userRole === 'admin' && (
+            <Button
+              onClick={() => setShowInvite(true)}
+              size="sm"
+              className="flex items-center gap-1"
+            >
+              <Users className="h-4 w-4" /> Invitar
+            </Button>
+          )}
+          {canEdit && (
+            <Button
+              onClick={() => setShowCreateColumn(true)}
+              size="sm"
+              className="flex items-center gap-1"
+            >
+              <Plus className="h-4 w-4" /> Añadir columna
+            </Button>
+          )}
           <Link href={`/tableros/${boardId}/gantt`}>
-            <Button variant="outline">
-              <Calendar className="mr-2 h-4 w-4" /> Vista Gantt
+            <Button variant="outline" size="sm" className="flex items-center gap-1">
+              <Calendar className="h-4 w-4" /> Vista Gantt
             </Button>
           </Link>
         </div>
@@ -351,7 +442,7 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
       >
-        <div className="flex gap-6 overflow-x-auto pb-4">
+        <div className="flex gap-6 overflow-x-auto pt-2 pb-4">
           {columns.map((col) => (
             <KanbanColumn
               key={col.id}
@@ -421,7 +512,10 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
       )}
       {editItem && (
         <ItemEditModal
-          item={editItem}
+          item={{
+            ...editItem,
+            status: editItem.status ?? 'pending',
+          }}
           onClose={() => setEditItem(null)}
           onUpdated={fetchData}
           assignees={

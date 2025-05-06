@@ -1,10 +1,16 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useTeams } from '@/contexts/TeamsContext';
-import { XIcon } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'react-toastify';
 
@@ -57,17 +63,11 @@ export default function TeamDetailModal({ team, isOwner, onClose, onUpdated }: P
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="relative w-full max-w-lg rounded bg-white p-6 shadow-lg dark:bg-neutral-900">
-        <button
-          onClick={onClose}
-          className="text-muted-foreground hover:text-foreground absolute top-4 right-4"
-          title="Cerrar"
-          aria-label="Cerrar"
-        >
-          <XIcon className="size-5" />
-        </button>
-        <h2 className="mb-4 text-xl font-semibold">{team.name}</h2>
+    <Dialog open={true} onOpenChange={onClose}>
+      <DialogContent className="animate-scaleIn sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{team.name}</DialogTitle>
+        </DialogHeader>
 
         <div className="mb-4 space-y-2">
           <h3 className="font-medium">Miembros actuales</h3>
@@ -105,14 +105,14 @@ export default function TeamDetailModal({ team, isOwner, onClose, onUpdated }: P
                 disabled={processing}
               />
             </div>
-            <div className="flex justify-end">
+            <DialogFooter>
               <Button onClick={handleInvite} disabled={processing}>
                 {processing ? 'Enviando…' : 'Invitar'}
               </Button>
-            </div>
+            </DialogFooter>
           </div>
         )}
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

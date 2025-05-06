@@ -28,5 +28,6 @@ namespace Simpled.Models
 
         public BoardColumn? Column { get; set; }
         public List<Content> Contents { get; set; } = new();
+        public List<Subtask> Subtasks { get; set; } = new();
     }
 }

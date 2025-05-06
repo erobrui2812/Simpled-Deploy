@@ -15,16 +15,14 @@ namespace Simpled.Data
         public DbSet<Board> Boards => Set<Board>();
         public DbSet<BoardColumn> BoardColumns => Set<BoardColumn>();
         public DbSet<Item> Items => Set<Item>();
+        public DbSet<Subtask> Subtasks => Set<Subtask>();          
         public DbSet<Content> Contents => Set<Content>();
         public DbSet<BoardMember> BoardMembers => Set<BoardMember>();
         public DbSet<BoardInvitation> BoardInvitations => Set<BoardInvitation>();
         public DbSet<UserAchievement> UserAchievements => Set<UserAchievement>();
-
         public DbSet<Team> Teams => Set<Team>();
         public DbSet<TeamMember> TeamMembers => Set<TeamMember>();
-
         public DbSet<TeamInvitation> TeamInvitations => Set<TeamInvitation>();
-
         public DbSet<FavoriteBoards> FavoriteBoards => Set<FavoriteBoards>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -55,13 +53,20 @@ namespace Simpled.Data
                 .WithMany(c => c.Items)
                 .HasForeignKey(i => i.ColumnId);
 
+            // Subtask ↔ Item
+            modelBuilder.Entity<Subtask>()
+                .HasOne(st => st.Item)
+                .WithMany(i => i.Subtasks)
+                .HasForeignKey(st => st.ItemId)
+                .OnDelete(DeleteBehavior.Cascade);        
+
             // Content ↔ Item
             modelBuilder.Entity<Content>()
                 .HasOne(cnt => cnt.Item)
                 .WithMany(i => i.Contents)
                 .HasForeignKey(cnt => cnt.ItemId);
 
-         
+            // BoardMember compuesto
             modelBuilder.Entity<BoardMember>()
                 .HasKey(bm => new { bm.BoardId, bm.UserId });
             modelBuilder.Entity<BoardMember>()
@@ -73,19 +78,18 @@ namespace Simpled.Data
                 .WithMany(u => u.BoardMembers)
                 .HasForeignKey(bm => bm.UserId);
 
-       
+            // BoardInvitation ↔ Board
             modelBuilder.Entity<BoardInvitation>()
                 .HasOne(i => i.Board)
                 .WithMany()
                 .HasForeignKey(i => i.BoardId);
 
-        
+            // UserAchievement ↔ User
             modelBuilder.Entity<UserAchievement>()
                 .HasOne(a => a.User)
                 .WithMany(u => u.Achievements)
                 .HasForeignKey(a => a.UserId);
 
-          
             // Team ↔ Owner(User)
             modelBuilder.Entity<Team>()
                 .HasOne(t => t.Owner)
@@ -93,29 +97,27 @@ namespace Simpled.Data
                 .HasForeignKey(t => t.OwnerId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            
+            // TeamMember compuesto
             modelBuilder.Entity<TeamMember>()
                 .HasKey(tm => new { tm.TeamId, tm.UserId });
-
             modelBuilder.Entity<TeamMember>()
                 .HasOne(tm => tm.Team)
                 .WithMany(t => t.Members)
                 .HasForeignKey(tm => tm.TeamId)
                 .OnDelete(DeleteBehavior.Cascade);
-
             modelBuilder.Entity<TeamMember>()
                 .HasOne(tm => tm.User)
                 .WithMany(u => u.TeamMembers)
                 .HasForeignKey(tm => tm.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-
+            // TeamInvitation ↔ Team
             modelBuilder.Entity<TeamInvitation>()
                 .HasOne(i => i.Team)
                 .WithMany()
                 .HasForeignKey(i => i.TeamId);
 
-            // User ↔ Favorite Boards
+ 
             modelBuilder.Entity<FavoriteBoards>()
                 .HasKey(f => new { f.UserId, f.BoardId });
         }

@@ -81,7 +81,7 @@ export function GanttTaskDialog({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="sm:max-w-md">
+      <SheetContent className="z-[1100] sm:max-w-md">
         <form onSubmit={handleSubmit} className="px-4">
           <SheetHeader>
             <SheetTitle>Detalles de la tarea</SheetTitle>
@@ -159,7 +159,7 @@ export function GanttTaskDialog({
                 <SelectTrigger id="status">
                   <SelectValue placeholder="Seleccionar estado" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="z-[1200]">
                   <SelectItem value="pending">
                     <div className="flex items-center">
                       <div className="mr-2 h-2 w-2 rounded-full bg-amber-500"></div>

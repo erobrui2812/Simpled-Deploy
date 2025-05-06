@@ -1,6 +1,13 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
@@ -101,9 +108,11 @@ export default function InvitationsModal({ onClose }: Props) {
   };
 
   return (
-    <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black">
-      <div className="w-full max-w-2xl space-y-6 rounded bg-white p-6 shadow-lg dark:bg-neutral-900">
-        <h2 className="text-xl font-semibold">Invitaciones pendientes</h2>
+    <Dialog open={true} onOpenChange={onClose}>
+      <DialogContent className="animate-scaleIn sm:max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Invitaciones pendientes</DialogTitle>
+        </DialogHeader>
 
         {loading ? (
           <p>Cargando...</p>
@@ -180,12 +189,12 @@ export default function InvitationsModal({ onClose }: Props) {
           </>
         )}
 
-        <div className="flex justify-end pt-4">
+        <DialogFooter>
           <Button variant="ghost" onClick={onClose}>
             Cerrar
           </Button>
-        </div>
-      </div>
-    </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
