@@ -19,6 +19,7 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import { differenceInDays, format } from 'date-fns';
+import { Link2 } from 'lucide-react';
 import type React from 'react';
 import { useEffect, useState } from 'react';
 import type { Task } from './index';
@@ -28,6 +29,7 @@ interface GanttTaskDialogProps {
   readonly open: boolean;
   readonly onOpenChange: (open: boolean) => void;
   readonly onUpdate: (task: Task) => void;
+  readonly onManageDependencies: () => void;
   readonly allTasks?: readonly Task[];
 }
 
@@ -36,6 +38,7 @@ export function GanttTaskDialog({
   open,
   onOpenChange,
   onUpdate,
+  onManageDependencies,
   allTasks = [],
 }: GanttTaskDialogProps) {
   const [editedTask, setEditedTask] = useState<Task>(task);
@@ -187,6 +190,16 @@ export function GanttTaskDialog({
                 </SelectContent>
               </Select>
             </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              className="mt-2 w-full"
+              onClick={onManageDependencies}
+            >
+              <Link2 className="mr-2 h-4 w-4" />
+              Gestionar dependencias
+            </Button>
 
             <div className="mt-2">
               <div className="flex items-center justify-between">

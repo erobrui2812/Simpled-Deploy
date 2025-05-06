@@ -12,7 +12,11 @@ import {
   useSensors,
 } from '@dnd-kit/core';
 import { format } from 'date-fns';
+import type React from 'react';
 import { useRef, useState } from 'react';
+
+import { GanttTaskCreator } from './gantt-task-creator';
+import { GanttTaskDependencyDialog } from './gantt-task-dependency-dialog';
 import { GanttTaskDialog } from './gantt-task-dialog';
 import { GanttToolbar } from './gantt-toolbar';
 import { GanttView } from './gantt-view';
@@ -34,6 +38,14 @@ export interface Task {
   groupId?: string;
   isGroup?: boolean;
   order?: number;
+  dependencies?: string[];
+}
+
+export interface Dependency {
+  id: string;
+  fromTaskId: string;
+  toTaskId: string;
+  type: 'finish-to-start' | 'start-to-start' | 'finish-to-finish' | 'start-to-finish';
 }
 
 interface GanttChartProps {
@@ -42,16 +54,35 @@ interface GanttChartProps {
 }
 
 export function GanttChart({ boardId, className }: GanttChartProps) {
+  // Contexto de autenticación
   const { auth } = useAuth();
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Estados locales para diálogos y creación de tarea
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isDependencyDialogOpen, setIsDependencyDialogOpen] = useState(false);
+  const [taskCreatorPosition, setTaskCreatorPosition] = useState<{
+    x: number;
+    y: number;
+    date: Date;
+  } | null>(null);
 
-  const { tasks, loading, error, fetchTasks, updateTask, updateTaskDates } = useGanttData(
-    boardId,
-    auth,
-  );
+  // Hook de datos: tareas, dependencias y operaciones CRUD
+  const {
+    tasks,
+    loading,
+    error,
+    fetchTasks,
+    updateTask,
+    updateTaskDates,
+    createTask,
+    dependencies,
+    addDependency,
+    removeDependency,
+  } = useGanttData(boardId, auth);
 
+  // Hook de timeline: fechas visibles y navegación
   const {
     viewMode,
     setViewMode,
@@ -63,6 +94,7 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
     navigateTimeline,
   } = useGanttTimeline();
 
+  // Hook de filtros: búsqueda, agrupación y visibilidad
   const {
     showCompleted,
     setShowCompleted,
@@ -79,41 +111,78 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
     toggleGroupExpansion,
   } = useGanttFilters(tasks);
 
+  // Sensores para drag-and-drop
   const sensors = useSensors(
-    useSensor(MouseSensor, {
-      activationConstraint: {
-        distance: 10,
-      },
-    }),
-    useSensor(TouchSensor, {
-      activationConstraint: {
-        delay: 250,
-        tolerance: 5,
-      },
-    }),
+    useSensor(MouseSensor, { activationConstraint: { distance: 10 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } }),
   );
 
+  /**
+   * Abrir modal de edición de tarea
+   */
   const handleTaskClick = (task: Task) => {
     setSelectedTask(task);
     setIsDialogOpen(true);
   };
 
+  /**
+   * Al terminar drag, actualizar fechas de tarea
+   */
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-
     if (!over) return;
-
     const taskId = active.id as string;
     const task = tasks.find((t) => t.id === taskId);
-
     if (!task) return;
 
-    const newStartDate = new Date(active.data.current?.startDate);
-    const newEndDate = new Date(active.data.current?.endDate);
-
-    updateTaskDates(taskId, newStartDate, newEndDate);
+    const newStart = new Date(active.data.current?.startDate);
+    const newEnd = new Date(active.data.current?.endDate);
+    updateTaskDates(taskId, newStart, newEnd);
   };
 
+  /**
+   * Al hacer clic en timeline, posicionar creador de tarea
+   * Solo usuarios autenticados pueden crear
+   */
+  const handleTimelineClick = (e: React.MouseEvent, date: Date) => {
+    if (!auth.id) return;
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    setTaskCreatorPosition({ x, y, date });
+  };
+
+  /**
+   * Crear nueva tarea y refrescar vista
+   */
+  const handleCreateTask = async (data: Partial<Task>) => {
+    if (!data.title || !data.startDate || !data.endDate) return;
+    await createTask({ ...data, boardId, progress: data.progress ?? 0 });
+    setTaskCreatorPosition(null);
+  };
+
+  /**
+   * Abrir diálogo de dependencias para una tarea
+   */
+  const handleManageDependencies = (task: Task) => {
+    setSelectedTask(task);
+    setIsDependencyDialogOpen(true);
+  };
+
+  /**
+   * Adaptadores para el diálogo de dependencias
+   */
+  const handleAddDependency = async (dep: Omit<Dependency, 'id'>) => {
+    await addDependency(dep.fromTaskId, dep.toTaskId, dep.type);
+  };
+  const handleRemoveDependency = async (id: string) => {
+    await removeDependency(id);
+  };
+
+  /**
+   * Exportar datos a CSV
+   */
   const exportToCSV = () => {
     const headers = [
       'ID',
@@ -123,8 +192,9 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
       'Fecha Fin',
       'Progreso',
       'Estado',
+      'Dependencias',
     ];
-    const csvData = [
+    const csvRows = [
       headers.join(','),
       ...tasks.map((task) =>
         [
@@ -135,16 +205,15 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
           format(new Date(task.endDate), 'yyyy-MM-dd'),
           task.progress,
           task.status || 'pending',
+          task.dependencies?.join(';') || '',
         ].join(','),
       ),
-    ].join('\n');
-
-    const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+    ];
+    const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', `gantt-export-${format(new Date(), 'yyyy-MM-dd')}.csv`);
-    link.style.visibility = 'hidden';
+    link.href = url;
+    link.download = `gantt-export-${format(new Date(), 'yyyy-MM-dd')}.csv`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -160,7 +229,6 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
               <CardDescription>Visualización de tareas y cronograma del proyecto</CardDescription>
             </div>
           </div>
-
           <GanttToolbar
             viewMode={viewMode}
             setViewMode={setViewMode}
@@ -179,6 +247,7 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
           />
         </div>
       </CardHeader>
+
       <CardContent>
         {loading ? (
           <div className="flex h-64 items-center justify-center">
@@ -191,6 +260,7 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
             <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
               <GanttView
                 tasks={tasks}
+                dependencies={dependencies}
                 filteredTasks={filteredTasks}
                 groupedTasks={groupedTasks}
                 timelineDates={timelineDates}
@@ -200,21 +270,53 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
                 daysToShow={daysToShow}
                 zoomLevel={zoomLevel}
                 onTaskClick={handleTaskClick}
+                onTimelineClick={handleTimelineClick}
+                onManageDependencies={handleManageDependencies}
                 toggleGroupExpansion={toggleGroupExpansion}
               />
             </DndContext>
+
+            {taskCreatorPosition && (
+              <GanttTaskCreator
+                position={taskCreatorPosition}
+                onClose={() => setTaskCreatorPosition(null)}
+                onSave={handleCreateTask}
+                columns={Array.from(
+                  new Set(tasks.map((t) => t.columnId).filter((id): id is string => Boolean(id))),
+                ).map((id) => ({ id, title: id }))}
+              />
+            )}
           </div>
         )}
       </CardContent>
 
+      {/* Diálogos modales para edición y dependencias */}
       {selectedTask && (
-        <GanttTaskDialog
-          task={selectedTask}
-          open={isDialogOpen}
-          onOpenChange={setIsDialogOpen}
-          onUpdate={updateTask}
-          allTasks={tasks}
-        />
+        <>
+          <GanttTaskDialog
+            task={selectedTask}
+            open={isDialogOpen}
+            onOpenChange={setIsDialogOpen}
+            onUpdate={updateTask}
+            onManageDependencies={() => {
+              setIsDialogOpen(false);
+              setIsDependencyDialogOpen(true);
+            }}
+            allTasks={tasks}
+          />
+
+          <GanttTaskDependencyDialog
+            task={selectedTask}
+            open={isDependencyDialogOpen}
+            onOpenChange={setIsDependencyDialogOpen}
+            allTasks={tasks.filter((t) => t.id !== selectedTask.id)}
+            dependencies={dependencies.filter(
+              (d) => d.fromTaskId === selectedTask.id || d.toTaskId === selectedTask.id,
+            )}
+            onAddDependency={handleAddDependency}
+            onRemoveDependency={handleRemoveDependency}
+          />
+        </>
       )}
     </Card>
   );

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
   Select,
   SelectContent,
@@ -11,7 +12,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ChevronLeft, ChevronRight, Download, Search, ZoomIn, ZoomOut } from 'lucide-react';
+import {
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
+  Download,
+  Search,
+  ZoomIn,
+  ZoomOut,
+} from 'lucide-react';
 
 type ViewMode = 'day' | 'week' | 'month';
 type GroupBy = 'none' | 'status' | 'assignee';
@@ -31,6 +40,8 @@ interface GanttToolbarProps {
   readonly zoomLevel: number;
   readonly setZoomLevel: (level: number) => void;
   readonly navigateTimeline: (direction: TimelineDirection) => void;
+  readonly goToToday: () => void;
+  readonly setDateRange: (startDate: Date, days: number) => void;
   readonly exportData: () => void;
 }
 
@@ -48,8 +59,52 @@ export function GanttToolbar({
   zoomLevel,
   setZoomLevel,
   navigateTimeline,
+  goToToday,
+  setDateRange,
   exportData,
 }: GanttToolbarProps) {
+  const dateRangePresets = [
+    {
+      label: 'Esta semana',
+      fn: () => {
+        const today = new Date();
+        const startOfWeek = new Date(today);
+        startOfWeek.setDate(today.getDate() - today.getDay());
+        setDateRange(startOfWeek, 7);
+      },
+    },
+    {
+      label: 'Próximos 14 días',
+      fn: () => {
+        const today = new Date();
+        setDateRange(today, 14);
+      },
+    },
+    {
+      label: 'Este mes',
+      fn: () => {
+        const today = new Date();
+        const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+        const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+        setDateRange(startOfMonth, daysInMonth);
+      },
+    },
+    {
+      label: 'Próximos 30 días',
+      fn: () => {
+        const today = new Date();
+        setDateRange(today, 30);
+      },
+    },
+    {
+      label: 'Próximos 90 días',
+      fn: () => {
+        const today = new Date();
+        setDateRange(today, 90);
+      },
+    },
+  ];
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
@@ -71,10 +126,34 @@ export function GanttToolbar({
           </Button>
         </div>
 
-        <Button variant="outline" size="sm" onClick={exportData}>
-          <Download className="mr-2 h-4 w-4" />
-          Exportar
-        </Button>
+        <div className="flex items-center gap-2">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Calendar className="mr-2 h-4 w-4" />
+                Rango de fechas
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-56 p-2">
+              <div className="grid gap-2">
+                {dateRangePresets.map((preset, i) => (
+                  <Button key={i} variant="ghost" className="justify-start" onClick={preset.fn}>
+                    {preset.label}
+                  </Button>
+                ))}
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          <Button variant="outline" size="sm" onClick={goToToday}>
+            Hoy
+          </Button>
+
+          <Button variant="outline" size="sm" onClick={exportData}>
+            <Download className="mr-2 h-4 w-4" />
+            Exportar
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-4">

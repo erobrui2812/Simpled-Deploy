@@ -3,6 +3,7 @@
 import type React from 'react';
 
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -12,172 +13,160 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { format } from 'date-fns';
+import { addDays, format } from 'date-fns';
 import { X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { Task } from './index';
+
+interface Column {
+  id: string;
+  title: string;
+}
 
 interface GanttTaskCreatorProps {
   readonly position: { x: number; y: number; date: Date };
   readonly onClose: () => void;
   readonly onSave: (task: Partial<Task>) => void;
-  readonly columns: { id: string; title: string }[];
+  readonly columns: Column[];
 }
 
 export function GanttTaskCreator({ position, onClose, onSave, columns }: GanttTaskCreatorProps) {
-  const [taskData, setTaskData] = useState<Partial<Task>>({
+  const [task, setTask] = useState<Partial<Task>>({
     title: '',
     description: '',
     startDate: position.date.toISOString(),
-    endDate: new Date(position.date.getTime() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+    endDate: addDays(position.date, 1).toISOString(),
     progress: 0,
     status: 'pending',
-    columnId: columns[0]?.id,
   });
 
+  useEffect(() => {
+    // Update the task start date when the position changes
+    setTask((prev) => ({
+      ...prev,
+      startDate: position.date.toISOString(),
+      endDate: addDays(position.date, 1).toISOString(),
+    }));
+  }, [position.date]);
+
   const handleChange = (field: keyof Task, value: any) => {
-    setTaskData((prev) => ({ ...prev, [field]: value }));
+    setTask((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(taskData);
-  };
-
-  const style = {
-    position: 'absolute' as const,
-    left: `${position.x}px`,
-    top: `${position.y}px`,
-    zIndex: 100,
-    transform: 'translateY(-50%)',
+    onSave(task);
   };
 
   return (
-    <div style={style} className="bg-card w-80 rounded-md border p-4 shadow-lg">
-      <div className="mb-4 flex items-center justify-between">
-        <h3 className="font-medium">Nueva Tarea</h3>
-        <Button variant="ghost" size="sm" onClick={onClose} className="h-8 w-8 p-0">
-          <X className="h-4 w-4" />
-        </Button>
-      </div>
-
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="title">Título</Label>
-          <Input
-            id="title"
-            value={taskData.title ?? ''}
-            onChange={(e) => handleChange('title', e.target.value)}
-            placeholder="Título de la tarea"
-            required
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="description">Descripción</Label>
-          <Input
-            id="description"
-            value={taskData.description ?? ''}
-            onChange={(e) => handleChange('description', e.target.value)}
-            placeholder="Descripción (opcional)"
-          />
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="startDate">Fecha inicio</Label>
-            <Input
-              id="startDate"
-              type="date"
-              value={format(new Date(taskData.startDate ?? position.date), 'yyyy-MM-dd')}
-              onChange={(e) => handleChange('startDate', new Date(e.target.value).toISOString())}
-              required
-            />
+    <div
+      className="absolute z-20"
+      style={{
+        left: `${position.x}px`,
+        top: `${position.y}px`,
+      }}
+    >
+      <Card className="w-80 shadow-lg">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base">Nueva tarea</CardTitle>
+            <Button variant="ghost" size="icon" onClick={onClose}>
+              <X className="h-4 w-4" />
+            </Button>
           </div>
+        </CardHeader>
+        <form onSubmit={handleSubmit}>
+          <CardContent className="space-y-3">
+            <div className="grid gap-1.5">
+              <Label htmlFor="title">Título</Label>
+              <Input
+                id="title"
+                value={task.title}
+                onChange={(e) => handleChange('title', e.target.value)}
+                placeholder="Título de la tarea"
+                required
+              />
+            </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="endDate">Fecha fin</Label>
-            <Input
-              id="endDate"
-              type="date"
-              value={format(
-                new Date(
-                  taskData.endDate ?? new Date(position.date.getTime() + 3 * 24 * 60 * 60 * 1000),
-                ),
-                'yyyy-MM-dd',
-              )}
-              onChange={(e) => handleChange('endDate', new Date(e.target.value).toISOString())}
-              required
-            />
-          </div>
-        </div>
+            <div className="grid gap-1.5">
+              <Label htmlFor="description">Descripción</Label>
+              <Input
+                id="description"
+                value={task.description}
+                onChange={(e) => handleChange('description', e.target.value)}
+                placeholder="Descripción (opcional)"
+              />
+            </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="status">Estado</Label>
-          <Select
-            value={taskData.status ?? 'pending'}
-            onValueChange={(value) => handleChange('status', value)}
-          >
-            <SelectTrigger id="status">
-              <SelectValue placeholder="Seleccionar estado" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="pending">
-                <div className="flex items-center">
-                  <div className="mr-2 h-2 w-2 rounded-full bg-amber-500"></div>
-                  Pendiente
-                </div>
-              </SelectItem>
-              <SelectItem value="in-progress">
-                <div className="flex items-center">
-                  <div className="mr-2 h-2 w-2 rounded-full bg-blue-500"></div>
-                  En progreso
-                </div>
-              </SelectItem>
-              <SelectItem value="completed">
-                <div className="flex items-center">
-                  <div className="mr-2 h-2 w-2 rounded-full bg-emerald-500"></div>
-                  Completada
-                </div>
-              </SelectItem>
-              <SelectItem value="delayed">
-                <div className="flex items-center">
-                  <div className="mr-2 h-2 w-2 rounded-full bg-rose-500"></div>
-                  Retrasada
-                </div>
-              </SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="grid gap-1.5">
+                <Label htmlFor="startDate">Fecha inicio</Label>
+                <Input
+                  id="startDate"
+                  type="date"
+                  value={format(new Date(task.startDate!), 'yyyy-MM-dd')}
+                  onChange={(e) =>
+                    handleChange('startDate', new Date(e.target.value).toISOString())
+                  }
+                  required
+                />
+              </div>
 
-        {columns.length > 0 && (
-          <div className="space-y-2">
-            <Label htmlFor="column">Columna</Label>
-            <Select
-              value={taskData.columnId ?? columns[0]?.id}
-              onValueChange={(value) => handleChange('columnId', value)}
-            >
-              <SelectTrigger id="column">
-                <SelectValue placeholder="Seleccionar columna" />
-              </SelectTrigger>
-              <SelectContent>
-                {columns.map((column) => (
-                  <SelectItem key={column.id} value={column.id}>
-                    {column.title}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
+              <div className="grid gap-1.5">
+                <Label htmlFor="endDate">Fecha fin</Label>
+                <Input
+                  id="endDate"
+                  type="date"
+                  value={format(new Date(task.endDate!), 'yyyy-MM-dd')}
+                  onChange={(e) => handleChange('endDate', new Date(e.target.value).toISOString())}
+                  required
+                />
+              </div>
+            </div>
 
-        <div className="flex justify-end gap-2 pt-2">
-          <Button type="button" variant="outline" onClick={onClose}>
-            Cancelar
-          </Button>
-          <Button type="submit">Crear Tarea</Button>
-        </div>
-      </form>
+            <div className="grid gap-1.5">
+              <Label htmlFor="status">Estado</Label>
+              <Select value={task.status} onValueChange={(value) => handleChange('status', value)}>
+                <SelectTrigger id="status">
+                  <SelectValue placeholder="Seleccionar estado" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pending">Pendiente</SelectItem>
+                  <SelectItem value="in-progress">En progreso</SelectItem>
+                  <SelectItem value="completed">Completada</SelectItem>
+                  <SelectItem value="delayed">Retrasada</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {columns.length > 0 && (
+              <div className="grid gap-1.5">
+                <Label htmlFor="columnId">Columna</Label>
+                <Select
+                  value={task.columnId}
+                  onValueChange={(value) => handleChange('columnId', value)}
+                >
+                  <SelectTrigger id="columnId">
+                    <SelectValue placeholder="Seleccionar columna" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {columns.map((column) => (
+                      <SelectItem key={column.id} value={column.id}>
+                        {column.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </CardContent>
+          <CardFooter>
+            <Button type="submit" className="w-full">
+              Crear tarea
+            </Button>
+          </CardFooter>
+        </form>
+      </Card>
     </div>
   );
 }
