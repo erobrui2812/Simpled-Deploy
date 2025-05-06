@@ -13,9 +13,9 @@ import { useState } from 'react';
 interface SubtaskListProps {
   readonly subtasks: Subtask[];
   readonly itemId: string;
-  readonly onAdd: (title: string) => void;
-  readonly onUpdate: (subtask: Subtask) => void;
-  readonly onDelete: (subtaskId: string) => void;
+  readonly onAdd: (title: string) => Promise<void>;
+  readonly onUpdate: (subtask: Subtask) => Promise<void>;
+  readonly onDelete: (subtaskId: string) => Promise<void>;
   readonly disabled?: boolean;
 }
 
@@ -33,14 +33,13 @@ export default function SubtaskList({
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const handleAddSubtask = async () => {
-    if (newSubtaskTitle.trim()) {
-      setIsAdding(true);
-      try {
-        await onAdd(newSubtaskTitle.trim());
-        setNewSubtaskTitle('');
-      } finally {
-        setIsAdding(false);
-      }
+    if (!newSubtaskTitle.trim()) return;
+    setIsAdding(true);
+    try {
+      await onAdd(newSubtaskTitle.trim());
+      setNewSubtaskTitle('');
+    } finally {
+      setIsAdding(false);
     }
   };
 

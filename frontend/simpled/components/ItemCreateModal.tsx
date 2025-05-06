@@ -23,6 +23,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
 import type { User } from '@/types';
 import { Check, Loader2, Trash2, X } from 'lucide-react';
+import { nanoid } from 'nanoid';
 import { useState } from 'react';
 import { toast } from 'react-toastify';
 
@@ -52,11 +53,12 @@ export default function ItemCreateModal({
     'pending',
   );
   const [assigneeId, setAssigneeId] = useState<string | null>(null);
-  const [subtasks, setSubtasks] = useState<string[]>([]);
+  const [subtasks, setSubtasks] = useState<{ id: string; title: string }[]>([]);
   const [newSubtask, setNewSubtask] = useState('');
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('details');
 
+  // Crea una nueva tarea y sus subtareas
   const handleCreate = async () => {
     if (!title.trim()) {
       toast.warning('El título es obligatorio');
@@ -72,7 +74,6 @@ export default function ItemCreateModal({
         columnId,
         status,
       };
-      // Solo admin puede asignar al crear
       if (userRole === 'admin' && assigneeId) {
         payload.assigneeId = assigneeId;
       }
@@ -90,21 +91,18 @@ export default function ItemCreateModal({
 
       const createdItem = await res.json();
 
-      // Create subtasks if any
-      if (subtasks.length > 0) {
-        for (const subtaskTitle of subtasks) {
-          await fetch(`${API}/api/items/${createdItem.id}/subtasks`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${auth.token}`,
-            },
-            body: JSON.stringify({
-              itemId: createdItem.id,
-              title: subtaskTitle,
-            }),
-          });
-        }
+      for (const subtask of subtasks) {
+        await fetch(`${API}/api/items/${createdItem.id}/subtasks`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${auth.token}`,
+          },
+          body: JSON.stringify({
+            itemId: createdItem.id,
+            title: subtask.title,
+          }),
+        });
       }
 
       toast.success('Tarea creada');
@@ -117,15 +115,16 @@ export default function ItemCreateModal({
     }
   };
 
+  // Añade una subtarea temporal con id único
   const handleAddSubtask = () => {
     if (newSubtask.trim()) {
-      setSubtasks([...subtasks, newSubtask.trim()]);
+      setSubtasks([...subtasks, { id: nanoid(), title: newSubtask.trim() }]);
       setNewSubtask('');
     }
   };
 
-  const handleRemoveSubtask = (index: number) => {
-    setSubtasks(subtasks.filter((_, i) => i !== index));
+  const handleRemoveSubtask = (id: string) => {
+    setSubtasks(subtasks.filter((sub) => sub.id !== id));
   };
 
   return (
@@ -173,7 +172,6 @@ export default function ItemCreateModal({
                   placeholder="Fecha inicio"
                 />
               </div>
-
               <div className="space-y-2">
                 <Label htmlFor="item-dueDate">Fecha de vencimiento</Label>
                 <DatePicker date={dueDate} onDateChange={setDueDate} placeholder="Fecha fin" />
@@ -187,30 +185,10 @@ export default function ItemCreateModal({
                   <SelectValue placeholder="Seleccionar estado" />
                 </SelectTrigger>
                 <SelectContent className="z-[1200]">
-                  <SelectItem value="pending">
-                    <div className="flex items-center">
-                      <div className="mr-2 h-2 w-2 rounded-full bg-amber-500"></div>
-                      Pendiente
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="in-progress">
-                    <div className="flex items-center">
-                      <div className="mr-2 h-2 w-2 rounded-full bg-blue-500"></div>
-                      En progreso
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="completed">
-                    <div className="flex items-center">
-                      <div className="mr-2 h-2 w-2 rounded-full bg-emerald-500"></div>
-                      Completada
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="delayed">
-                    <div className="flex items-center">
-                      <div className="mr-2 h-2 w-2 rounded-full bg-rose-500"></div>
-                      Retrasada
-                    </div>
-                  </SelectItem>
+                  <SelectItem value="pending">Pendiente</SelectItem>
+                  <SelectItem value="in-progress">En progreso</SelectItem>
+                  <SelectItem value="completed">Completada</SelectItem>
+                  <SelectItem value="delayed">Retrasada</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -244,15 +222,15 @@ export default function ItemCreateModal({
 
               {subtasks.length > 0 ? (
                 <ul className="scrollbar-thin max-h-[200px] space-y-2 overflow-y-auto pr-1">
-                  {subtasks.map((subtask, index) => (
-                    <li key={index} className="group flex items-center gap-2">
+                  {subtasks.map((subtask) => (
+                    <li key={subtask.id} className="group flex items-center gap-2">
                       <div className="border-primary h-4 w-4 flex-shrink-0 rounded-sm border" />
-                      <span className="flex-1 text-sm">{subtask}</span>
+                      <span className="flex-1 text-sm">{subtask.title}</span>
                       <Button
                         variant="ghost"
                         size="icon"
                         className="h-6 w-6 opacity-0 transition-opacity group-hover:opacity-100"
-                        onClick={() => handleRemoveSubtask(index)}
+                        onClick={() => handleRemoveSubtask(subtask.id)}
                       >
                         <Trash2 className="text-muted-foreground h-4 w-4" />
                       </Button>

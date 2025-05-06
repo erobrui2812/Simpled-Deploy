@@ -7,10 +7,12 @@ import { cn } from '@/lib/utils';
 
 const Popover = PopoverPrimitive.Root;
 
+// Al clicar el botón, se abrirá el popover
 const PopoverTrigger = PopoverPrimitive.Trigger;
 
+// Contenido motrado
 const PopoverContent = React.forwardRef<
-  React.ElementRef<typeof PopoverPrimitive.Content>,
+  HTMLDivElement,
   React.ComponentPropsWithoutRef<typeof PopoverPrimitive.Content>
 >(({ className, align = 'center', sideOffset = 4, ...props }, ref) => (
   <PopoverPrimitive.Portal>

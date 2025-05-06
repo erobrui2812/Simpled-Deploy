@@ -62,11 +62,9 @@ export default function ItemEditModal({
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('details');
 
-  // permisos
   const canChangeAll = userRole === 'admin';
   const canChangeStatus = canChangeAll || item.assigneeId === currentUserId;
 
-  // Fetch subtasks on load
   useEffect(() => {
     const fetchSubtasks = async () => {
       try {
@@ -148,7 +146,7 @@ export default function ItemEditModal({
       const newSubtask = await res.json();
       setSubtasks((prev) => [...prev, newSubtask]);
       toast.success('Subtarea añadida');
-      return true;
+      return;
     } catch (error) {
       toast.error('Error al crear subtarea');
       console.error(error);
@@ -176,7 +174,6 @@ export default function ItemEditModal({
 
       setSubtasks((prev) => prev.map((st) => (st.id === subtask.id ? subtask : st)));
 
-      // Update task status based on subtasks completion
       const allSubtasks = subtasks.length;
       const completedSubtasks = subtasks.filter((st) =>
         st.id === subtask.id ? subtask.isCompleted : st.isCompleted,
@@ -188,7 +185,7 @@ export default function ItemEditModal({
         setStatus('in-progress');
       }
 
-      return true;
+      return;
     } catch (error) {
       toast.error('Error al actualizar subtarea');
       console.error(error);
@@ -209,7 +206,7 @@ export default function ItemEditModal({
 
       setSubtasks((prev) => prev.filter((st) => st.id !== subtaskId));
       toast.success('Subtarea eliminada');
-      return true;
+      return;
     } catch (error) {
       toast.error('Error al eliminar subtarea');
       console.error(error);
