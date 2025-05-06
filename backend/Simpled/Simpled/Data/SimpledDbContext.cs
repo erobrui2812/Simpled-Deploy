@@ -15,7 +15,7 @@ namespace Simpled.Data
         public DbSet<Board> Boards => Set<Board>();
         public DbSet<BoardColumn> BoardColumns => Set<BoardColumn>();
         public DbSet<Item> Items => Set<Item>();
-        public DbSet<Subtask> Subtasks => Set<Subtask>();          
+        public DbSet<Subtask> Subtasks => Set<Subtask>();
         public DbSet<Content> Contents => Set<Content>();
         public DbSet<BoardMember> BoardMembers => Set<BoardMember>();
         public DbSet<BoardInvitation> BoardInvitations => Set<BoardInvitation>();
@@ -24,6 +24,7 @@ namespace Simpled.Data
         public DbSet<TeamMember> TeamMembers => Set<TeamMember>();
         public DbSet<TeamInvitation> TeamInvitations => Set<TeamInvitation>();
         public DbSet<FavoriteBoards> FavoriteBoards => Set<FavoriteBoards>();
+        public DbSet<Dependency> Dependencies => Set<Dependency>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -58,7 +59,7 @@ namespace Simpled.Data
                 .HasOne(st => st.Item)
                 .WithMany(i => i.Subtasks)
                 .HasForeignKey(st => st.ItemId)
-                .OnDelete(DeleteBehavior.Cascade);        
+                .OnDelete(DeleteBehavior.Cascade);
 
             // Content ↔ Item
             modelBuilder.Entity<Content>()
@@ -117,9 +118,22 @@ namespace Simpled.Data
                 .WithMany()
                 .HasForeignKey(i => i.TeamId);
 
- 
+          
             modelBuilder.Entity<FavoriteBoards>()
                 .HasKey(f => new { f.UserId, f.BoardId });
+
+         
+            modelBuilder.Entity<Dependency>()
+                .HasOne(d => d.FromTask)
+                .WithMany()
+                .HasForeignKey(d => d.FromTaskId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Dependency>()
+                .HasOne(d => d.ToTask)
+                .WithMany()
+                .HasForeignKey(d => d.ToTaskId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

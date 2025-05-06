@@ -172,6 +172,7 @@ builder.Services.AddSingleton<IUserIdProvider, EmailBasedUserIdHelper>();
 builder.Services.AddScoped<ITeamRepository, TeamService>();
 builder.Services.AddScoped<ITeamMemberRepository, TeamService>();
 builder.Services.AddScoped<ITeamInvitationRepository, TeamInvitationService>();
+builder.Services.AddScoped<IDependencyRepository, DependencyService>();
 
 
 
