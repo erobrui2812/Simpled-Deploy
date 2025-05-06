@@ -1,8 +1,8 @@
-import { notFound } from 'next/navigation';
-import Link from 'next/link';
-import { ArrowLeft, Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { ArrowLeft, Trophy } from 'lucide-react';
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
 
 const API = 'http://localhost:5193';
 
@@ -38,7 +38,11 @@ const formatDate = (isoDate: string): string => {
   });
 };
 
-export default async function AchievementsPage({ params }: { params: { id: string } }) {
+export default async function AchievementsPage({
+  params,
+}: {
+  readonly params: { readonly id: string };
+}) {
   const allAchievements = await getAllAchievements();
   const unlockedAchievements = await getUserAchievements(params.id);
 

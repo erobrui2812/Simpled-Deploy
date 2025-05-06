@@ -1,7 +1,4 @@
 ﻿using Simpled.Dtos.Users;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace Simpled.Repository
 {
@@ -10,7 +7,7 @@ namespace Simpled.Repository
         Task<IEnumerable<UserReadDto>> GetAllUsersAsync();
         Task<UserReadDto?> GetUserByIdAsync(Guid id);
         Task<UserReadDto> RegisterAsync(UserRegisterDto userDto, IFormFile ?image);
-        Task<bool> UpdateAsync(UserUpdateDto userDto);
+        Task<bool> UpdateAsync(UserUpdateDto userDto, IFormFile? image);
         Task<bool> DeleteAsync(Guid id);
     }
 }

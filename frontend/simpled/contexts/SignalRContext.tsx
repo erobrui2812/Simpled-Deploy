@@ -1,7 +1,7 @@
 'use client';
 
 import * as signalR from '@microsoft/signalr';
-import React, { createContext, useContext, useEffect, useRef } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useAuth } from './AuthContext';
 
@@ -15,55 +15,79 @@ export const useSignalR = () => useContext(SignalRContext);
 
 export const SignalRProvider = ({ children }: { children: React.ReactNode }) => {
   const { auth } = useAuth();
-  const connectionRef = useRef<signalR.HubConnection | null>(null);
+  const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
 
   useEffect(() => {
-    if (!auth.token || connectionRef.current) return;
+    if (!auth.token) return;
+    if (connection) return;
 
-    const connect = async () => {
-      const connection = new signalR.HubConnectionBuilder()
-        .withUrl('http://localhost:5193/hubs/board', {
-          accessTokenFactory: () => auth.token!,
-        })
-        .withAutomaticReconnect()
-        .build();
+    const conn = new signalR.HubConnectionBuilder()
+      .withUrl('http://localhost:5193/hubs/board', {
+        accessTokenFactory: () => auth.token!,
+      })
+      .withAutomaticReconnect()
+      .build();
 
-      connection.on(
-        'InvitationReceived',
-        (data: { boardName: string; role: string; invitationToken: string }) => {
-          toast.info(`📩 Has sido invitado al tablero "${data.boardName}" como ${data.role}`, {
-            toastId: `invitation-${data.invitationToken}`,
-            onClick: () => {
-              window.location.href = `/invitations/${data.invitationToken}`;
-            },
-          });
-        },
-      );
+    conn.onreconnecting((error) => {
+      console.warn('SignalR reconectando', error);
+      toast.info('Reconectando a notificaciones…', {
+        toastId: 'sigr-reconnecting',
+      });
+    });
+    conn.onreconnected(() => {
+      toast.dismiss('sigr-reconnecting');
+      toast.success('Reconectado a notificaciones', {
+        toastId: 'sigr-reconnected',
+      });
+    });
+    conn.onclose((error) => {
+      console.error('SignalR cerrado', error);
+      toast.error('Se perdió conexión de notificaciones', {
+        toastId: 'sigr-closed',
+      });
+    });
 
-      connection.on('BoardUpdated', (boardId: string) => {
-        console.log('Tablero actualizado:', boardId);
+    conn.on('InvitationReceived', (data) => {
+      toast.info(`📩 Invitación al tablero "${data.boardName}" como ${data.role}`, {
+        toastId: `board-invite-${data.invitationToken}`,
+      });
+    });
+    conn.on('TeamInvitationReceived', (data) => {
+      toast.info(`📩 Invitado al equipo "${data.teamName}" como ${data.role}`, {
+        toastId: `team-invite-${data.invitationToken}`,
+      });
+    });
+    conn.on('BoardUpdated', (_boardId, action, payload) => {
+      console.log('📡 BoardUpdated', { action, payload });
+    });
+
+    conn
+      .start()
+      .then(() => {
+        setConnection(conn);
+        console.log('✅ SignalR conectado');
+      })
+      .catch((err) => {
+        console.error('❌ Error al conectar SignalR', err);
+        toast.error('No se pudo conectar a notificaciones');
       });
 
-      try {
-        await connection.start();
-        console.log('✅ Conectado a SignalR');
-        connectionRef.current = connection;
-      } catch (err) {
-        console.error('❌ Error al conectar a SignalR', err);
-      }
-    };
-
-    connect();
+    const handleUnload = () => conn.stop();
+    window.addEventListener('beforeunload', handleUnload);
 
     return () => {
-      connectionRef.current?.stop();
+      window.removeEventListener('beforeunload', handleUnload);
     };
-  }, [auth.token]);
+  }, [auth.token, connection]);
 
-  const contextValue = React.useMemo(
-    () => ({ connection: connectionRef.current }),
-    [connectionRef.current],
-  );
+  useEffect(() => {
+    if (!auth.token && connection) {
+      connection.stop();
+      setConnection(null);
+    }
+  }, [auth.token, connection]);
 
-  return <SignalRContext.Provider value={contextValue}>{children}</SignalRContext.Provider>;
+  const value = useMemo(() => ({ connection }), [connection]);
+
+  return <SignalRContext.Provider value={value}>{children}</SignalRContext.Provider>;
 };

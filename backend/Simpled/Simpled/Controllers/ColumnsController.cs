@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Simpled.Dtos.Columns;
+using Simpled.Exception;
 using Simpled.Helpers;
 using Simpled.Repository;
 
@@ -37,8 +39,15 @@ namespace Simpled.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetColumn(Guid id)
         {
-            var column = await _columnService.GetByIdAsync(id);
-            return column == null ? NotFound("Column not found.") : Ok(column);
+            try
+            {
+                var column = await _columnService.GetByIdAsync(id);
+                return Ok(column);
+            }
+            catch (NotFoundException)
+            {
+                return NotFound("Columna no encontrada.");
+            }
         }
 
         /// <summary>
@@ -48,11 +57,11 @@ namespace Simpled.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateColumn([FromBody] BoardColumnCreateDto dto)
         {
-            var hasPermission = await BoardAuthorizationHelper.HasBoardPermissionAsync(
-                User, dto.BoardId, new[] { "admin", "editor" }, _boardMemberRepo);
-
-            if (!hasPermission)
+            if (!await BoardAuthorizationHelper.HasBoardPermissionAsync(
+                    User, dto.BoardId, new[] { "admin", "editor" }, _boardMemberRepo))
+            {
                 return Forbid("No tienes permisos para crear columnas en este tablero.");
+            }
 
             var created = await _columnService.CreateAsync(dto);
             return CreatedAtAction(nameof(GetColumn), new { id = created.Id }, created);
@@ -69,33 +78,56 @@ namespace Simpled.Controllers
             if (id != dto.Id)
                 return BadRequest("ID mismatch.");
 
-            var boardId = await _columnService.GetBoardIdByColumnId(dto.Id);
-            var hasPermission = await BoardAuthorizationHelper.HasBoardPermissionAsync(
-                User, boardId, new[] { "admin", "editor" }, _boardMemberRepo);
-
-            if (!hasPermission)
+            var boardId = await _columnService.GetBoardIdByColumnId(id);
+            if (!await BoardAuthorizationHelper.HasBoardPermissionAsync(
+                    User, boardId, new[] { "admin", "editor" }, _boardMemberRepo))
+            {
                 return Forbid("No tienes permisos para modificar columnas en este tablero.");
+            }
 
-            var success = await _columnService.UpdateAsync(dto);
-            return success ? NoContent() : NotFound("Column not found.");
+            try
+            {
+                await _columnService.UpdateAsync(dto);
+                return NoContent();
+            }
+            catch (NotFoundException)
+            {
+                return NotFound("Columna no encontrada.");
+            }
         }
 
         /// <summary>
-        /// Elimina una columna (requiere rol admin en el board).
+        /// Elimina una columna (requiere rol admin en el tablero).
         /// </summary>
         /// <param name="id">ID de la columna</param>
+        /// <param name="cascadeItems">Indica si también deben eliminarse las tareas contenidas</param>
+        /// <param name="targetColumnId">ID de la columna destino para mover las tareas</param>
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteColumn(Guid id)
+        public async Task<IActionResult> DeleteColumn(
+            Guid id,
+            [FromQuery] bool cascadeItems = false,
+            [FromQuery] Guid? targetColumnId = null)
         {
             var boardId = await _columnService.GetBoardIdByColumnId(id);
-            var hasPermission = await BoardAuthorizationHelper.HasBoardPermissionAsync(
-                User, boardId, new[] { "admin" }, _boardMemberRepo);
-
-            if (!hasPermission)
+            if (!await BoardAuthorizationHelper.HasBoardPermissionAsync(
+                    User, boardId, new[] { "admin" }, _boardMemberRepo))
+            {
                 return Forbid("No tienes permisos para eliminar columnas en este tablero.");
+            }
 
-            var success = await _columnService.DeleteAsync(id);
-            return success ? NoContent() : NotFound("Column not found.");
+            try
+            {
+                await _columnService.DeleteAsync(id, cascadeItems, targetColumnId);
+                return NoContent();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (NotFoundException)
+            {
+                return NotFound("Columna no encontrada.");
+            }
         }
     }
 }

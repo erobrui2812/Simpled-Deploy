@@ -8,9 +8,13 @@ namespace Simpled.Dtos.Users
         public Guid Id { get; set; }
 
         [Required]
+        public string Name { get; set; } = "";
+
+        [Required]
         [EmailAddress]
         public string Email { get; set; } = default!;
 
         public string? Password { get; set; }
+        public string? ImageUrl { get; set; }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿
+using System.ComponentModel.DataAnnotations;
 
 namespace Simpled.Models
 {
@@ -18,7 +19,15 @@ namespace Simpled.Models
 
         public DateTime? DueDate { get; set; }
 
+        [Required]
+        [RegularExpression("pending|in-progress|completed|delayed")]
+        public string Status { get; set; } = "pending";
+
+        public Guid? AssigneeId { get; set; }
+        public User? Assignee { get; set; }
+
         public BoardColumn? Column { get; set; }
         public List<Content> Contents { get; set; } = new();
+        public List<Subtask> Subtasks { get; set; } = new();
     }
 }

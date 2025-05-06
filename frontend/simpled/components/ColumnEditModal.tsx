@@ -36,7 +36,7 @@ export default function ColumnEditModal({
         body: JSON.stringify({
           id: columnId,
           title,
-          boardId, // 👈 requerido por el backend
+          boardId,
         }),
       });
 

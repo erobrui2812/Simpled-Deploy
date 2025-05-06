@@ -5,6 +5,8 @@ using Simpled.Models;
 using Simpled.Repository;
 using Simpled.Exception;
 using Simpled.Dtos.Teams;
+using Simpled.Dtos.Teams.TeamMembers;
+
 
 namespace Simpled.Services
 {
@@ -26,7 +28,7 @@ namespace Simpled.Services
                 Name = u.Name,
                 Email = u.Email,
                 ImageUrl = u.ImageUrl,
-                achievementsCompleted = u.Achievements.Count,
+                AchievementsCompleted = u.Achievements.Count,
                 CreatedAt = u.CreatedAt,
                 Roles = u.Roles.Select(r => r.Role).ToList()
             });
@@ -42,23 +44,43 @@ namespace Simpled.Services
             if (user == null)
                 throw new NotFoundException("Usuario no encontrado.");
 
-            Console.WriteLine(user.Achievements);
+            var memberships = await _context.TeamMembers
+                .Include(tm => tm.Team)
+                    .ThenInclude(t => t.Owner)
+                .Include(tm => tm.Team)
+                    .ThenInclude(t => t.Members)
+                        .ThenInclude(m => m.User)
+                .Where(tm => tm.UserId == id)
+                .ToListAsync();
+
+            var teamDtos = memberships.Select(tm => new TeamReadDto
+            {
+                Id = tm.TeamId,
+                Name = tm.Team!.Name,
+                OwnerId = tm.Team.OwnerId,
+                OwnerName = tm.Team.Owner!.Name,
+                Role = tm.Role,  
+                Members = tm.Team.Members.Select(m => new TeamMemberDto
+                {
+                    UserId = m.UserId,
+                    UserName = m.User!.Name,
+                    Role = m.Role
+                })
+            });
+
             return new UserReadDto
             {
                 Id = user.Id,
                 Name = user.Name,
                 Email = user.Email,
                 ImageUrl = user.ImageUrl,
-                achievementsCompleted = user.Achievements.Count,
-                Teams = new List<TeamDto>
-    {
-                    new TeamDto { Key = "1" ,Name = "Equipo Alpha", Role = "Admin" },
-                    new TeamDto { Key = "2" ,Name = "Equipo Beta", Role = "Miembro" }
-                },
+                AchievementsCompleted = user.Achievements.Count,
                 CreatedAt = user.CreatedAt,
-                Roles = user.Roles.Select(r => r.Role).ToList()
+                Roles = user.Roles.Select(r => r.Role).ToList(),
+                Teams = teamDtos.ToList()
             };
         }
+
 
         public async Task<UserReadDto> RegisterAsync(UserRegisterDto userDto, IFormFile ?image)
         {
@@ -122,13 +144,14 @@ namespace Simpled.Services
 
 
 
-        public async Task<bool> UpdateAsync(UserUpdateDto updatedDto)
+        public async Task<bool> UpdateAsync(UserUpdateDto updatedDto, IFormFile? image)
         {
             var existing = await _context.Users.Include(u => u.Roles).FirstOrDefaultAsync(u => u.Id == updatedDto.Id);
             if (existing == null)
                 throw new NotFoundException("Usuario no encontrado.");
 
             existing.Email = updatedDto.Email;
+            existing.Name = updatedDto.Name;
 
             if (!string.IsNullOrWhiteSpace(updatedDto.Password))
             {
@@ -136,6 +159,57 @@ namespace Simpled.Services
                 if (!samePassword)
                 {
                     existing.PasswordHash = BCrypt.Net.BCrypt.HashPassword(updatedDto.Password);
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(updatedDto.ImageUrl))
+            {
+                if (!existing.ImageUrl.Contains("avatar-default.jpg"))
+                {
+                    string oldImagePath = Path.Combine("wwwroot", existing.ImageUrl.TrimStart('/'));
+                    
+                    if (File.Exists(oldImagePath))
+                    {
+                        File.Delete(oldImagePath);
+                    }
+
+                    var directory = Path.GetDirectoryName(oldImagePath);
+                    
+                    if (Directory.Exists(directory) && Directory.GetFiles(directory).Length == 0)
+                    {
+                        Directory.Delete(directory);
+                    }
+                }
+
+                existing.ImageUrl = "/images/default/avatar-default.jpg";
+            
+            } else {
+
+                if (image != null)
+                {
+                    string uploadsFolder = Path.Combine("wwwroot", "images", existing.Id.ToString());
+
+                    if (!Directory.Exists(uploadsFolder))
+                    {
+                        Directory.CreateDirectory(uploadsFolder);
+                        Console.WriteLine($"Carpeta creada: {uploadsFolder}");
+                    }
+
+                    string filePath = Path.Combine(uploadsFolder, "image.jpg");
+
+                    if (File.Exists(filePath))
+                    {
+                        File.Delete(filePath);
+                    }
+
+                    using (var fileStream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await image.CopyToAsync(fileStream);
+                    }
+
+                    existing.ImageUrl = $"/images/{existing.Id.ToString()}/image.jpg";
+                    _context.Users.Update(existing);
+                    await _context.SaveChangesAsync();
                 }
             }
 

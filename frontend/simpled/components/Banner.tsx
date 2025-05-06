@@ -1,8 +1,8 @@
 import { ReactNode } from 'react';
 
 interface BannerProps {
-  children: ReactNode;
-  className: string;
+  readonly children: ReactNode;
+  readonly className: string;
 }
 
 export default function Banner({ children, className }: BannerProps) {

@@ -1,10 +1,10 @@
 'use client';
 
-import Image from 'next/image';
-import { Button } from '@/components/ui/button';
-import { useState } from 'react';
 import EditProfileModal from '@/components/EditProfileModal';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import Image from 'next/image';
+import { useState } from 'react';
 
 const API_URL = 'http://localhost:5193';
 
@@ -17,8 +17,8 @@ interface User {
 }
 
 interface ProfileHeaderProps {
-  user: User;
-  isOwner: boolean;
+  readonly user: User;
+  readonly isOwner: boolean;
 }
 
 export default function ProfileHeader({ user, isOwner }: ProfileHeaderProps) {

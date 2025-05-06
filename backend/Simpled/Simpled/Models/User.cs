@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.Diagnostics.CodeAnalysis;
 
 namespace Simpled.Models
 {
@@ -29,5 +28,9 @@ namespace Simpled.Models
         public int TeamsCount { get; set; }
 
         public ICollection<UserAchievement> Achievements { get; set; } = new List<UserAchievement>();
+
+        public List<Team> Teams { get; set; } = new();
+        public List<TeamMember> TeamMembers { get; set; } = new();
+
     }
 }

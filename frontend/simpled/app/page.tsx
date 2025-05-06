@@ -7,7 +7,7 @@ import Image from 'next/image';
 export default function Home() {
   return (
     <main className="flex min-h-screen flex-col">
-      <Banner>
+      <Banner className="bg-gradient-to-r from-blue-500 to-indigo-600 px-4 py-16 text-center">
         <h1 className="mb-6 text-4xl font-bold md:text-5xl">
           La herramienta definitiva para la gestión colaborativa de proyectos
         </h1>
@@ -101,7 +101,7 @@ export default function Home() {
         </div>
       </section>
 
-      <Banner>
+      <Banner className="bg-gradient-to-r from-blue-500 to-indigo-600 px-4 py-16 text-center">
         <h2 className="mb-4 text-3xl font-bold">¡Comienza a organizar tus proyectos hoy mismo!</h2>
         <p className="mb-8 text-xl">
           Regístrate ahora y prueba todas las funciones de <b>Simpled</b>. ¡Es completamente gratis!

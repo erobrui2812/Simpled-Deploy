@@ -1,9 +1,10 @@
 'use client';
 import { useRouter } from 'next/navigation';
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import type React from 'react';
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 
-const API_URL = 'http://localhost:5193/';
+const API_URL = 'http://localhost:5193';
 
 type User = {
   id: string | null;
@@ -38,9 +39,21 @@ type AuthContextType = {
     password: string,
     image: File | null,
   ) => Promise<void>;
+  updateUser: (
+    id: string,
+    name: string,
+    email: string,
+    imageUrl: string,
+    password: string,
+    image: File | null,
+  ) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
   fetchUserProfile: (userId: string) => Promise<User | null>;
+  fetchFavoriteBoards: () => void;
+  checkFavoriteBoard: (boardId: string) => void;
+  toggleFavoriteBoard: (boardId: string) => void;
+  externalLogin: (provider: string) => void;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -51,18 +64,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     id: null,
   });
   const [isAuthenticated, setAuthenticated] = useState(false);
-  const router = useRouter();
   const [userData, setUserData] = useState<User | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     const token =
       typeof window !== 'undefined'
-        ? sessionStorage.getItem('token') || localStorage.getItem('token')
+        ? (sessionStorage.getItem('token') ?? localStorage.getItem('token'))
         : null;
 
     const id =
       typeof window !== 'undefined'
-        ? sessionStorage.getItem('userId') || localStorage.getItem('userId')
+        ? (sessionStorage.getItem('userId') ?? localStorage.getItem('userId'))
         : null;
 
     if (token && id) {
@@ -71,16 +84,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   useEffect(() => {
-    if (auth.token) {
-      setAuthenticated(true);
-    } else {
-      setAuthenticated(false);
-    }
+    setAuthenticated(!!auth.token);
   }, [auth.token]);
 
   const fetchUserProfile = async (userId: string) => {
     try {
-      const response = await fetch(`${API_URL}api/Users/${userId}`);
+      const response = await fetch(`${API_URL}/api/Users/${userId}`);
+      if (!response.ok) throw new Error('Error al obtener perfil.');
       const data = await response.json();
       return data;
     } catch (error) {
@@ -101,17 +111,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const loginUser = async (email: string, password: string, keepUserLoggedIn: boolean) => {
     try {
-      const response = await fetch(`${API_URL}api/Auth/login`, {
+      const response = await fetch(`${API_URL}/api/Auth/login`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
 
       if (!response.ok) throw new Error('Credenciales incorrectas o error en el servidor.');
 
-      console.log('response', response);
       const { token, id } = await response.json();
       setAuth({ token, id });
 
@@ -125,7 +132,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       toast.success('Sesión iniciada correctamente.');
       router.push('/');
-      setAuthenticated(true);
     } catch (error) {
       console.error('Error al iniciar sesión:', error);
       toast.error('Correo o contraseña incorrectos.');
@@ -143,13 +149,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       formData.append('name', name);
       formData.append('email', email);
       formData.append('password', password);
-      if (image) {
-        formData.append('image', image);
-      }
+      if (image) formData.append('image', image);
 
-      const response = await fetch(`${API_URL}api/Users/register`, {
+      const response = await fetch(`${API_URL}/api/Users/register`, {
         method: 'POST',
-
         body: formData,
       });
 
@@ -163,38 +166,125 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const updateUser = async (
+    id: string,
+    name: string,
+    email: string,
+    imageUrl: string,
+    password: string,
+    image: File | null,
+  ) => {
+    try {
+      const formData = new FormData();
+      formData.append('id', id);
+      formData.append('name', name);
+      formData.append('email', email);
+      formData.append('imageUrl', imageUrl);
+      formData.append('password', password);
+      if (image) formData.append('image', image);
+
+      const response = await fetch(`${API_URL}/api/Users/${id}`, {
+        method: 'PUT',
+        body: formData,
+      });
+
+      if (!response.ok) throw new Error('Error al actualizar usuario.');
+
+      toast.success('Perfil actualizado correctamente.');
+    } catch (error) {
+      console.error('Error actualizando usuario:', error);
+      toast.error('Error al actualizar usuario. Intenta nuevamente.');
+    }
+  };
+
   const logout = () => {
     setAuth({ token: null, id: null });
-
     setUserData(null);
-
-    sessionStorage.removeItem('userId');
-    localStorage.removeItem('userId');
-
     localStorage.removeItem('token');
+    localStorage.removeItem('userId');
     sessionStorage.removeItem('token');
-
+    sessionStorage.removeItem('userId');
     setAuthenticated(false);
-
     router.push('/login');
     toast.info('Sesión cerrada.');
   };
 
-  return (
-    <AuthContext.Provider
-      value={{
-        auth,
-        loginUser,
-        registerUser,
-        logout,
-        isAuthenticated,
-        userData,
-        fetchUserProfile,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
+  const fetchFavoriteBoards = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/favorite-boards`);
+      if (!response.ok) throw new Error('Error al obtener la lista de favoritos.');
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error al obtener la lista de favoritos:', error);
+      return null;
+    }
+  };
+
+  const toggleFavoriteBoard = async (boardId: string) => {
+    try {
+      const response = await fetch(`${API_URL}/api/favorite-boards/toggle`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${auth.token}`,
+        },
+        body: JSON.stringify({ boardId }),
+      });
+
+      if (!response.ok) throw new Error('Error al actualizar favorito.');
+
+      const data = await response.json();
+      toast.success(
+        data.favorite ? 'Tablero añadido a favoritos.' : 'Tablero eliminado de favoritos.',
+      );
+
+      return data.favorite;
+    } catch (error) {
+      console.error('Error modificando el estado del board', error);
+      toast.error('No se pudo actualizar el estado del favorito.');
+      return null;
+    }
+  };
+
+  const checkFavoriteBoard = async (boardId: string): Promise<boolean | null> => {
+    try {
+      const response = await fetch(`${API_URL}/api/favorite-boards/check-favorite/${boardId}`, {
+        method: 'GET',
+      });
+
+      if (!response.ok) throw new Error('Error al comprobar favorito.');
+
+      const data = await response.json();
+      return data.favorite;
+    } catch (error) {
+      console.error('Error comprobando si es favorito:', error);
+      return null;
+    }
+  };
+
+  const authContextValue = useMemo(
+    () => ({
+      auth,
+      loginUser,
+      registerUser,
+      updateUser,
+      logout,
+      isAuthenticated,
+      userData,
+      fetchUserProfile,
+      fetchFavoriteBoards,
+      toggleFavoriteBoard,
+      checkFavoriteBoard,
+      externalLogin: (provider: string) => {
+        const redirectUrl = `${API_URL}/api/Auth/external-login/${provider}`;
+        window.location.href = redirectUrl;
+      },
+    }),
+    [auth, isAuthenticated, userData],
   );
+
+  return <AuthContext.Provider value={authContextValue}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = (): AuthContextType => {

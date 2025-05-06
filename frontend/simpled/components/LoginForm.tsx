@@ -1,20 +1,20 @@
 'use client';
 
-import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { AtSign, KeyRound } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { AtSign, Github, KeyRound, Mail } from 'lucide-react';
+import React, { useState } from 'react';
 
 export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [keepUserLoggedIn, setKeepUserLoggedIn] = useState(false);
-  const { loginUser } = useAuth();
+  const { loginUser, externalLogin } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,47 +40,81 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
                 <div className="relative flex items-center">
                   <AtSign className="text-muted-foreground absolute left-3 h-5 w-5" />
                   <Input
-                    className="pl-10"
                     id="email"
                     type="email"
                     placeholder="email@dominio.com"
+                    className="pl-10"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
                   />
                 </div>
               </div>
+
               <div className="grid gap-3">
-                <div className="flex items-center">
-                  <Label htmlFor="password">Contraseña</Label>
-                </div>
+                <Label htmlFor="password">Contraseña</Label>
                 <div className="relative flex items-center">
                   <KeyRound className="text-muted-foreground absolute left-3 h-5 w-5" />
                   <Input
-                    className="pl-10"
                     id="password"
                     type="password"
-                    value={password}
                     placeholder="••••••••"
+                    className="pl-10"
+                    value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
                   />
                 </div>
               </div>
+
               <div className="flex items-center gap-3">
                 <Checkbox
                   id="keepUserLoggedIn"
                   checked={keepUserLoggedIn}
-                  onCheckedChange={(checked: boolean) => setKeepUserLoggedIn(checked)}
+                  onCheckedChange={(checked: boolean) => setKeepUserLoggedIn(!!checked)}
                 />
                 <Label htmlFor="keepUserLoggedIn">Mantener sesión iniciada</Label>
               </div>
+
               <div className="flex flex-col gap-3">
                 <Button type="submit" className="w-full">
                   Iniciar sesión
                 </Button>
+
+                <div className="relative my-2">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t"></span>
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-background text-muted-foreground px-2">
+                      O continuar con
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => externalLogin('GitHub')}
+                    className="w-full"
+                  >
+                    <Github className="mr-2 h-4 w-4" />
+                    GitHub
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => externalLogin('Google')}
+                    className="w-full"
+                  >
+                    <Mail className="mr-2 h-4 w-4" />
+                    Google
+                  </Button>
+                </div>
               </div>
             </div>
+
             <div className="mt-4 text-center text-sm">
               ¿No tienes cuenta?{' '}
               <a href="/registro" className="underline underline-offset-4">

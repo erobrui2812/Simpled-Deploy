@@ -1,10 +1,10 @@
-import Link from 'next/link';
-import { Trophy } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Trophy } from 'lucide-react';
+import Link from 'next/link';
 
 interface AchievementCounterProps {
-  achievements: number;
-  userId: string;
+  readonly achievements: number;
+  readonly userId: string;
 }
 
 export default function AchievementCounter({ achievements, userId }: AchievementCounterProps) {

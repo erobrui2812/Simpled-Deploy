@@ -23,7 +23,6 @@ namespace Simpled.Models
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        // Relaciones
         public Board? Board { get; set; }
     }
 }
