@@ -121,6 +121,7 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
       const cols = allCols.filter((c: any) => c.boardId === boardId);
       const its = allItems.filter((i: any) => cols.some((c: any) => c.id === i.columnId));
 
+      // For each item, fetch its subtasks
       const itemsWithSubtasks = await Promise.all(
         its.map(async (item: Item) => {
           try {
@@ -128,6 +129,7 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
             if (subtasksRes.ok) {
               const subtasks = await subtasksRes.json();
 
+              // Calculate progress based on subtasks
               const subtasksCount = subtasks.length;
               const completedSubtasks = subtasks.filter((st: any) => st.isCompleted).length;
               const progress =
@@ -251,6 +253,7 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
                 const subtasks = item.subtasks || [];
                 const newSubtasks = [...subtasks, payload];
 
+                // Calculate new progress
                 const subtasksCount = newSubtasks.length;
                 const completedSubtasks = newSubtasks.filter((st) => st.isCompleted).length;
                 const progress =
@@ -270,6 +273,7 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
                 const subtasks = item.subtasks || [];
                 const updatedSubtasks = subtasks.map((st) => (st.id === payload.id ? payload : st));
 
+                // Calculate new progress
                 const subtasksCount = updatedSubtasks.length;
                 const completedSubtasks = updatedSubtasks.filter((st) => st.isCompleted).length;
                 const progress =
@@ -289,6 +293,7 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
                 const subtasks = item.subtasks || [];
                 const updatedSubtasks = subtasks.filter((st) => st.id !== payload.id);
 
+                // Calculate new progress
                 const subtasksCount = updatedSubtasks.length;
                 const completedSubtasks = updatedSubtasks.filter((st) => st.isCompleted).length;
                 const progress =
@@ -472,7 +477,11 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
       {showInvite && (
         <BoardInviteModal
           boardId={boardId}
-          onClose={() => setShowInvite(false)}
+          onClose={() => {
+            setShowInvite(false);
+            // Ensure state is properly reset
+            setTimeout(() => fetchData(), 100);
+          }}
           onInvited={() => {
             setShowInvite(false);
             fetchData();
@@ -489,7 +498,11 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
       {createItemColumnId && (
         <ItemCreateModal
           columnId={createItemColumnId}
-          onClose={() => setCreateItemColumnId(null)}
+          onClose={() => {
+            setCreateItemColumnId(null);
+            // Ensure state is properly reset
+            setTimeout(() => fetchData(), 100);
+          }}
           onCreated={fetchData}
           assignees={
             members
@@ -516,7 +529,11 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
             ...editItem,
             status: editItem.status ?? 'pending',
           }}
-          onClose={() => setEditItem(null)}
+          onClose={() => {
+            setEditItem(null);
+            // Ensure state is properly reset
+            setTimeout(() => fetchData(), 100);
+          }}
           onUpdated={fetchData}
           assignees={
             members

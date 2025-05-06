@@ -186,7 +186,7 @@ export default function ItemCreateModal({
                 <SelectTrigger id="item-status">
                   <SelectValue placeholder="Seleccionar estado" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="z-[1200]">
                   <SelectItem value="pending">
                     <div className="flex items-center">
                       <div className="mr-2 h-2 w-2 rounded-full bg-amber-500"></div>
@@ -225,7 +225,7 @@ export default function ItemCreateModal({
                   <SelectTrigger id="item-assignee">
                     <SelectValue placeholder="Sin asignar" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="z-[1200]">
                     <SelectItem value="not-assigned">Sin asignar</SelectItem>
                     {assignees.map((u) => (
                       <SelectItem key={u.id} value={u.id}>

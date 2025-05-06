@@ -1,11 +1,12 @@
 'use client';
 
+import { DialogFooter } from '@/components/ui/dialog';
+
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -100,7 +101,7 @@ export default function BoardInviteModal({ boardId, onClose, onInvited }: Props)
               <SelectTrigger id="role">
                 <SelectValue placeholder="Selecciona un rol" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="z-[1200]">
                 <SelectItem value="viewer">Viewer (Solo ver)</SelectItem>
                 <SelectItem value="editor">Editor (Puede editar tareas)</SelectItem>
                 <SelectItem value="admin">Admin (Control total)</SelectItem>

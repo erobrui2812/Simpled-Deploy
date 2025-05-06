@@ -5,6 +5,7 @@ import * as React from 'react';
 
 import { cn } from '@/lib/utils';
 
+// Ensure proper modal behavior with focus trapping
 const Dialog = ({ children, ...props }: DialogPrimitive.DialogProps) => (
   <DialogPrimitive.Root {...props}>{children}</DialogPrimitive.Root>
 );
