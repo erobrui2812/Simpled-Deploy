@@ -17,6 +17,7 @@ namespace Simpled.Dtos.Items
         public string? Description { get; set; }
 
         public DateTime? DueDate { get; set; }
+        public DateTime? StartDate { get; set; }
 
         [Required]
         public Guid ColumnId { get; set; }

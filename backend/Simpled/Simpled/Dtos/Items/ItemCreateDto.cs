@@ -10,6 +10,7 @@ namespace Simpled.Dtos.Items
         public string? Description { get; set; }
         public DateTime? DueDate { get; set; }
         [Required]
+        public DateTime? StartDate { get; set; }
         public Guid ColumnId { get; set; }
         [Required]
         [RegularExpression("pending|in-progress|completed|delayed")]

@@ -36,6 +36,7 @@ namespace Simpled.Services
                     Id = i.Id,
                     Title = i.Title,
                     Description = i.Description,
+                    StartDate = i.StartDate,
                     DueDate = i.DueDate,
                     ColumnId = i.ColumnId,
                     Status = i.Status,
@@ -65,6 +66,7 @@ namespace Simpled.Services
                 Id = i.Id,
                 Title = i.Title,
                 Description = i.Description,
+                StartDate = i.StartDate,
                 DueDate = i.DueDate,
                 ColumnId = i.ColumnId,
                 Status = i.Status,
@@ -88,6 +90,7 @@ namespace Simpled.Services
                 Id = Guid.NewGuid(),
                 Title = dto.Title,
                 Description = dto.Description,
+                StartDate = dto.StartDate,
                 DueDate = dto.DueDate,
                 ColumnId = dto.ColumnId,
                 Status = dto.Status,
@@ -101,6 +104,7 @@ namespace Simpled.Services
                 Id = item.Id,
                 Title = item.Title,
                 Description = item.Description,
+                StartDate = item.StartDate,
                 DueDate = item.DueDate,
                 ColumnId = item.ColumnId,
                 Status = item.Status,
@@ -122,6 +126,7 @@ namespace Simpled.Services
 
             item.Title = dto.Title;
             item.Description = dto.Description;
+            item.StartDate = dto.StartDate;
             item.DueDate = dto.DueDate;
             item.ColumnId = dto.ColumnId;
             item.Status = dto.Status;
@@ -137,6 +142,7 @@ namespace Simpled.Services
                     dto.Id,
                     dto.Title,
                     dto.Description,
+                    dto.StartDate,
                     dto.DueDate,
                     dto.ColumnId,
                     dto.Status,

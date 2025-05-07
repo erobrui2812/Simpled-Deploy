@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Simpled.Dtos.Items;
 using Simpled.Exception;
@@ -23,40 +24,25 @@ namespace Simpled.Controllers
         private readonly IItemRepository _itemService;
         private readonly IBoardMemberRepository _memberRepo;
 
-        /// <summary>
-        /// Crea una nueva instancia de <see cref="ItemsController"/>.
-        /// </summary>
-        /// <param name="itemService">Servicio/repo de ítems.</param>
-        /// <param name="memberRepo">Repositorio de miembros de tablero.</param>
-        public ItemsController(IItemRepository itemService, IBoardMemberRepository memberRepo)
+        public ItemsController(
+            IItemRepository itemService,
+            IBoardMemberRepository memberRepo)
         {
             _itemService = itemService;
             _memberRepo = memberRepo;
         }
 
-        /// <summary>
-        /// Obtiene todos los ítems, incluyendo sus subtareas y progreso.
-        /// </summary>
-        /// <returns>Lista de <see cref="ItemReadDto"/>.</returns>
-        /// <response code="200">Ítems recuperados correctamente.</response>
         [HttpGet]
-        [ProducesResponseType(typeof(IEnumerable<ItemReadDto>), 200)]
+        [ProducesResponseType(typeof(IEnumerable<ItemReadDto>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetAllItems()
         {
             var items = await _itemService.GetAllAsync();
             return Ok(items);
         }
 
-        /// <summary>
-        /// Obtiene un ítem por su identificador, incluyendo subtareas y progreso.
-        /// </summary>
-        /// <param name="id">Identificador del ítem.</param>
-        /// <returns>Detalle del ítem.</returns>
-        /// <response code="200">Ítem encontrado.</response>
-        /// <response code="404">Ítem no encontrado.</response>
         [HttpGet("{id:guid}")]
-        [ProducesResponseType(typeof(ItemReadDto), 200)]
-        [ProducesResponseType(404)]
+        [ProducesResponseType(typeof(ItemReadDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetItem(Guid id)
         {
             try
@@ -70,18 +56,10 @@ namespace Simpled.Controllers
             }
         }
 
-        /// <summary>
-        /// Crea un nuevo ítem en una columna específica.
-        /// </summary>
-        /// <param name="dto">Datos para la creación del ítem.</param>
-        /// <returns>Ítem creado.</returns>
-        /// <response code="201">Ítem creado correctamente.</response>
-        /// <response code="400">Datos de entrada no válidos.</response>
-        /// <response code="403">Sin permisos para crear en este tablero.</response>
         [HttpPost]
-        [ProducesResponseType(typeof(ItemReadDto), 201)]
-        [ProducesResponseType(400)]
-        [ProducesResponseType(403)]
+        [ProducesResponseType(typeof(ItemReadDto), StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> CreateItem([FromBody] ItemCreateDto dto)
         {
             var boardId = await _itemService.GetBoardIdByColumnId(dto.ColumnId);
@@ -103,18 +81,10 @@ namespace Simpled.Controllers
             return CreatedAtAction(nameof(GetItem), new { id = created.Id }, created);
         }
 
-        /// <summary>
-        /// Actualiza un ítem existente. Los administradores pueden modificar todo, los editores solo el estado de sus propias tareas.
-        /// </summary>
-        /// <param name="id">Identificador del ítem.</param>
-        /// <param name="dto">Datos actualizados del ítem.</param>
-        /// <response code="204">Ítem actualizado correctamente.</response>
-        /// <response code="400">ID en ruta y DTO no coinciden.</response>
-        /// <response code="403">Sin permisos para modificar este ítem.</response>
         [HttpPut("{id:guid}")]
-        [ProducesResponseType(204)]
-        [ProducesResponseType(400)]
-        [ProducesResponseType(403)]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> UpdateItem(Guid id, [FromBody] ItemUpdateDto dto)
         {
             if (id != dto.Id)
@@ -143,17 +113,10 @@ namespace Simpled.Controllers
             }
         }
 
-        /// <summary>
-        /// Elimina un ítem por su identificador (solo rol admin).
-        /// </summary>
-        /// <param name="id">Identificador del ítem.</param>
-        /// <response code="204">Ítem eliminado correctamente.</response>
-        /// <response code="403">Sin permisos para eliminar este ítem.</response>
-        /// <response code="404">Ítem no encontrado.</response>
         [HttpDelete("{id:guid}")]
-        [ProducesResponseType(204)]
-        [ProducesResponseType(403)]
-        [ProducesResponseType(404)]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteItem(Guid id)
         {
             var boardId = await _itemService.GetBoardIdByItemId(id);
@@ -175,19 +138,10 @@ namespace Simpled.Controllers
             }
         }
 
-        /// <summary>
-        /// Sube un archivo (imagen) y lo asocia al ítem.
-        /// </summary>
-        /// <param name="id">Identificador del ítem.</param>
-        /// <param name="file">Archivo a subir.</param>
-        /// <returns>Contenido subido.</returns>
-        /// <response code="200">Archivo subido correctamente.</response>
-        /// <response code="400">Archivo inválido o ítem no encontrado.</response>
-        /// <response code="403">Sin permisos para subir archivos.</response>
         [HttpPost("{id:guid}/upload")]
-        [ProducesResponseType(typeof(Content), 200)]
-        [ProducesResponseType(400)]
-        [ProducesResponseType(403)]
+        [ProducesResponseType(typeof(Content), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> UploadFile(Guid id, IFormFile file)
         {
             var boardId = await _itemService.GetBoardIdByItemId(id);

@@ -18,6 +18,7 @@ namespace Simpled.Models
         public string? Description { get; set; }
 
         public DateTime? DueDate { get; set; }
+        public DateTime? StartDate { get; set; }
 
         [Required]
         [RegularExpression("pending|in-progress|completed|delayed")]
