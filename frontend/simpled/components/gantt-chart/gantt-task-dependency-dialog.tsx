@@ -156,10 +156,30 @@ export function GanttTaskDependencyDialog({
                     <SelectValue placeholder="Tipo" />
                   </SelectTrigger>
                   <SelectContent className="z-[1200]">
-                    <SelectItem value="finish-to-start">Fin a Inicio (FS)</SelectItem>
-                    <SelectItem value="start-to-start">Inicio a Inicio (SS)</SelectItem>
-                    <SelectItem value="finish-to-finish">Fin a Fin (FF)</SelectItem>
-                    <SelectItem value="start-to-finish">Inicio a Fin (SF)</SelectItem>
+                    <SelectItem value="finish-to-start">
+                      <div className="flex items-center gap-2">
+                        <div className="h-1 w-4 bg-blue-500"></div>
+                        <span>Fin a Inicio (FS)</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="start-to-start">
+                      <div className="flex items-center gap-2">
+                        <div className="h-1 w-4 border-t border-dashed border-green-500 bg-green-500"></div>
+                        <span>Inicio a Inicio (SS)</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="finish-to-finish">
+                      <div className="flex items-center gap-2">
+                        <div className="h-1 w-4 border-t-2 border-dashed border-amber-500 bg-amber-500"></div>
+                        <span>Fin a Fin (FF)</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="start-to-finish">
+                      <div className="flex items-center gap-2">
+                        <div className="h-1 w-4 border-t-2 border-dotted border-red-500 bg-red-500"></div>
+                        <span>Inicio a Fin (SF)</span>
+                      </div>
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -209,8 +229,31 @@ export function GanttTaskDependencyDialog({
                               </>
                             )}
                           </div>
-                          <div className="text-muted-foreground mt-1 text-xs">
-                            {getDependencyTypeLabel(dep.type)}
+                          <div className="text-muted-foreground mt-1 flex items-center gap-2 text-xs">
+                            {dep.type === 'finish-to-start' && (
+                              <>
+                                <div className="h-1 w-4 bg-blue-500"></div>
+                                <span>Fin a Inicio (FS)</span>
+                              </>
+                            )}
+                            {dep.type === 'start-to-start' && (
+                              <>
+                                <div className="h-1 w-4 border-t border-dashed border-green-500 bg-green-500"></div>
+                                <span>Inicio a Inicio (SS)</span>
+                              </>
+                            )}
+                            {dep.type === 'finish-to-finish' && (
+                              <>
+                                <div className="h-1 w-4 border-t-2 border-dashed border-amber-500 bg-amber-500"></div>
+                                <span>Fin a Fin (FF)</span>
+                              </>
+                            )}
+                            {dep.type === 'start-to-finish' && (
+                              <>
+                                <div className="h-1 w-4 border-t-2 border-dotted border-red-500 bg-red-500"></div>
+                                <span>Inicio a Fin (SF)</span>
+                              </>
+                            )}
                           </div>
                         </div>
                         <Button

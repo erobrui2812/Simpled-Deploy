@@ -160,6 +160,7 @@ builder.Services.AddSwaggerGen(options =>
 // --------------------------------------------------
 builder.Services.AddSignalR();
 builder.Services.AddAuthorization();
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IAuthRepository, AuthService>();
 builder.Services.AddScoped<IUserRepository, UserService>();
 builder.Services.AddScoped<IBoardRepository, BoardService>();
@@ -173,6 +174,9 @@ builder.Services.AddScoped<ITeamRepository, TeamService>();
 builder.Services.AddScoped<ITeamMemberRepository, TeamService>();
 builder.Services.AddScoped<ITeamInvitationRepository, TeamInvitationService>();
 builder.Services.AddScoped<IDependencyRepository, DependencyService>();
+builder.Services.AddScoped<DependencyService>();
+
+
 
 
 

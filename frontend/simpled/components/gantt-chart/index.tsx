@@ -245,6 +245,25 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
             navigateTimeline={navigateTimeline}
             exportData={exportToCSV}
           />
+          <div className="mb-4 flex flex-wrap items-center gap-4 text-sm">
+            <div className="font-medium">Tipos de dependencias:</div>
+            <div className="flex items-center gap-2">
+              <div className="h-1 w-6 bg-blue-500"></div>
+              <span>Fin a Inicio (FS)</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="h-1 w-6 border-t border-dashed border-green-500 bg-green-500"></div>
+              <span>Inicio a Inicio (SS)</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="h-1 w-6 border-t-2 border-dashed border-amber-500 bg-amber-500"></div>
+              <span>Fin a Fin (FF)</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="h-1 w-6 border-t-2 border-dotted border-red-500 bg-red-500"></div>
+              <span>Inicio a Fin (SF)</span>
+            </div>
+          </div>
         </div>
       </CardHeader>
 
