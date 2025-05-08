@@ -59,8 +59,8 @@ export function TaskDistribution() {
                   dataKey="value"
                   label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                 >
-                  {statusData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  {statusData.map((entry) => (
+                    <Cell key={`cell-${entry.name}`} fill={entry.color} />
                   ))}
                 </Pie>
                 <Tooltip formatter={(value) => [`${value} tareas`, '']} />
@@ -82,8 +82,8 @@ export function TaskDistribution() {
                   dataKey="value"
                   label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                 >
-                  {assigneeData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  {assigneeData.map((entry) => (
+                    <Cell key={`cell-${entry.name}`} fill={entry.color} />
                   ))}
                 </Pie>
                 <Tooltip formatter={(value) => [`${value} tareas`, '']} />
@@ -105,8 +105,8 @@ export function TaskDistribution() {
                   dataKey="value"
                   label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                 >
-                  {priorityData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  {priorityData.map((entry) => (
+                    <Cell key={`cell-${entry.name}`} fill={entry.color} />
                   ))}
                 </Pie>
                 <Tooltip formatter={(value) => [`${value} tareas`, '']} />

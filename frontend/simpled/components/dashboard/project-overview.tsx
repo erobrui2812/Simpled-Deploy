@@ -6,7 +6,7 @@ import { ArrowRight, BarChart2, Layers } from 'lucide-react';
 import Link from 'next/link';
 
 interface ProjectOverviewProps {
-  boards: Board[];
+  readonly boards: Board[];
 }
 
 export function ProjectOverview({ boards }: ProjectOverviewProps) {

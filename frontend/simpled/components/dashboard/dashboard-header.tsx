@@ -2,7 +2,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { CalendarDays, CheckCircle2, Clock } from 'lucide-react';
 
 interface DashboardHeaderProps {
-  user: any;
+  readonly user: any;
 }
 
 export function DashboardHeader({ user }: DashboardHeaderProps) {
@@ -21,7 +21,7 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
         <p className="text-muted-foreground mt-2">
-          {greeting}, {user?.name || 'Usuario'}. Aquí tienes un resumen de tus proyectos.
+          {greeting}, {user?.name ?? 'Usuario'}. Aquí tienes un resumen de tus proyectos.
         </p>
       </div>
 

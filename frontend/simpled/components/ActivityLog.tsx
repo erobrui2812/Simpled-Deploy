@@ -82,7 +82,7 @@ export const ActivityLogComponent: React.FC<ActivityLogProps> = ({ logs }) => {
               <CardContent className="p-3">
                 <div className="flex gap-3">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={log.userAvatarUrl || '/placeholder.svg'} alt={log.userName} />
+                    <AvatarImage src={log.userAvatarUrl ?? '/placeholder.svg'} alt={log.userName} />
                     <AvatarFallback>{log.userName.charAt(0)}</AvatarFallback>
                   </Avatar>
                   <div className="space-y-1">

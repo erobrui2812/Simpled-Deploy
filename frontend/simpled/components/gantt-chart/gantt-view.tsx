@@ -27,7 +27,6 @@ interface GroupedTask {
 interface GanttViewProps {
   readonly tasks: Task[];
   readonly dependencies: Dependency[];
-  readonly filteredTasks: Task[];
   readonly groupedTasks: GroupedTask[];
   readonly timelineDates: Date[];
   readonly timelineHeaders: TimelineHeader[];
@@ -85,6 +84,34 @@ export function GanttView({
     }
   }, [startDate, daysToShow]);
 
+  // Helper: Find task index in groupedTasks
+  function findTaskIndexInGroups(groupedTasks: GroupedTask[], taskId: string) {
+    let index = -1;
+    let visible = true;
+    groupedTasks.forEach((group, groupIdx) => {
+      if (group.isGroup) {
+        const inGroup = group.tasks.some((t) => t.id === taskId);
+        if (!group.expanded && inGroup) visible = false;
+        if (group.expanded) {
+          group.tasks.forEach((task, taskIdx) => {
+            if (task.id === taskId) index = groupIdx + taskIdx + 1;
+          });
+        }
+      } else if (group.tasks[0].id === taskId) {
+        index = groupIdx;
+      }
+    });
+    return { index, visible };
+  }
+
+  // Helper: Calculate days from start
+  function toDays(dateStr: string, startDate: Date, daysToShow: number) {
+    const date = new Date(dateStr);
+    const diffTime = date.getTime() - startDate.getTime();
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    return Math.max(0, Math.min(diffDays, daysToShow - 1));
+  }
+
   // Efecto para calcular las líneas de dependencia entre tareas
   // Nota: este cálculo es simplificado y asume posiciones fijas para los elementos
   useEffect(() => {
@@ -97,52 +124,19 @@ export function GanttView({
       const toTask = tasks.find((t) => t.id === dep.toTaskId);
       if (!fromTask || !toTask) return;
 
-      // Determine indices of rows for both tasks
-      let fromIndex = -1;
-      let toIndex = -1;
-      let fromVisible = true;
-      let toVisible = true;
-
-      groupedTasks.forEach((group, groupIdx) => {
-        if (group.isGroup) {
-          const inFromGroup = group.tasks.some((t) => t.id === fromTask.id);
-          const inToGroup = group.tasks.some((t) => t.id === toTask.id);
-
-          if (!group.expanded) {
-            if (inFromGroup) fromVisible = false;
-            if (inToGroup) toVisible = false;
-          }
-
-          if (group.expanded) {
-            group.tasks.forEach((task, taskIdx) => {
-              if (task.id === fromTask.id) fromIndex = groupIdx + taskIdx + 1;
-              if (task.id === toTask.id) toIndex = groupIdx + taskIdx + 1;
-            });
-          }
-        } else {
-          if (group.tasks[0].id === fromTask.id) fromIndex = groupIdx;
-          if (group.tasks[0].id === toTask.id) toIndex = groupIdx;
-        }
-      });
-
+      const { index: fromIndex, visible: fromVisible } = findTaskIndexInGroups(
+        groupedTasks,
+        fromTask.id,
+      );
+      const { index: toIndex, visible: toVisible } = findTaskIndexInGroups(groupedTasks, toTask.id);
       if (fromIndex === -1 || toIndex === -1 || !fromVisible || !toVisible) return;
 
-      // Calculate days relative to the visible timeline start
-      const toDays = (dateStr: string) => {
-        const date = new Date(dateStr);
-        const diffTime = date.getTime() - startDate.getTime();
-        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-        return Math.max(0, Math.min(diffDays, daysToShow - 1));
-      };
+      const fromStartDay = toDays(fromTask.startDate, startDate, daysToShow);
+      const fromEndDay = toDays(fromTask.endDate, startDate, daysToShow);
+      const toStartDay = toDays(toTask.startDate, startDate, daysToShow);
+      const toEndDay = toDays(toTask.endDate, startDate, daysToShow);
 
-      const fromStartDay = toDays(fromTask.startDate);
-      const fromEndDay = toDays(fromTask.endDate);
-      const toStartDay = toDays(toTask.startDate);
-      const toEndDay = toDays(toTask.endDate);
-
-      // Determine connection points based on dependency type
       let fromX: number, toX: number;
-
       switch (dep.type) {
         case 'finish-to-start':
           fromX = 200 + fromEndDay * dayWidth + dayWidth / 2;
@@ -160,12 +154,8 @@ export function GanttView({
           fromX = 200 + fromStartDay * dayWidth;
           toX = 200 + toEndDay * dayWidth + dayWidth / 2;
           break;
-        default:
-          fromX = 200 + fromEndDay * dayWidth + dayWidth / 2;
-          toX = 200 + toStartDay * dayWidth;
       }
 
-      // Calculate Y coordinates based on row indices
       const fromY = (fromIndex + 1) * rowHeight + rowHeight / 2;
       const toY = (toIndex + 1) * rowHeight + rowHeight / 2;
 
@@ -209,16 +199,14 @@ export function GanttView({
           {viewMode === 'day'
             ? timelineDates.map((date) => {
                 const formatted = format(date, 'yyyy-MM-dd');
+                let dayHeaderClass =
+                  'gantt-header-cell gantt-day border-r border-b p-2 text-center text-xs';
+                dayHeaderClass +=
+                  formatted === todayFormatted
+                    ? ' bg-blue-100 dark:bg-blue-900/20'
+                    : ' bg-muted/50';
                 return (
-                  <div
-                    key={formatted}
-                    className={cn(
-                      'gantt-header-cell gantt-day border-r border-b p-2 text-center text-xs',
-                      formatted === todayFormatted
-                        ? 'bg-blue-100 dark:bg-blue-900/20'
-                        : 'bg-muted/50',
-                    )}
-                  >
+                  <div key={formatted} className={dayHeaderClass}>
                     {format(date, 'EEE d', { locale: es })}
                   </div>
                 );
@@ -245,16 +233,11 @@ export function GanttView({
             <div className="gantt-header-cell bg-muted/30 border-r border-b p-2"></div>
             {timelineDates.map((date) => {
               const formatted = format(date, 'yyyy-MM-dd');
+              let subHeaderClass = 'gantt-day border-r border-b p-1 text-center text-xs';
+              subHeaderClass +=
+                formatted === todayFormatted ? ' bg-blue-100 dark:bg-blue-900/20' : ' bg-muted/30';
               return (
-                <div
-                  key={formatted}
-                  className={cn(
-                    'gantt-day border-r border-b p-1 text-center text-xs',
-                    formatted === todayFormatted
-                      ? 'bg-blue-100 dark:bg-blue-900/20'
-                      : 'bg-muted/30',
-                  )}
-                >
+                <div key={formatted} className={subHeaderClass}>
                   {format(date, 'd', { locale: es })}
                 </div>
               );
@@ -263,18 +246,15 @@ export function GanttView({
         )}
 
         {/* Cuerpo del Gantt con tareas */}
-        <div
-          className="gantt-body relative"
-          role="button"
-          tabIndex={0}
-          onClick={handleTimelineClick}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              // Se incluye para accesibilidad, pero no dispara onTimelineClick por falta de coordenadas de puntero
-            }
-          }}
-        >
+        <div className="gantt-body relative">
+          <button
+            type="button"
+            className="absolute top-0 left-0 z-0 h-full w-full cursor-pointer opacity-0"
+            aria-label="Seleccionar fecha en el timeline"
+            onClick={handleTimelineClick}
+            tabIndex={0}
+            style={{ outline: 'none' }}
+          />
           {groupedTasks.length === 0 ? (
             <div className="col-span-full border-b py-8 text-center">
               No hay tareas para mostrar
@@ -336,47 +316,38 @@ export function GanttView({
             style={{ zIndex: 5 }}
           >
             {dependencyLines.map((line) => {
-              // Calculate control points for smoother curves
               const isVertical = Math.abs(line.toY - line.fromY) > Math.abs(line.toX - line.fromX);
               const controlDistance = isVertical ? 20 : Math.abs(line.toX - line.fromX) * 0.4;
 
-              // Determine path based on dependency type
               let path = '';
               const arrowSize = 6;
 
-              if (isVertical) {
-                // For vertical-dominant paths, use an S-curve
-                path = `M ${line.fromX},${line.fromY} 
-                        C ${line.fromX + controlDistance},${line.fromY} 
-                          ${line.toX - controlDistance},${line.toY} 
+              path = `M ${line.fromX},${line.fromY} \
+                        C ${line.fromX + controlDistance},${line.fromY} \
+                          ${line.toX - controlDistance},${line.toY} \
                           ${line.toX},${line.toY}`;
+
+              let strokeStyle = '';
+              if (line.type === 'finish-to-start') {
+                strokeStyle = '';
+              } else if (line.type === 'start-to-start') {
+                strokeStyle = '5,5';
+              } else if (line.type === 'finish-to-finish') {
+                strokeStyle = '8,3';
               } else {
-                // For horizontal-dominant paths
-                path = `M ${line.fromX},${line.fromY} 
-                        C ${line.fromX + controlDistance},${line.fromY} 
-                          ${line.toX - controlDistance},${line.toY} 
-                          ${line.toX},${line.toY}`;
+                strokeStyle = '3,3,8,3';
               }
 
-              // Determine line style based on dependency type
-              const strokeStyle =
-                line.type === 'finish-to-start'
-                  ? ''
-                  : line.type === 'start-to-start'
-                    ? '5,5'
-                    : line.type === 'finish-to-finish'
-                      ? '8,3'
-                      : '3,3,8,3';
-
-              // Determine color based on dependency type
-              const strokeColor =
-                line.type === 'finish-to-start'
-                  ? 'rgba(59, 130, 246, 0.6)'
-                  : line.type === 'start-to-start'
-                    ? 'rgba(16, 185, 129, 0.6)'
-                    : line.type === 'finish-to-finish'
-                      ? 'rgba(245, 158, 11, 0.6)'
-                      : 'rgba(239, 68, 68, 0.6)';
+              let strokeColor = '';
+              if (line.type === 'finish-to-start') {
+                strokeColor = 'rgba(59, 130, 246, 0.6)';
+              } else if (line.type === 'start-to-start') {
+                strokeColor = 'rgba(16, 185, 129, 0.6)';
+              } else if (line.type === 'finish-to-finish') {
+                strokeColor = 'rgba(245, 158, 11, 0.6)';
+              } else {
+                strokeColor = 'rgba(239, 68, 68, 0.6)';
+              }
 
               return (
                 <g key={line.id}>
@@ -392,7 +363,6 @@ export function GanttView({
               );
             })}
 
-            {/* Define different arrowheads for each dependency type */}
             <defs>
               <marker
                 id="arrowhead-finish-to-start"
@@ -500,15 +470,11 @@ function GroupRow({
 
       {timelineDates.map((date) => {
         const formatted = format(date, 'yyyy-MM-dd');
-        return (
-          <div
-            key={formatted}
-            className={cn(
-              'gantt-cell border-r border-b',
-              formatted === todayFormatted ? 'bg-blue-100 dark:bg-blue-900/20' : '',
-            )}
-          />
-        );
+        let cellClass = 'gantt-cell border-r border-b';
+        if (formatted === todayFormatted) {
+          cellClass += ' bg-blue-100 dark:bg-blue-900/20';
+        }
+        return <div key={formatted} className={cellClass} />;
       })}
     </div>
   );
@@ -541,19 +507,18 @@ function TaskRow({
   const taskStart = new Date(task.startDate);
   const taskEnd = new Date(task.endDate);
 
-  // Días desde el inicio del timeline hasta el inicio de la tarea
   const startDiff = Math.max(
     0,
     Math.floor((taskStart.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)),
   );
-  // Duración de la tarea en días (al menos 1)
+
   const duration = Math.max(
     1,
     Math.floor((taskEnd.getTime() - taskStart.getTime()) / (1000 * 60 * 60 * 24)) + 1,
   );
-  // Duración visible teniendo en cuenta los días restantes del timeline
+
   let visibleDuration = Math.min(duration, daysToShow - startDiff);
-  // Determina si la tarea se ve dentro del periodo actual
+
   let isVisible = startDiff < daysToShow && startDiff + duration > 0;
 
   // Hook de dnd-kit para arrastrar tareas
@@ -571,7 +536,6 @@ function TaskRow({
     ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)` }
     : undefined;
 
-  // Función para determinar el color de la barra según estado/progreso
   const getStatusColor = (status?: string, progress?: number) => {
     if (progress === 100 || status === 'completed') return 'bg-emerald-500 hover:bg-emerald-600';
     if (status === 'delayed') return 'bg-rose-500 hover:bg-rose-600';
@@ -579,7 +543,6 @@ function TaskRow({
     return 'bg-amber-500 hover:bg-amber-600';
   };
 
-  // Etiqueta legible del estado de la tarea
   const statusLabel = useMemo(() => {
     switch (task.status) {
       case 'completed':
@@ -593,7 +556,6 @@ function TaskRow({
     }
   }, [task.status]);
 
-  // Calculate days from the start of the timeline
   const getVisibleDay = (dateStr: string) => {
     const date = new Date(dateStr);
     const diffTime = date.getTime() - startDate.getTime();
@@ -601,20 +563,16 @@ function TaskRow({
     return Math.max(0, Math.min(diffDays, daysToShow - 1));
   };
 
-  // Calculate task position and duration
   const taskStartDay = getVisibleDay(task.startDate);
   const taskEndDay = getVisibleDay(task.endDate);
 
-  // Calculate actual duration (including days outside the visible range)
   const actualStartDate = new Date(task.startDate);
   const actualEndDate = new Date(task.endDate);
   const actualDuration =
     Math.floor((actualEndDate.getTime() - actualStartDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
 
-  // Calculate visible duration
   visibleDuration = Math.max(1, taskEndDay - taskStartDay + 1);
 
-  // Determine if task is visible in the current view
   isVisible = taskStartDay < daysToShow && taskEndDay >= 0;
 
   return (
@@ -624,7 +582,6 @@ function TaskRow({
         gridTemplateColumns: `200px repeat(${daysToShow}, minmax(${40 * zoomLevel}px, 1fr))`,
       }}
     >
-      {/* Nombre de la tarea y anidamiento si está en un grupo */}
       <div className={cn('gantt-task-info truncate border-r border-b p-2', isInGroup && 'pl-6')}>
         <div className="flex items-center truncate font-medium">
           {task.title}
@@ -632,41 +589,23 @@ function TaskRow({
         </div>
       </div>
 
-      {/* Celdas vacías para el fondo del timeline */}
       {timelineDates.map((date) => {
         const formatted = format(date, 'yyyy-MM-dd');
-        return (
-          <div
-            key={formatted}
-            className={cn(
-              'gantt-cell border-r border-b',
-              formatted === todayFormatted ? 'bg-blue-100 dark:bg-blue-900/20' : '',
-            )}
-          />
-        );
+        let cellClass = 'gantt-cell border-r border-b';
+        if (formatted === todayFormatted) {
+          cellClass += ' bg-blue-100 dark:bg-blue-900/20';
+        }
+        return <div key={formatted} className={cellClass} />;
       })}
 
-      {/* Barra de tarea (si es visible) con tooltip y arrastrable */}
       {isVisible && (
         <Tooltip>
           <TooltipTrigger asChild>
-            {/* Contenedor arrastrable y cliquable para seleccionar la tarea */}
-            <div
+            <button
+              type="button"
               ref={setNodeRef}
               {...attributes}
               {...listeners}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  onTaskClick(task);
-                }
-              }}
-              onClick={(e) => {
-                e.stopPropagation();
-                onTaskClick(task);
-              }}
               className={cn(
                 'gantt-task-bar absolute flex cursor-pointer items-center rounded-md px-2 text-xs text-white',
                 getStatusColor(task.status, task.progress),
@@ -679,13 +618,17 @@ function TaskRow({
                 height: 'calc(100% - 8px)',
                 ...style,
               }}
+              onClick={(e) => {
+                e.stopPropagation();
+                onTaskClick(task);
+              }}
+              aria-label={`Seleccionar tarea ${task.title}`}
             >
               <div className="gantt-task-content flex-1 truncate">
                 <Grip className="mr-1 inline h-3 w-3 opacity-70" />
                 {task.title}
               </div>
 
-              {/* Indicador de progreso */}
               {task.progress > 0 && (
                 <div
                   className="absolute top-0 bottom-0 left-0 rounded-l-md bg-white/20"
@@ -693,7 +636,6 @@ function TaskRow({
                 />
               )}
 
-              {/* Botón para gestionar dependencias */}
               <button
                 type="button"
                 aria-label="Gestionar dependencias"
@@ -706,10 +648,9 @@ function TaskRow({
               >
                 <Link2 className="h-3 w-3" />
               </button>
-            </div>
+            </button>
           </TooltipTrigger>
           <TooltipContent>
-            {/* Contenido del tooltip con detalles de la tarea */}
             <div className="text-xs">
               <div className="font-bold">{task.title}</div>
               {task.description && <div className="mt-1">{task.description}</div>}

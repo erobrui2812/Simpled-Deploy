@@ -19,12 +19,12 @@ import { useState } from 'react';
 import { toast } from 'react-toastify';
 
 interface CommentSectionProps {
-  itemId: string;
-  comments: Comment[];
-  onAddComment: (text: string) => Promise<void>;
-  onUpdateComment: (commentId: string, text: string) => Promise<void>;
-  onDeleteComment: (commentId: string) => Promise<void>;
-  onResolveComment: (commentId: string, isResolved: boolean) => Promise<void>;
+  readonly itemId: string;
+  readonly comments: Comment[];
+  readonly onAddComment: (text: string) => Promise<void>;
+  readonly onUpdateComment: (commentId: string, text: string) => Promise<void>;
+  readonly onDeleteComment: (commentId: string) => Promise<void>;
+  readonly onResolveComment: (commentId: string, isResolved: boolean) => Promise<void>;
 }
 
 export function CommentSection({
@@ -130,7 +130,7 @@ export function CommentSection({
                   <div className="flex gap-3">
                     <Avatar className="h-8 w-8">
                       <AvatarImage
-                        src={comment.userImageUrl || '/placeholder.svg'}
+                        src={comment.userImageUrl ?? '/placeholder.svg'}
                         alt={comment.userName}
                       />
                       <AvatarFallback>{comment.userName.charAt(0)}</AvatarFallback>
@@ -237,8 +237,8 @@ export function CommentSection({
 
       <div className="flex gap-3">
         <Avatar className="h-8 w-8">
-          <AvatarImage src={userData?.imageUrl || '/placeholder.svg'} alt={userData?.name} />
-          <AvatarFallback>{userData?.name?.charAt(0) || 'U'}</AvatarFallback>
+          <AvatarImage src={userData?.imageUrl ?? '/placeholder.svg'} alt={userData?.name} />
+          <AvatarFallback>{userData?.name?.charAt(0) ?? 'U'}</AvatarFallback>
         </Avatar>
         <div className="flex-1 space-y-2">
           <Textarea

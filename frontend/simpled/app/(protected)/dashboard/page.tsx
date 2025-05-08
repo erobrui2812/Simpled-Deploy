@@ -95,7 +95,7 @@ export default function DashboardPage() {
           // No hay token disponible. ¿Usuario no autenticado?
         }
       } catch (error) {
-        // Error cargando datos del dashboard
+        console.error('Error cargando datos del dashboard:', error);
       } finally {
         setIsLoading(false);
       }

@@ -219,6 +219,13 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
     document.body.removeChild(link);
   };
 
+  const goToToday = () => setStartDate(new Date());
+  const setDateRange = (startDate: Date, days: number) => {
+    setStartDate(startDate);
+    // If you have a daysToShow state, set it here as well
+    // setDaysToShow(days);
+  };
+
   return (
     <Card className={cn('w-full', className)}>
       <CardHeader className="pb-3">
@@ -244,6 +251,8 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
             setZoomLevel={setZoomLevel}
             navigateTimeline={navigateTimeline}
             exportData={exportToCSV}
+            goToToday={goToToday}
+            setDateRange={setDateRange}
           />
           <div className="mb-4 flex flex-wrap items-center gap-4 text-sm">
             <div className="font-medium">Tipos de dependencias:</div>
@@ -280,7 +289,6 @@ export function GanttChart({ boardId, className }: GanttChartProps) {
               <GanttView
                 tasks={tasks}
                 dependencies={dependencies}
-                filteredTasks={filteredTasks}
                 groupedTasks={groupedTasks}
                 timelineDates={timelineDates}
                 timelineHeaders={timelineHeaders}

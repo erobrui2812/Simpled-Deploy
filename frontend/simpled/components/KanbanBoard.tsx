@@ -31,6 +31,89 @@ import KanbanItem from './KanbanItem';
 
 const API = 'http://localhost:5193';
 
+// Helper functions for subtask, column, and item updates
+function addSubtaskToItem(items: Item[], payload: any): Item[] {
+  return items.map((item) => {
+    if (item.id === payload.itemId) {
+      const subtasks = item.subtasks || [];
+      const newSubtasks = [...subtasks, payload];
+      const subtasksCount = newSubtasks.length;
+      const completedSubtasks = newSubtasks.filter((st) => st.isCompleted).length;
+      const progress =
+        subtasksCount > 0 ? Math.round((completedSubtasks / subtasksCount) * 100) : 0;
+      return { ...item, subtasks: newSubtasks, progress };
+    }
+    return item;
+  });
+}
+
+function updateSubtaskInItem(items: Item[], payload: any): Item[] {
+  return items.map((item) => {
+    if (item.id === payload.itemId) {
+      const subtasks = item.subtasks || [];
+      const updatedSubtasks = subtasks.map((st) => (st.id === payload.id ? payload : st));
+      const subtasksCount = updatedSubtasks.length;
+      const completedSubtasks = updatedSubtasks.filter((st) => st.isCompleted).length;
+      const progress =
+        subtasksCount > 0 ? Math.round((completedSubtasks / subtasksCount) * 100) : 0;
+      return { ...item, subtasks: updatedSubtasks, progress };
+    }
+    return item;
+  });
+}
+
+function deleteSubtaskFromItem(items: Item[], payload: any): Item[] {
+  return items.map((item) => {
+    if (item.id === payload.itemId) {
+      const subtasks = item.subtasks || [];
+      const updatedSubtasks = subtasks.filter((st) => st.id !== payload.id);
+      const subtasksCount = updatedSubtasks.length;
+      const completedSubtasks = updatedSubtasks.filter((st) => st.isCompleted).length;
+      const progress =
+        subtasksCount > 0 ? Math.round((completedSubtasks / subtasksCount) * 100) : 0;
+      return { ...item, subtasks: updatedSubtasks, progress };
+    }
+    return item;
+  });
+}
+
+function updateColumnInList(columns: Column[], payload: any): Column[] {
+  return columns.map((col) =>
+    col.id === payload.id ? { ...col, title: payload.title, order: payload.order } : col,
+  );
+}
+
+function updateItemInList(items: Item[], payload: any): Item[] {
+  return items.map((it) => (it.id === payload.id ? { ...it, ...payload } : it));
+}
+
+function updateItemStatusInList(items: Item[], payload: any): Item[] {
+  return items.map((it) => (it.id === payload.id ? { ...it, status: payload.status } : it));
+}
+
+function removeColumnById(columns: Column[], columnId: string): Column[] {
+  return columns.filter((col) => col.id !== columnId);
+}
+
+function removeItemsByColumnId(items: Item[], columnId: string): Item[] {
+  return items.filter((it) => it.columnId !== columnId);
+}
+
+function handleItemDeleted(
+  payload: any,
+  currentUserId: string,
+  setItems: Function,
+  toast: any,
+  showDesktopNotification: Function,
+) {
+  setItems((i: any[]) => i.filter((it) => it.id !== payload.id));
+  if (payload.assigneeId === currentUserId) {
+    const msg = `Tu tarea "${payload.title}" ha sido eliminada`;
+    toast.info(`🗑️ ${msg}`, { toastId: `item-deleted-${payload.id}` });
+    showDesktopNotification('🗑️ Tarea eliminada', { body: payload.title });
+  }
+}
+
 export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
   const { auth, toggleFavoriteBoard } = useAuth();
   const { connection } = useSignalR();
@@ -189,18 +272,14 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
         case 'ColumnUpdated':
           toast.info('✏️ Columna actualizada');
           showDesktopNotification('✏️ Columna actualizada', { body: payload.title });
-          setColumns((c) =>
-            c.map((col) =>
-              col.id === payload.id ? { ...col, title: payload.title, order: payload.order } : col,
-            ),
-          );
+          setColumns((c) => updateColumnInList(c, payload));
           break;
 
         case 'ColumnDeleted':
           toast.info('🗑️ Columna eliminada');
           showDesktopNotification('🗑️ Columna eliminada', { body: `ID: ${payload.columnId}` });
-          setColumns((c) => c.filter((col) => col.id !== payload.columnId));
-          setItems((i) => i.filter((it) => it.columnId !== payload.columnId));
+          setColumns((c) => removeColumnById(c, payload.columnId));
+          setItems((i) => removeItemsByColumnId(i, payload.columnId));
           break;
 
         case 'ItemCreated':
@@ -213,7 +292,7 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
           break;
 
         case 'ItemUpdated':
-          setItems((i) => i.map((it) => (it.id === payload.id ? { ...it, ...payload } : it)));
+          setItems((i) => updateItemInList(i, payload));
           if (payload.assigneeId === currentUserId) {
             const msg = `La tarea "${payload.title}" ha sido modificada`;
             toast.info(`🔁 ${msg}`, { toastId: `item-updated-${payload.id}` });
@@ -222,18 +301,11 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
           break;
 
         case 'ItemDeleted':
-          setItems((i) => i.filter((it) => it.id !== payload.id));
-          if (payload.assigneeId === currentUserId) {
-            const msg = `Tu tarea "${payload.title}" ha sido eliminada`;
-            toast.info(`🗑️ ${msg}`, { toastId: `item-deleted-${payload.id}` });
-            showDesktopNotification('🗑️ Tarea eliminada', { body: payload.title });
-          }
+          handleItemDeleted(payload, userId ?? '', setItems, toast, showDesktopNotification);
           break;
 
         case 'ItemStatusChanged':
-          setItems((i) =>
-            i.map((it) => (it.id === payload.id ? { ...it, status: payload.status } : it)),
-          );
+          setItems((i) => updateItemStatusInList(i, payload));
           if (payload.assigneeId === currentUserId) {
             const msg = `Estado actualizado de "${payload.title}"`;
             toast.info(`📍 ${msg}`, { toastId: `item-status-${payload.id}` });
@@ -252,60 +324,15 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
           break;
 
         case 'SubtaskCreated':
-          setItems((items) => {
-            return items.map((item) => {
-              if (item.id === payload.itemId) {
-                const subtasks = item.subtasks || [];
-                const newSubtasks = [...subtasks, payload];
-
-                const subtasksCount = newSubtasks.length;
-                const completedSubtasks = newSubtasks.filter((st) => st.isCompleted).length;
-                const progress =
-                  subtasksCount > 0 ? Math.round((completedSubtasks / subtasksCount) * 100) : 0;
-
-                return { ...item, subtasks: newSubtasks, progress };
-              }
-              return item;
-            });
-          });
+          setItems((items) => addSubtaskToItem(items, payload));
           break;
 
         case 'SubtaskUpdated':
-          setItems((items) => {
-            return items.map((item) => {
-              if (item.id === payload.itemId) {
-                const subtasks = item.subtasks || [];
-                const updatedSubtasks = subtasks.map((st) => (st.id === payload.id ? payload : st));
-
-                const subtasksCount = updatedSubtasks.length;
-                const completedSubtasks = updatedSubtasks.filter((st) => st.isCompleted).length;
-                const progress =
-                  subtasksCount > 0 ? Math.round((completedSubtasks / subtasksCount) * 100) : 0;
-
-                return { ...item, subtasks: updatedSubtasks, progress };
-              }
-              return item;
-            });
-          });
+          setItems((items) => updateSubtaskInItem(items, payload));
           break;
 
         case 'SubtaskDeleted':
-          setItems((items) => {
-            return items.map((item) => {
-              if (item.id === payload.itemId) {
-                const subtasks = item.subtasks || [];
-                const updatedSubtasks = subtasks.filter((st) => st.id !== payload.id);
-
-                const subtasksCount = updatedSubtasks.length;
-                const completedSubtasks = updatedSubtasks.filter((st) => st.isCompleted).length;
-                const progress =
-                  subtasksCount > 0 ? Math.round((completedSubtasks / subtasksCount) * 100) : 0;
-
-                return { ...item, subtasks: updatedSubtasks, progress };
-              }
-              return item;
-            });
-          });
+          setItems((items) => deleteSubtaskFromItem(items, payload));
           break;
 
         default:
@@ -314,14 +341,14 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
     };
 
     connection.on('BoardUpdated', handler);
-    return () => void connection.off('BoardUpdated', handler);
+    return () => connection.off('BoardUpdated', handler);
   }, [connection, boardId, fetchData, userId, showDesktopNotification]);
 
   useEffect(() => {
     if (!connection) return;
     connection.invoke('JoinBoardGroup', boardId).catch(console.error);
     return () => {
-      void connection.invoke('LeaveBoardGroup', boardId).catch(console.error);
+      connection.invoke('LeaveBoardGroup', boardId).catch(console.error);
     };
   }, [connection, boardId]);
 

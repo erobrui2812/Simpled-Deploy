@@ -32,7 +32,7 @@ import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import SubtaskList from './SubtaskList';
 
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5193';
+const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5193';
 
 type Props = Readonly<{
   item: Item;
@@ -104,6 +104,11 @@ export default function ItemEditModal({
 
     // Fetch comments
     const fetchComments = async () => {
+      if (!auth.token) {
+        toast.error('No autenticado');
+        setIsLoadingComments(false);
+        return;
+      }
       setIsLoadingComments(true);
       try {
         const data = await commentService.fetchComments(item.id, auth.token);
@@ -118,6 +123,11 @@ export default function ItemEditModal({
 
     // Fetch activity logs
     const fetchActivityLogs = async () => {
+      if (!auth.token) {
+        toast.error('No autenticado');
+        setIsLoadingLogs(false);
+        return;
+      }
       setIsLoadingLogs(true);
       try {
         const data = await activityLogService.fetchActivityLogs(item.id, auth.token);
@@ -248,6 +258,10 @@ export default function ItemEditModal({
 
   // Handlers de comentarios
   const handleAddComment = async (text: string) => {
+    if (!auth.token) {
+      toast.error('No autenticado');
+      return;
+    }
     try {
       const newComment = await commentService.addComment(item.id, text, auth.token);
       setComments((prev) => [newComment, ...prev]);
@@ -257,6 +271,10 @@ export default function ItemEditModal({
   };
 
   const handleUpdateComment = async (commentId: string, text: string) => {
+    if (!auth.token) {
+      toast.error('No autenticado');
+      return;
+    }
     try {
       const updated = await commentService.updateComment(commentId, item.id, text, auth.token);
       setComments((prev) => prev.map((c) => (c.id === commentId ? updated : c)));
@@ -266,6 +284,10 @@ export default function ItemEditModal({
   };
 
   const handleDeleteComment = async (commentId: string) => {
+    if (!auth.token) {
+      toast.error('No autenticado');
+      return;
+    }
     try {
       await commentService.deleteComment(commentId, item.id, auth.token);
       setComments((prev) => prev.filter((c) => c.id !== commentId));
@@ -275,6 +297,10 @@ export default function ItemEditModal({
   };
 
   const handleResolveComment = async (commentId: string, isResolved: boolean) => {
+    if (!auth.token) {
+      toast.error('No autenticado');
+      return;
+    }
     try {
       await commentService.resolveComment(commentId, item.id, isResolved, auth.token);
       setComments((prev) => prev.map((c) => (c.id === commentId ? { ...c, isResolved } : c)));
@@ -318,6 +344,21 @@ export default function ItemEditModal({
       default:
         return `${log.userName} realizó una acción`;
     }
+  }
+
+  let activityContent;
+  if (isLoadingLogs) {
+    activityContent = (
+      <div className="flex justify-center py-8">
+        <Loader2 className="text-primary h-8 w-8 animate-spin" />
+      </div>
+    );
+  } else if (activityLogs.length) {
+    activityContent = <ActivityLogComponent logs={activityLogs} />;
+  } else {
+    activityContent = (
+      <p className="text-muted-foreground text-center text-sm">Sin actividad registrada</p>
+    );
   }
 
   return (
@@ -396,26 +437,22 @@ export default function ItemEditModal({
                 <SelectContent>
                   <SelectItem value="pending">
                     <div className="flex items-center">
-                      <span className="mr-2 h-2 w-2 rounded-full bg-amber-500" />
-                      Pendiente
+                      <span className="mr-2 h-2 w-2 rounded-full bg-amber-500" /> Pendiente
                     </div>
                   </SelectItem>
                   <SelectItem value="in-progress">
                     <div className="flex items-center">
-                      <span className="mr-2 h-2 w-2 rounded-full bg-blue-500" />
-                      En progreso
+                      <span className="mr-2 h-2 w-2 rounded-full bg-blue-500" /> En progreso
                     </div>
                   </SelectItem>
                   <SelectItem value="completed">
                     <div className="flex items-center">
-                      <span className="mr-2 h-2 w-2 rounded-full bg-emerald-500" />
-                      Completada
+                      <span className="mr-2 h-2 w-2 rounded-full bg-emerald-500" /> Completada
                     </div>
                   </SelectItem>
                   <SelectItem value="delayed">
                     <div className="flex items-center">
-                      <span className="mr-2 h-2 w-2 rounded-full bg-rose-500" />
-                      Retrasada
+                      <span className="mr-2 h-2 w-2 rounded-full bg-rose-500" /> Retrasada
                     </div>
                   </SelectItem>
                 </SelectContent>
@@ -476,15 +513,7 @@ export default function ItemEditModal({
 
           {/* Actividad */}
           <TabsContent value="activity" className="py-4">
-            {isLoadingLogs ? (
-              <div className="flex justify-center py-8">
-                <Loader2 className="text-primary h-8 w-8 animate-spin" />
-              </div>
-            ) : activityLogs.length ? (
-              <ActivityLogComponent logs={activityLogs} />
-            ) : (
-              <p className="text-muted-foreground text-center text-sm">Sin actividad registrada</p>
-            )}
+            {activityContent}
           </TabsContent>
         </Tabs>
 

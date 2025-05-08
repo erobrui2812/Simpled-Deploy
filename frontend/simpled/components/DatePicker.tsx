@@ -56,7 +56,7 @@ export const DatePicker = forwardRef(
     const setRefs = (node: HTMLInputElement) => {
       inputRef.current = node;
       if (typeof ref === 'function') ref(node);
-      else if (ref) (ref as React.MutableRefObject<HTMLInputElement>).current = node;
+      else if (ref) (ref as React.RefObject<HTMLInputElement>).current = node;
     };
 
     return (

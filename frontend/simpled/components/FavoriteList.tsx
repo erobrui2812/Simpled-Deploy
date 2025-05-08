@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Star } from 'lucide-react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 interface FavoriteBoard {
@@ -40,18 +41,17 @@ export default function FavoriteList({ list }: FavoriteListProps) {
       <CardContent>
         <ul className="space-y-3">
           {list.map((element) => (
-            <li
-              key={element.id}
-              className="cursor-pointer transition hover:opacity-80"
-              onClick={() => {
-                router.push(`/tableros/${element.id}`);
-              }}
-            >
-              <Card>
-                <CardContent className="flex items-center justify-between">
-                  <span className="font-medium">{element.name}</span>
-                </CardContent>
-              </Card>
+            <li key={element.id}>
+              <Link
+                href={`/tableros/${element.id}`}
+                className="block cursor-pointer transition hover:opacity-80"
+              >
+                <Card>
+                  <CardContent className="flex items-center justify-between">
+                    <span className="font-medium">{element.name}</span>
+                  </CardContent>
+                </Card>
+              </Link>
             </li>
           ))}
         </ul>

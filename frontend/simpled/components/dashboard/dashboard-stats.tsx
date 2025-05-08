@@ -2,12 +2,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertTriangle, CheckCircle, Clock, ListTodo, TrendingUp } from 'lucide-react';
 
 interface DashboardStatsProps {
-  stats: {
-    totalTasks: number;
-    completedTasks: number;
-    inProgressTasks: number;
-    delayedTasks: number;
-    upcomingDeadlines: number;
+  readonly stats: {
+    readonly totalTasks: number;
+    readonly completedTasks: number;
+    readonly inProgressTasks: number;
+    readonly delayedTasks: number;
+    readonly upcomingDeadlines: number;
   };
 }
 

@@ -29,7 +29,7 @@ export interface Activity {
 }
 
 interface RecentActivityProps {
-  activities: Activity[];
+  readonly activities: Activity[];
 }
 
 export function RecentActivity({ activities }: RecentActivityProps) {
