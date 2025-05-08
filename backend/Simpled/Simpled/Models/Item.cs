@@ -27,6 +27,8 @@ namespace Simpled.Models
         public Guid? AssigneeId { get; set; }
         public User? Assignee { get; set; }
 
+        public ICollection<Comment> Comments { get; set; } = new List<Comment>();
+
         public BoardColumn? Column { get; set; }
         public List<Content> Contents { get; set; } = new();
         public List<Subtask> Subtasks { get; set; } = new();

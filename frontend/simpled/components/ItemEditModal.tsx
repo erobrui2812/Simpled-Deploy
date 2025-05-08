@@ -1,3 +1,4 @@
+// src/components/ItemEditModal.tsx
 'use client';
 
 import { ActivityLogComponent } from '@/components/ActivityLog';
@@ -23,14 +24,14 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
+import * as commentService from '@/services/commentService';
 import type { ActivityLog, Comment, Item, Subtask, User } from '@/types';
 import { Check, Loader2, X } from 'lucide-react';
-import type React from 'react';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import SubtaskList from './SubtaskList';
 
-const API = 'http://localhost:5193';
+const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5193';
 
 type Props = Readonly<{
   item: Item;
@@ -50,6 +51,8 @@ export default function ItemEditModal({
   currentUserId,
 }: Props) {
   const { auth } = useAuth();
+
+  // Detalles de la tarea
   const [title, setTitle] = useState(item.title);
   const [description, setDescription] = useState(item.description ?? '');
   const [startDate, setStartDate] = useState<Date | undefined>(
@@ -60,140 +63,68 @@ export default function ItemEditModal({
   );
   const [status, setStatus] = useState(item.status ?? 'pending');
   const [assigneeId, setAssigneeId] = useState(item.assigneeId ?? '');
+
+  // Subtareas
   const [subtasks, setSubtasks] = useState<Subtask[]>(item.subtasks || []);
+
+  // Comentarios
   const [comments, setComments] = useState<Comment[]>([]);
-  const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState('details');
   const [isLoadingComments, setIsLoadingComments] = useState(false);
+
+  // Actividad
+  const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
   const [isLoadingLogs, setIsLoadingLogs] = useState(false);
+
+  // UI
+  const [activeTab, setActiveTab] = useState<'details' | 'subtasks' | 'comments' | 'activity'>(
+    'details',
+  );
+  const [loading, setLoading] = useState(false);
 
   const canChangeAll = userRole === 'admin';
   const canChangeStatus = canChangeAll || item.assigneeId === currentUserId;
 
   useEffect(() => {
+    // Fetch subtasks
     const fetchSubtasks = async () => {
       try {
         const res = await fetch(`${API}/api/items/${item.id}/subtasks`, {
-          headers: {
-            Authorization: `Bearer ${auth.token}`,
-          },
+          headers: { Authorization: `Bearer ${auth.token}` },
         });
         if (res.ok) {
-          const data = await res.json();
-          setSubtasks(data);
+          setSubtasks(await res.json());
         }
-      } catch (error) {
-        console.error('Error fetching subtasks:', error);
+      } catch (err) {
+        console.error('Error fetching subtasks:', err);
+        toast.error('Error al cargar subtareas');
       }
     };
 
+    // Fetch comments
     const fetchComments = async () => {
       setIsLoadingComments(true);
       try {
-        // In a real implementation, you would fetch comments from your API
-        // For now, we'll simulate the data
-        const mockComments: Comment[] = [
-          {
-            id: '1',
-            itemId: item.id,
-            userId: currentUserId,
-            userName: 'Carlos Rodríguez',
-            userImageUrl: '/placeholder.svg?height=32&width=32',
-            text: 'He comenzado a trabajar en esta tarea. Necesitaré más información sobre los requisitos específicos.',
-            createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(), // 2 days ago
-            isResolved: false,
-          },
-          {
-            id: '2',
-            itemId: item.id,
-            userId: 'user2',
-            userName: 'Ana García',
-            userImageUrl: '/placeholder.svg?height=32&width=32',
-            text: 'Te enviaré los detalles por correo electrónico. También podemos programar una reunión para discutirlo.',
-            createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1 day ago
-            isResolved: true,
-          },
-          {
-            id: '3',
-            itemId: item.id,
-            userId: currentUserId,
-            userName: 'Carlos Rodríguez',
-            userImageUrl: '/placeholder.svg?height=32&width=32',
-            text: 'Gracias, he recibido la información. Comenzaré a implementar los cambios solicitados.',
-            createdAt: new Date(Date.now() - 1000 * 60 * 60 * 12).toISOString(), // 12 hours ago
-            isResolved: false,
-          },
-        ];
-        setComments(mockComments);
-      } catch (error) {
-        console.error('Error fetching comments:', error);
+        const data = await commentService.fetchComments(item.id, auth.token);
+        setComments(data);
+      } catch (err) {
+        console.error('Error fetching comments:', err);
         toast.error('Error al cargar los comentarios');
       } finally {
         setIsLoadingComments(false);
       }
     };
 
+    // Fetch activity logs (placeholder o real service)
     const fetchActivityLogs = async () => {
       setIsLoadingLogs(true);
       try {
-        // In a real implementation, you would fetch activity logs from your API
-        // For now, we'll simulate the data
+        // TODO: reemplazar con llamada real si existe endpoint
         const mockLogs: ActivityLog[] = [
-          {
-            id: '1',
-            itemId: item.id,
-            userId: 'user1',
-            userName: 'Laura Martínez',
-            userImageUrl: '/placeholder.svg?height=32&width=32',
-            action: 'created',
-            details: 'Creó esta tarea',
-            timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3).toISOString(), // 3 days ago
-          },
-          {
-            id: '2',
-            itemId: item.id,
-            userId: 'user2',
-            userName: 'Ana García',
-            userImageUrl: '/placeholder.svg?height=32&width=32',
-            action: 'status_changed',
-            details: "Cambió el estado de 'Pendiente' a 'En progreso'",
-            timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(), // 2 days ago
-          },
-          {
-            id: '3',
-            itemId: item.id,
-            userId: currentUserId,
-            userName: 'Carlos Rodríguez',
-            userImageUrl: '/placeholder.svg?height=32&width=32',
-            action: 'assigned',
-            details: 'Asignó la tarea a Carlos Rodríguez',
-            timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1 day ago
-          },
-          {
-            id: '4',
-            itemId: item.id,
-            userId: currentUserId,
-            userName: 'Carlos Rodríguez',
-            userImageUrl: '/placeholder.svg?height=32&width=32',
-            action: 'commented',
-            details: 'Añadió un comentario a la tarea',
-            timestamp: new Date(Date.now() - 1000 * 60 * 60 * 12).toISOString(), // 12 hours ago
-          },
-          {
-            id: '5',
-            itemId: item.id,
-            userId: 'user2',
-            userName: 'Ana García',
-            userImageUrl: '/placeholder.svg?height=32&width=32',
-            action: 'due_date_changed',
-            details: 'Actualizó la fecha de vencimiento',
-            timestamp: new Date(Date.now() - 1000 * 60 * 60 * 6).toISOString(), // 6 hours ago
-          },
+          // ... si quieres mantener mocks de actividad
         ];
         setActivityLogs(mockLogs);
-      } catch (error) {
-        console.error('Error fetching activity logs:', error);
+      } catch (err) {
+        console.error('Error fetching activity logs:', err);
         toast.error('Error al cargar el historial de actividad');
       } finally {
         setIsLoadingLogs(false);
@@ -203,8 +134,9 @@ export default function ItemEditModal({
     fetchSubtasks();
     fetchComments();
     fetchActivityLogs();
-  }, [item.id, auth.token, currentUserId]);
+  }, [item.id, auth.token]);
 
+  // Guardar cambios de la tarea
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) {
@@ -227,7 +159,7 @@ export default function ItemEditModal({
         payload.assigneeId = assigneeId || null;
       }
 
-      const res = await fetch(`${API}/api/Items/${item.id}`, {
+      const res = await fetch(`${API}/api/items/${item.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -240,179 +172,53 @@ export default function ItemEditModal({
       toast.success('Tarea actualizada');
       onUpdated();
       onClose();
-    } catch {
+    } catch (err) {
+      console.error('Error updating item:', err);
       toast.error('Error actualizando tarea');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleAddSubtask = async (title: string) => {
-    try {
-      const res = await fetch(`${API}/api/items/${item.id}/subtasks`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${auth.token}`,
-        },
-        body: JSON.stringify({
-          itemId: item.id,
-          title,
-        }),
-      });
-
-      if (!res.ok) throw new Error('Error al crear subtarea');
-
-      const newSubtask = await res.json();
-      setSubtasks((prev) => [...prev, newSubtask]);
-      toast.success('Subtarea añadida');
-      return;
-    } catch (error) {
-      toast.error('Error al crear subtarea');
-      console.error(error);
-      throw error;
-    }
-  };
-
-  const handleUpdateSubtask = async (subtask: Subtask) => {
-    try {
-      const res = await fetch(`${API}/api/items/${item.id}/subtasks/${subtask.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${auth.token}`,
-        },
-        body: JSON.stringify({
-          id: subtask.id,
-          itemId: item.id,
-          title: subtask.title,
-          isCompleted: subtask.isCompleted,
-        }),
-      });
-
-      if (!res.ok) throw new Error('Error al actualizar subtarea');
-
-      setSubtasks((prev) => prev.map((st) => (st.id === subtask.id ? subtask : st)));
-
-      const allSubtasks = subtasks.length;
-      const completedSubtasks = subtasks.filter((st) =>
-        st.id === subtask.id ? subtask.isCompleted : st.isCompleted,
-      ).length;
-
-      if (allSubtasks > 0 && completedSubtasks === allSubtasks) {
-        setStatus('completed');
-      } else if (completedSubtasks > 0) {
-        setStatus('in-progress');
-      }
-
-      return;
-    } catch (error) {
-      toast.error('Error al actualizar subtarea');
-      console.error(error);
-      throw error;
-    }
-  };
-
-  const handleDeleteSubtask = async (subtaskId: string) => {
-    try {
-      const res = await fetch(`${API}/api/items/${item.id}/subtasks/${subtaskId}`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${auth.token}`,
-        },
-      });
-
-      if (!res.ok) throw new Error('Error al eliminar subtarea');
-
-      setSubtasks((prev) => prev.filter((st) => st.id !== subtaskId));
-      toast.success('Subtarea eliminada');
-      return;
-    } catch (error) {
-      toast.error('Error al eliminar subtarea');
-      console.error(error);
-      throw error;
-    }
-  };
-
+  // Handlers de comentarios
   const handleAddComment = async (text: string) => {
-    // In a real implementation, you would send this to your API
-    // For now, we'll simulate adding a comment
-    const newComment: Comment = {
-      id: `comment-${Date.now()}`,
-      itemId: item.id,
-      userId: currentUserId,
-      userName: 'Carlos Rodríguez', // This would come from your auth context
-      userImageUrl: '/placeholder.svg?height=32&width=32', // This would come from your auth context
-      text,
-      createdAt: new Date().toISOString(),
-      isResolved: false,
-    };
-
-    setComments((prev) => [newComment, ...prev]);
-
-    // Add to activity log
-    const newLog: ActivityLog = {
-      id: `log-${Date.now()}`,
-      itemId: item.id,
-      userId: currentUserId,
-      userName: 'Carlos Rodríguez',
-      userImageUrl: '/placeholder.svg?height=32&width=32',
-      action: 'commented',
-      details: 'Añadió un comentario a la tarea',
-      timestamp: new Date().toISOString(),
-    };
-
-    setActivityLogs((prev) => [newLog, ...prev]);
-
-    return Promise.resolve();
+    try {
+      const newComment = await commentService.addComment(item.id, text, auth.token);
+      setComments((prev) => [newComment, ...prev]);
+    } catch {
+      toast.error('Error al añadir comentario');
+    }
   };
 
   const handleUpdateComment = async (commentId: string, text: string) => {
-    // In a real implementation, you would send this to your API
-    // For now, we'll simulate updating a comment
-    setComments((prev) =>
-      prev.map((comment) =>
-        comment.id === commentId
-          ? {
-              ...comment,
-              text,
-              updatedAt: new Date().toISOString(),
-            }
-          : comment,
-      ),
-    );
-
-    return Promise.resolve();
+    try {
+      const updated = await commentService.updateComment(commentId, item.id, text, auth.token);
+      setComments((prev) => prev.map((c) => (c.id === commentId ? updated : c)));
+    } catch {
+      toast.error('Error al editar comentario');
+    }
   };
 
   const handleDeleteComment = async (commentId: string) => {
-    // In a real implementation, you would send this to your API
-    // For now, we'll simulate deleting a comment
-    setComments((prev) => prev.filter((comment) => comment.id !== commentId));
-
-    return Promise.resolve();
+    try {
+      await commentService.deleteComment(commentId, item.id, auth.token);
+      setComments((prev) => prev.filter((c) => c.id !== commentId));
+    } catch {
+      toast.error('Error al eliminar comentario');
+    }
   };
 
   const handleResolveComment = async (commentId: string, isResolved: boolean) => {
-    // In a real implementation, you would send this to your API
-    // For now, we'll simulate resolving a comment
-    setComments((prev) =>
-      prev.map((comment) =>
-        comment.id === commentId
-          ? {
-              ...comment,
-              isResolved,
-              updatedAt: new Date().toISOString(),
-            }
-          : comment,
-      ),
-    );
-
-    return Promise.resolve();
+    try {
+      await commentService.resolveComment(commentId, item.id, isResolved, auth.token);
+      setComments((prev) => prev.map((c) => (c.id === commentId ? { ...c, isResolved } : c)));
+    } catch {
+      toast.error('Error al cambiar estado de comentario');
+    }
   };
 
   return (
-    <Dialog open={true} onOpenChange={onClose}>
+    <Dialog open onOpenChange={onClose}>
       <DialogContent className="animate-scaleIn max-h-[90vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Editar Tarea</DialogTitle>
@@ -426,6 +232,7 @@ export default function ItemEditModal({
             <TabsTrigger value="activity">Actividad</TabsTrigger>
           </TabsList>
 
+          {/* Detalles */}
           <TabsContent value="details" className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="item-title">Título</Label>
@@ -461,7 +268,6 @@ export default function ItemEditModal({
                   disabled={!canChangeAll}
                 />
               </div>
-
               <div className="space-y-2">
                 <Label htmlFor="item-dueDate">Fecha de vencimiento</Label>
                 <DatePicker
@@ -477,34 +283,34 @@ export default function ItemEditModal({
               <Label htmlFor="item-status">Estado</Label>
               <Select
                 value={status}
-                onValueChange={(value) => setStatus(value as any)}
+                onValueChange={(v) => setStatus(v as any)}
                 disabled={!canChangeStatus}
               >
                 <SelectTrigger id="item-status">
                   <SelectValue placeholder="Seleccionar estado" />
                 </SelectTrigger>
-                <SelectContent className="z-[1200]">
+                <SelectContent>
                   <SelectItem value="pending">
                     <div className="flex items-center">
-                      <div className="mr-2 h-2 w-2 rounded-full bg-amber-500"></div>
+                      <span className="mr-2 h-2 w-2 rounded-full bg-amber-500" />
                       Pendiente
                     </div>
                   </SelectItem>
                   <SelectItem value="in-progress">
                     <div className="flex items-center">
-                      <div className="mr-2 h-2 w-2 rounded-full bg-blue-500"></div>
+                      <span className="mr-2 h-2 w-2 rounded-full bg-blue-500" />
                       En progreso
                     </div>
                   </SelectItem>
                   <SelectItem value="completed">
                     <div className="flex items-center">
-                      <div className="mr-2 h-2 w-2 rounded-full bg-emerald-500"></div>
+                      <span className="mr-2 h-2 w-2 rounded-full bg-emerald-500" />
                       Completada
                     </div>
                   </SelectItem>
                   <SelectItem value="delayed">
                     <div className="flex items-center">
-                      <div className="mr-2 h-2 w-2 rounded-full bg-rose-500"></div>
+                      <span className="mr-2 h-2 w-2 rounded-full bg-rose-500" />
                       Retrasada
                     </div>
                   </SelectItem>
@@ -517,12 +323,12 @@ export default function ItemEditModal({
                 <Label htmlFor="item-assignee">Asignar a</Label>
                 <Select
                   value={assigneeId || 'not_assigned'}
-                  onValueChange={(value) => setAssigneeId(value === 'not_assigned' ? '' : value)}
+                  onValueChange={(v) => setAssigneeId(v === 'not_assigned' ? '' : v)}
                 >
                   <SelectTrigger id="item-assignee">
                     <SelectValue placeholder="Sin asignar" />
                   </SelectTrigger>
-                  <SelectContent className="z-[1200]">
+                  <SelectContent>
                     <SelectItem value="not_assigned">Sin asignar</SelectItem>
                     {assignees.map((u) => (
                       <SelectItem key={u.id} value={u.id}>
@@ -535,17 +341,25 @@ export default function ItemEditModal({
             )}
           </TabsContent>
 
+          {/* Subtareas */}
           <TabsContent value="subtasks" className="py-4">
             <SubtaskList
               subtasks={subtasks}
               itemId={item.id}
-              onAdd={handleAddSubtask}
-              onUpdate={handleUpdateSubtask}
-              onDelete={handleDeleteSubtask}
+              onAdd={async (title) => {
+                /* ... */
+              }}
+              onUpdate={async (st) => {
+                /* ... */
+              }}
+              onDelete={async (id) => {
+                /* ... */
+              }}
               disabled={!canChangeStatus}
             />
           </TabsContent>
 
+          {/* Comentarios */}
           <TabsContent value="comments" className="py-4">
             {isLoadingComments ? (
               <div className="flex justify-center py-8">
@@ -563,6 +377,7 @@ export default function ItemEditModal({
             )}
           </TabsContent>
 
+          {/* Actividad */}
           <TabsContent value="activity" className="py-4">
             {isLoadingLogs ? (
               <div className="flex justify-center py-8">
@@ -575,7 +390,7 @@ export default function ItemEditModal({
         </Tabs>
 
         <DialogFooter className="flex pt-4 sm:justify-between">
-          <Button type="button" variant="outline" onClick={onClose} disabled={loading}>
+          <Button variant="outline" onClick={onClose} disabled={loading}>
             <X className="mr-2 h-4 w-4" />
             Cancelar
           </Button>

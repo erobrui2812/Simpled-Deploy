@@ -25,6 +25,8 @@ namespace Simpled.Data
         public DbSet<TeamInvitation> TeamInvitations => Set<TeamInvitation>();
         public DbSet<FavoriteBoards> FavoriteBoards => Set<FavoriteBoards>();
         public DbSet<Dependency> Dependencies => Set<Dependency>();
+        public DbSet<Comment> Comments => Set<Comment>();
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -134,6 +136,19 @@ namespace Simpled.Data
                 .WithMany()
                 .HasForeignKey(d => d.ToTaskId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Comment>()
+                .HasOne(c => c.Item)
+                .WithMany(i => i.Comments)
+                .HasForeignKey(c => c.ItemId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Comment>()
+                .HasOne(c => c.User)
+                .WithMany()
+                .HasForeignKey(c => c.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
         }
     }
 }

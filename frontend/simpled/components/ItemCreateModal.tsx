@@ -69,7 +69,7 @@ export default function ItemCreateModal({
       const payload: any = {
         title: title.trim(),
         description: description.trim() || null,
-        startDate: startDate ? startDate.toISOString() : null,
+        startDate: startDate ? startDate.toISOString() : new Date().toISOString(),
         dueDate: dueDate ? dueDate.toISOString() : null,
         columnId,
         status,
