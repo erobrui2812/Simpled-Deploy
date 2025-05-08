@@ -27,6 +27,8 @@ namespace Simpled.Data
         public DbSet<Dependency> Dependencies => Set<Dependency>();
         public DbSet<Comment> Comments => Set<Comment>();
 
+        public DbSet<ActivityLog> ActivityLogs { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

@@ -13,6 +13,12 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  webpack(config, { dev }) {
+    if (dev) {
+      config.devtool = false;
+    }
+    return config;
+  },
 };
 
 export default nextConfig;

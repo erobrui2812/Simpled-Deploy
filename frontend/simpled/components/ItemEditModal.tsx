@@ -24,6 +24,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
+import * as activityLogService from '@/services/activityLogService';
 import * as commentService from '@/services/commentService';
 import type { ActivityLog, Comment, Item, Subtask, User } from '@/types';
 import { Check, Loader2, X } from 'lucide-react';
@@ -114,15 +115,12 @@ export default function ItemEditModal({
       }
     };
 
-    // Fetch activity logs (placeholder o real service)
+    // Fetch activity logs
     const fetchActivityLogs = async () => {
       setIsLoadingLogs(true);
       try {
-        // TODO: reemplazar con llamada real si existe endpoint
-        const mockLogs: ActivityLog[] = [
-          // ... si quieres mantener mocks de actividad
-        ];
-        setActivityLogs(mockLogs);
+        const data = await activityLogService.fetchActivityLogs(item.id, auth.token);
+        setActivityLogs(data);
       } catch (err) {
         console.error('Error fetching activity logs:', err);
         toast.error('Error al cargar el historial de actividad');
@@ -177,6 +175,72 @@ export default function ItemEditModal({
       toast.error('Error actualizando tarea');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Handlers de subtareas
+  const handleAddSubtask = async (title: string) => {
+    try {
+      const res = await fetch(`${API}/api/items/${item.id}/subtasks`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${auth.token}`,
+        },
+        body: JSON.stringify({ itemId: item.id, title }),
+      });
+      if (!res.ok) throw new Error('Error al crear subtarea');
+      const newSubtask = await res.json();
+      setSubtasks((prev) => [...prev, newSubtask]);
+      toast.success('Subtarea añadida');
+    } catch (err) {
+      console.error(err);
+      toast.error('Error al crear subtarea');
+    }
+  };
+
+  const handleUpdateSubtask = async (subtask: Subtask) => {
+    try {
+      const res = await fetch(`${API}/api/items/${item.id}/subtasks/${subtask.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${auth.token}`,
+        },
+        body: JSON.stringify({
+          id: subtask.id,
+          itemId: item.id,
+          title: subtask.title,
+          isCompleted: subtask.isCompleted,
+        }),
+      });
+      if (!res.ok) throw new Error('Error al actualizar subtarea');
+      setSubtasks((prev) => prev.map((st) => (st.id === subtask.id ? subtask : st)));
+
+      const all = subtasks.length;
+      const done = subtasks.filter((st) =>
+        st.id === subtask.id ? subtask.isCompleted : st.isCompleted,
+      ).length;
+      if (all > 0 && done === all) setStatus('completed');
+      else if (done > 0) setStatus('in-progress');
+    } catch (err) {
+      console.error(err);
+      toast.error('Error al actualizar subtarea');
+    }
+  };
+
+  const handleDeleteSubtask = async (subtaskId: string) => {
+    try {
+      const res = await fetch(`${API}/api/items/${item.id}/subtasks/${subtaskId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${auth.token}` },
+      });
+      if (!res.ok) throw new Error('Error al eliminar subtarea');
+      setSubtasks((prev) => prev.filter((st) => st.id !== subtaskId));
+      toast.success('Subtarea eliminada');
+    } catch (err) {
+      console.error(err);
+      toast.error('Error al eliminar subtarea');
     }
   };
 
@@ -245,7 +309,6 @@ export default function ItemEditModal({
                 placeholder="Título de la tarea"
               />
             </div>
-
             <div className="space-y-2">
               <Label htmlFor="item-description">Descripción</Label>
               <Textarea
@@ -257,7 +320,6 @@ export default function ItemEditModal({
                 rows={3}
               />
             </div>
-
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="item-startDate">Fecha de inicio</Label>
@@ -278,7 +340,6 @@ export default function ItemEditModal({
                 />
               </div>
             </div>
-
             <div className="space-y-2">
               <Label htmlFor="item-status">Estado</Label>
               <Select
@@ -317,7 +378,6 @@ export default function ItemEditModal({
                 </SelectContent>
               </Select>
             </div>
-
             {canChangeAll && (
               <div className="space-y-2">
                 <Label htmlFor="item-assignee">Asignar a</Label>
@@ -346,15 +406,9 @@ export default function ItemEditModal({
             <SubtaskList
               subtasks={subtasks}
               itemId={item.id}
-              onAdd={async (title) => {
-                /* ... */
-              }}
-              onUpdate={async (st) => {
-                /* ... */
-              }}
-              onDelete={async (id) => {
-                /* ... */
-              }}
+              onAdd={handleAddSubtask}
+              onUpdate={handleUpdateSubtask}
+              onDelete={handleDeleteSubtask}
               disabled={!canChangeStatus}
             />
           </TabsContent>

@@ -176,6 +176,7 @@ builder.Services.AddScoped<ITeamInvitationRepository, TeamInvitationService>();
 builder.Services.AddScoped<IDependencyRepository, DependencyService>();
 builder.Services.AddScoped<DependencyService>();
 builder.Services.AddScoped<ICommentRepository, CommentService>();
+builder.Services.AddScoped<IActivityLogRepository, ActivityLogService>();
 
 
 
