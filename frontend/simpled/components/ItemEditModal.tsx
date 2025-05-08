@@ -1,5 +1,7 @@
 'use client';
 
+import { ActivityLogComponent } from '@/components/ActivityLog';
+import { CommentSection } from '@/components/CommentSection';
 import { DatePicker } from '@/components/DatePicker';
 import { Button } from '@/components/ui/button';
 import {
@@ -21,7 +23,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
-import type { Item, Subtask, User } from '@/types';
+import type { ActivityLog, Comment, Item, Subtask, User } from '@/types';
 import { Check, Loader2, X } from 'lucide-react';
 import type React from 'react';
 import { useEffect, useState } from 'react';
@@ -59,8 +61,12 @@ export default function ItemEditModal({
   const [status, setStatus] = useState(item.status ?? 'pending');
   const [assigneeId, setAssigneeId] = useState(item.assigneeId ?? '');
   const [subtasks, setSubtasks] = useState<Subtask[]>(item.subtasks || []);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('details');
+  const [isLoadingComments, setIsLoadingComments] = useState(false);
+  const [isLoadingLogs, setIsLoadingLogs] = useState(false);
 
   const canChangeAll = userRole === 'admin';
   const canChangeStatus = canChangeAll || item.assigneeId === currentUserId;
@@ -82,8 +88,122 @@ export default function ItemEditModal({
       }
     };
 
+    const fetchComments = async () => {
+      setIsLoadingComments(true);
+      try {
+        // In a real implementation, you would fetch comments from your API
+        // For now, we'll simulate the data
+        const mockComments: Comment[] = [
+          {
+            id: '1',
+            itemId: item.id,
+            userId: currentUserId,
+            userName: 'Carlos Rodríguez',
+            userImageUrl: '/placeholder.svg?height=32&width=32',
+            text: 'He comenzado a trabajar en esta tarea. Necesitaré más información sobre los requisitos específicos.',
+            createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(), // 2 days ago
+            isResolved: false,
+          },
+          {
+            id: '2',
+            itemId: item.id,
+            userId: 'user2',
+            userName: 'Ana García',
+            userImageUrl: '/placeholder.svg?height=32&width=32',
+            text: 'Te enviaré los detalles por correo electrónico. También podemos programar una reunión para discutirlo.',
+            createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1 day ago
+            isResolved: true,
+          },
+          {
+            id: '3',
+            itemId: item.id,
+            userId: currentUserId,
+            userName: 'Carlos Rodríguez',
+            userImageUrl: '/placeholder.svg?height=32&width=32',
+            text: 'Gracias, he recibido la información. Comenzaré a implementar los cambios solicitados.',
+            createdAt: new Date(Date.now() - 1000 * 60 * 60 * 12).toISOString(), // 12 hours ago
+            isResolved: false,
+          },
+        ];
+        setComments(mockComments);
+      } catch (error) {
+        console.error('Error fetching comments:', error);
+        toast.error('Error al cargar los comentarios');
+      } finally {
+        setIsLoadingComments(false);
+      }
+    };
+
+    const fetchActivityLogs = async () => {
+      setIsLoadingLogs(true);
+      try {
+        // In a real implementation, you would fetch activity logs from your API
+        // For now, we'll simulate the data
+        const mockLogs: ActivityLog[] = [
+          {
+            id: '1',
+            itemId: item.id,
+            userId: 'user1',
+            userName: 'Laura Martínez',
+            userImageUrl: '/placeholder.svg?height=32&width=32',
+            action: 'created',
+            details: 'Creó esta tarea',
+            timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3).toISOString(), // 3 days ago
+          },
+          {
+            id: '2',
+            itemId: item.id,
+            userId: 'user2',
+            userName: 'Ana García',
+            userImageUrl: '/placeholder.svg?height=32&width=32',
+            action: 'status_changed',
+            details: "Cambió el estado de 'Pendiente' a 'En progreso'",
+            timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(), // 2 days ago
+          },
+          {
+            id: '3',
+            itemId: item.id,
+            userId: currentUserId,
+            userName: 'Carlos Rodríguez',
+            userImageUrl: '/placeholder.svg?height=32&width=32',
+            action: 'assigned',
+            details: 'Asignó la tarea a Carlos Rodríguez',
+            timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1 day ago
+          },
+          {
+            id: '4',
+            itemId: item.id,
+            userId: currentUserId,
+            userName: 'Carlos Rodríguez',
+            userImageUrl: '/placeholder.svg?height=32&width=32',
+            action: 'commented',
+            details: 'Añadió un comentario a la tarea',
+            timestamp: new Date(Date.now() - 1000 * 60 * 60 * 12).toISOString(), // 12 hours ago
+          },
+          {
+            id: '5',
+            itemId: item.id,
+            userId: 'user2',
+            userName: 'Ana García',
+            userImageUrl: '/placeholder.svg?height=32&width=32',
+            action: 'due_date_changed',
+            details: 'Actualizó la fecha de vencimiento',
+            timestamp: new Date(Date.now() - 1000 * 60 * 60 * 6).toISOString(), // 6 hours ago
+          },
+        ];
+        setActivityLogs(mockLogs);
+      } catch (error) {
+        console.error('Error fetching activity logs:', error);
+        toast.error('Error al cargar el historial de actividad');
+      } finally {
+        setIsLoadingLogs(false);
+      }
+    };
+
     fetchSubtasks();
-  }, [item.id, auth.token]);
+    fetchComments();
+    fetchActivityLogs();
+  }, [item.id, auth.token, currentUserId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -214,17 +334,96 @@ export default function ItemEditModal({
     }
   };
 
+  const handleAddComment = async (text: string) => {
+    // In a real implementation, you would send this to your API
+    // For now, we'll simulate adding a comment
+    const newComment: Comment = {
+      id: `comment-${Date.now()}`,
+      itemId: item.id,
+      userId: currentUserId,
+      userName: 'Carlos Rodríguez', // This would come from your auth context
+      userImageUrl: '/placeholder.svg?height=32&width=32', // This would come from your auth context
+      text,
+      createdAt: new Date().toISOString(),
+      isResolved: false,
+    };
+
+    setComments((prev) => [newComment, ...prev]);
+
+    // Add to activity log
+    const newLog: ActivityLog = {
+      id: `log-${Date.now()}`,
+      itemId: item.id,
+      userId: currentUserId,
+      userName: 'Carlos Rodríguez',
+      userImageUrl: '/placeholder.svg?height=32&width=32',
+      action: 'commented',
+      details: 'Añadió un comentario a la tarea',
+      timestamp: new Date().toISOString(),
+    };
+
+    setActivityLogs((prev) => [newLog, ...prev]);
+
+    return Promise.resolve();
+  };
+
+  const handleUpdateComment = async (commentId: string, text: string) => {
+    // In a real implementation, you would send this to your API
+    // For now, we'll simulate updating a comment
+    setComments((prev) =>
+      prev.map((comment) =>
+        comment.id === commentId
+          ? {
+              ...comment,
+              text,
+              updatedAt: new Date().toISOString(),
+            }
+          : comment,
+      ),
+    );
+
+    return Promise.resolve();
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    // In a real implementation, you would send this to your API
+    // For now, we'll simulate deleting a comment
+    setComments((prev) => prev.filter((comment) => comment.id !== commentId));
+
+    return Promise.resolve();
+  };
+
+  const handleResolveComment = async (commentId: string, isResolved: boolean) => {
+    // In a real implementation, you would send this to your API
+    // For now, we'll simulate resolving a comment
+    setComments((prev) =>
+      prev.map((comment) =>
+        comment.id === commentId
+          ? {
+              ...comment,
+              isResolved,
+              updatedAt: new Date().toISOString(),
+            }
+          : comment,
+      ),
+    );
+
+    return Promise.resolve();
+  };
+
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="animate-scaleIn sm:max-w-md">
+      <DialogContent className="animate-scaleIn max-h-[90vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Editar Tarea</DialogTitle>
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="details">Detalles</TabsTrigger>
             <TabsTrigger value="subtasks">Subtareas ({subtasks.length})</TabsTrigger>
+            <TabsTrigger value="comments">Comentarios ({comments.length})</TabsTrigger>
+            <TabsTrigger value="activity">Actividad</TabsTrigger>
           </TabsList>
 
           <TabsContent value="details" className="space-y-4 py-4">
@@ -345,6 +544,33 @@ export default function ItemEditModal({
               onDelete={handleDeleteSubtask}
               disabled={!canChangeStatus}
             />
+          </TabsContent>
+
+          <TabsContent value="comments" className="py-4">
+            {isLoadingComments ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="text-primary h-8 w-8 animate-spin" />
+              </div>
+            ) : (
+              <CommentSection
+                itemId={item.id}
+                comments={comments}
+                onAddComment={handleAddComment}
+                onUpdateComment={handleUpdateComment}
+                onDeleteComment={handleDeleteComment}
+                onResolveComment={handleResolveComment}
+              />
+            )}
+          </TabsContent>
+
+          <TabsContent value="activity" className="py-4">
+            {isLoadingLogs ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="text-primary h-8 w-8 animate-spin" />
+              </div>
+            ) : (
+              <ActivityLogComponent logs={activityLogs} />
+            )}
           </TabsContent>
         </Tabs>
 

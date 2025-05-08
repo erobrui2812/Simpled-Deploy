@@ -11,6 +11,29 @@ export type Subtask = {
   isCompleted: boolean;
 };
 
+export type Comment = {
+  id: string;
+  itemId: string;
+  userId: string;
+  userName: string;
+  userImageUrl: string;
+  text: string;
+  createdAt: string;
+  updatedAt?: string;
+  isResolved?: boolean;
+};
+
+export type ActivityLog = {
+  id: string;
+  itemId: string;
+  userId: string;
+  userName: string;
+  userImageUrl: string;
+  action: string;
+  details: string;
+  timestamp: string;
+};
+
 export type Item = {
   id: string;
   title: string;
@@ -22,6 +45,8 @@ export type Item = {
   assigneeId?: string | null;
   subtasks?: Subtask[];
   progress?: number;
+  comments?: Comment[];
+  activityLogs?: ActivityLog[];
 };
 
 export type Column = {
