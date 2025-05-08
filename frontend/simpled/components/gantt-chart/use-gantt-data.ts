@@ -20,7 +20,6 @@ export function useGanttData(boardId: string, auth: Auth) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Add this helper function to the useGanttData hook to better handle dependency types:
   const getDependencyTypeLabel = (type: Dependency['type']): string => {
     switch (type) {
       case 'finish-to-start':
@@ -200,7 +199,6 @@ export function useGanttData(boardId: string, auth: Auth) {
     }
   };
 
-  // Add this to the addDependency function to validate dependency dates:
   const validateDependency = (fromTask: Task, toTask: Task, type: Dependency['type']): boolean => {
     const fromStart = new Date(fromTask.startDate);
     const fromEnd = new Date(fromTask.endDate);
@@ -209,17 +207,13 @@ export function useGanttData(boardId: string, auth: Auth) {
 
     switch (type) {
       case 'finish-to-start':
-        // From task must finish before to task starts
-        return true; // Always allow, user can adjust dates later
+        return true;
       case 'start-to-start':
-        // Tasks start together or with offset
-        return true; // Always allow, user can adjust dates later
+        return true;
       case 'finish-to-finish':
-        // Tasks finish together or with offset
-        return true; // Always allow, user can adjust dates later
+        return true;
       case 'start-to-finish':
-        // From task starts before to task finishes
-        return true; // Always allow, user can adjust dates later
+        return true;
       default:
         return true;
     }
