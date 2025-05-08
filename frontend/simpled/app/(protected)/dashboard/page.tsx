@@ -32,15 +32,10 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const loadDashboardData = async () => {
-      console.log('🟡 Iniciando carga del dashboard');
       setIsLoading(true);
       try {
-        console.log('🔍 Token actual:', auth.token);
-
         if (auth.token) {
-          console.log('✅ Token presente, obteniendo boards...');
           await fetchBoards();
-          console.log('📦 Boards cargados correctamente');
 
           setStats({
             totalTasks: 48,
@@ -96,20 +91,18 @@ export default function DashboardPage() {
               timestamp: new Date(Date.now() - 1000 * 60 * 300).toISOString(),
             },
           ]);
-          console.log('📊 Datos de dashboard simulados cargados');
         } else {
-          console.warn('⛔ No hay token disponible. ¿Usuario no autenticado?');
+          // No hay token disponible. ¿Usuario no autenticado?
         }
       } catch (error) {
-        console.error('❌ Error cargando datos del dashboard:', error);
+        // Error cargando datos del dashboard
       } finally {
-        console.log('🏁 Finalizando carga');
         setIsLoading(false);
       }
     };
 
     loadDashboardData();
-  }, [auth.token]); // ✅ Eliminado fetchBoards para evitar bucle infinito
+  }, [auth.token]);
 
   if (isLoading) {
     return (

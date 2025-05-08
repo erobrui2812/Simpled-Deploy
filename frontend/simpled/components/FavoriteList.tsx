@@ -13,7 +13,6 @@ interface FavoriteListProps {
 
 export default function FavoriteList({ list }: FavoriteListProps) {
   const router = useRouter();
-  console.log(list);
   if (!list || list.length === 0) {
     return (
       <Card className="h-full">

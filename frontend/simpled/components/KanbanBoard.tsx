@@ -37,7 +37,6 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
   const lastRef = useRef<string | null>(null);
 
   const [board, setBoard] = useState<any>(null);
-  console.log(board);
   const [columns, setColumns] = useState<Column[]>([]);
   const [items, setItems] = useState<Item[]>([]);
   const [members, setMembers] = useState<any[]>([]);

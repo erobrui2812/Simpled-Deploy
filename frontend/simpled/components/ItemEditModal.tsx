@@ -83,6 +83,7 @@ export default function ItemEditModal({
   const [loading, setLoading] = useState(false);
 
   const canChangeAll = userRole === 'admin';
+  const canChangeDates = canChangeAll || item.assigneeId === currentUserId;
   const canChangeStatus = canChangeAll || item.assigneeId === currentUserId;
 
   useEffect(() => {
@@ -120,6 +121,7 @@ export default function ItemEditModal({
       setIsLoadingLogs(true);
       try {
         const data = await activityLogService.fetchActivityLogs(item.id, auth.token);
+        console.log('Activity logs for item', item.id, data);
         setActivityLogs(data);
       } catch (err) {
         console.error('Error fetching activity logs:', err);
@@ -288,7 +290,11 @@ export default function ItemEditModal({
           <DialogTitle>Editar Tarea</DialogTitle>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <Tabs
+          value={activeTab}
+          onValueChange={(v) => setActiveTab(v as typeof activeTab)}
+          className="w-full"
+        >
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="details">Detalles</TabsTrigger>
             <TabsTrigger value="subtasks">Subtareas ({subtasks.length})</TabsTrigger>
@@ -327,7 +333,7 @@ export default function ItemEditModal({
                   date={startDate}
                   onDateChange={setStartDate}
                   placeholder="Fecha inicio"
-                  disabled={!canChangeAll}
+                  disabled={!canChangeDates}
                 />
               </div>
               <div className="space-y-2">
@@ -336,7 +342,7 @@ export default function ItemEditModal({
                   date={dueDate}
                   onDateChange={setDueDate}
                   placeholder="Fecha fin"
-                  disabled={!canChangeAll}
+                  disabled={!canChangeDates}
                 />
               </div>
             </div>
@@ -437,8 +443,10 @@ export default function ItemEditModal({
               <div className="flex justify-center py-8">
                 <Loader2 className="text-primary h-8 w-8 animate-spin" />
               </div>
-            ) : (
+            ) : activityLogs.length ? (
               <ActivityLogComponent logs={activityLogs} />
+            ) : (
+              <p className="text-muted-foreground text-center text-sm">Sin actividad registrada</p>
             )}
           </TabsContent>
         </Tabs>
