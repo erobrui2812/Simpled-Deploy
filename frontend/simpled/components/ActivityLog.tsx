@@ -6,12 +6,50 @@ import type { ActivityLog } from '@/types';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { CheckCircle2, Clock, Edit, MessageSquare, Tag, UserPlus } from 'lucide-react';
+import React from 'react';
 
 interface ActivityLogProps {
   logs: ActivityLog[];
 }
 
-export function ActivityLogComponent({ logs }: ActivityLogProps) {
+function getActivityMessage(log: ActivityLog) {
+  switch (log.type) {
+    case 'Created':
+      return `Tarea creada por ${log.userName}`;
+    case 'Updated':
+      return log.field
+        ? `${log.userName} actualizó ${log.field}: '${log.oldValue}' → '${log.newValue}'`
+        : `${log.userName} actualizó la tarea`;
+    case 'StatusChanged':
+      return `${log.userName} cambió el estado: '${log.oldValue}' → '${log.newValue}'`;
+    case 'Assigned':
+      return `${log.userName} cambió el responsable: '${log.oldValue}' → '${log.newValue}'`;
+    case 'DateChanged':
+      return `${log.userName} cambió la fecha: '${log.oldValue}' → '${log.newValue}'`;
+    case 'Deleted':
+      return `${log.userName} eliminó la tarea`;
+    case 'FileUploaded':
+      return `${log.userName} subió un archivo: ${log.details}`;
+    case 'SubtaskCreated':
+      return `${log.userName} creó una subtarea: ${log.details}`;
+    case 'SubtaskUpdated':
+      return `${log.userName} actualizó una subtarea: ${log.details}`;
+    case 'SubtaskDeleted':
+      return `${log.userName} eliminó una subtarea`;
+    case 'CommentAdded':
+      return `${log.userName} añadió un comentario: ${log.details}`;
+    case 'CommentEdited':
+      return `${log.userName} editó un comentario: ${log.details}`;
+    case 'CommentDeleted':
+      return `${log.userName} eliminó un comentario`;
+    case 'CommentResolved':
+      return `${log.userName} resolvió un comentario`;
+    default:
+      return `${log.userName} realizó una acción`;
+  }
+}
+
+export const ActivityLogComponent: React.FC<ActivityLogProps> = ({ logs }) => {
   const getActivityIcon = (action: string) => {
     switch (action) {
       case 'created':
@@ -44,13 +82,13 @@ export function ActivityLogComponent({ logs }: ActivityLogProps) {
               <CardContent className="p-3">
                 <div className="flex gap-3">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={log.userImageUrl || '/placeholder.svg'} alt={log.userName} />
+                    <AvatarImage src={log.userAvatarUrl || '/placeholder.svg'} alt={log.userName} />
                     <AvatarFallback>{log.userName.charAt(0)}</AvatarFallback>
                   </Avatar>
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      {getActivityIcon(log.action)}
-                      <span className="font-medium">{log.userName}</span>
+                      {getActivityIcon(log.type)}
+                      <span className="font-medium">{getActivityMessage(log)}</span>
                       <span className="text-muted-foreground text-xs">
                         {formatDistanceToNow(new Date(log.timestamp), {
                           addSuffix: true,
@@ -58,7 +96,6 @@ export function ActivityLogComponent({ logs }: ActivityLogProps) {
                         })}
                       </span>
                     </div>
-                    <p className="text-sm">{log.details}</p>
                   </div>
                 </div>
               </CardContent>
@@ -72,4 +109,4 @@ export function ActivityLogComponent({ logs }: ActivityLogProps) {
       )}
     </div>
   );
-}
+};

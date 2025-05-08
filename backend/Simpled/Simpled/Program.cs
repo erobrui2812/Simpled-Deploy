@@ -183,6 +183,7 @@ builder.Services.AddScoped<IActivityLogRepository, ActivityLogService>();
 
 
 
+
 var app = builder.Build();
 
 // --------------------------------------------------

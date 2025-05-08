@@ -23,13 +23,32 @@ export type Comment = {
   isResolved?: boolean;
 };
 
+export type ActivityType =
+  | 'Created'
+  | 'Updated'
+  | 'StatusChanged'
+  | 'Assigned'
+  | 'DateChanged'
+  | 'Deleted'
+  | 'FileUploaded'
+  | 'SubtaskCreated'
+  | 'SubtaskUpdated'
+  | 'SubtaskDeleted'
+  | 'CommentAdded'
+  | 'CommentEdited'
+  | 'CommentDeleted'
+  | 'CommentResolved';
+
 export type ActivityLog = {
   id: string;
   itemId: string;
   userId: string;
   userName: string;
-  userImageUrl: string;
-  action: string;
+  userAvatarUrl?: string | null;
+  type: ActivityType;
+  field?: string | null;
+  oldValue?: string | null;
+  newValue?: string | null;
   details: string;
   timestamp: string;
 };

@@ -283,6 +283,43 @@ export default function ItemEditModal({
     }
   };
 
+  function getActivityMessage(log: ActivityLog) {
+    switch (log.type) {
+      case 'Created':
+        return `Tarea creada por ${log.userName}`;
+      case 'Updated':
+        return log.field
+          ? `${log.userName} actualizó ${log.field}: '${log.oldValue}' → '${log.newValue}'`
+          : `${log.userName} actualizó la tarea`;
+      case 'StatusChanged':
+        return `${log.userName} cambió el estado: '${log.oldValue}' → '${log.newValue}'`;
+      case 'Assigned':
+        return `${log.userName} cambió el responsable: '${log.oldValue}' → '${log.newValue}'`;
+      case 'DateChanged':
+        return `${log.userName} cambió la fecha: '${log.oldValue}' → '${log.newValue}'`;
+      case 'Deleted':
+        return `${log.userName} eliminó la tarea`;
+      case 'FileUploaded':
+        return `${log.userName} subió un archivo: ${log.details}`;
+      case 'SubtaskCreated':
+        return `${log.userName} creó una subtarea: ${log.details}`;
+      case 'SubtaskUpdated':
+        return `${log.userName} actualizó una subtarea: ${log.details}`;
+      case 'SubtaskDeleted':
+        return `${log.userName} eliminó una subtarea`;
+      case 'CommentAdded':
+        return `${log.userName} añadió un comentario: ${log.details}`;
+      case 'CommentEdited':
+        return `${log.userName} editó un comentario: ${log.details}`;
+      case 'CommentDeleted':
+        return `${log.userName} eliminó un comentario`;
+      case 'CommentResolved':
+        return `${log.userName} resolvió un comentario`;
+      default:
+        return `${log.userName} realizó una acción`;
+    }
+  }
+
   return (
     <Dialog open onOpenChange={onClose}>
       <DialogContent className="animate-scaleIn max-h-[90vh] overflow-y-auto sm:max-w-2xl">
