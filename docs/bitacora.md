@@ -83,6 +83,7 @@ Registro de tareas realizadas durante el desarrollo del proyecto **Simpled**.
 | 2025-05-06  | Elías Robles     | Finalizacion lista de tableros favoritos  |
 | 2025-05-06  | Adrián Jiménez   | Implementado tablero a través de Day-Picker, agregado subtareas en los items de una columna, implementación de dependencias entre tareas |
 | 2025-05-06  | Adrián Jiménez   | Fixes varios gracias a Sonar, limpieza de codigo|
+| 2025-05-08  | Adrián Jiménez   | Implementación de combinaciones de teclas para acciones rapidas|
 
 ---
 
