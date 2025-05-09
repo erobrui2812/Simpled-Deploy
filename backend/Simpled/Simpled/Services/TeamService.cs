@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿
 using Microsoft.EntityFrameworkCore;
 using Simpled.Data;
 using Simpled.Dtos.Teams;
@@ -9,7 +6,6 @@ using Simpled.Dtos.Teams.TeamMembers;
 using Simpled.Exception;
 using Simpled.Models;
 using Simpled.Repository;
-using Simpled.Validators;
 using FluentValidation;
 
 namespace Simpled.Services

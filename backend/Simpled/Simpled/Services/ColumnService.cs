@@ -7,8 +7,6 @@ using Simpled.Hubs;
 using Simpled.Models;
 using Simpled.Repository;
 using Simpled.Validators;
-using FluentValidation;
-
 namespace Simpled.Services
 {
     /// <summary>

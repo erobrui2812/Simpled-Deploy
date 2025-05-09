@@ -19,7 +19,7 @@ namespace Simpled.Validators
                 .WithMessage("El rol debe ser 'admin', 'editor' o 'viewer'.");
         }
 
-        private bool BeAValidRole(string role)
+        private static bool BeAValidRole(string role)
         {
             return new[] { "admin", "editor", "viewer" }.Contains(role.ToLower());
         }
