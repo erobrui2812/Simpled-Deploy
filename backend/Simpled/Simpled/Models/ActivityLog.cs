@@ -2,35 +2,77 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
 
-public class ActivityLog
+namespace Simpled.Models
 {
-    [Key]
-    public Guid Id { get; set; }
+    /// <summary>
+    /// Registra las acciones realizadas en los ítems del tablero.
+    /// </summary>
+    public class ActivityLog
+    {
+        /// <summary>
+        /// Identificador único del registro de actividad.
+        /// </summary>
+        [Key]
+        public Guid Id { get; set; }
 
-    [Required]
-    public Guid ItemId { get; set; }
-    [ForeignKey(nameof(ItemId))]
-    public Item Item { get; set; } = null!;
+        /// <summary>
+        /// Identificador del ítem al que pertenece esta actividad.
+        /// </summary>
+        [Required]
+        public Guid ItemId { get; set; }
 
-    [Required]
-    public Guid UserId { get; set; }
-    [ForeignKey(nameof(UserId))]
-    public User User { get; set; } = null!;
+        /// <summary>
+        /// Ítem asociado a esta actividad.
+        /// </summary>
+        [ForeignKey(nameof(ItemId))]
+        public Item Item { get; set; } = null!;
 
-    [Required, MaxLength(100)]
-    public string Action { get; set; } = string.Empty;
-    [MaxLength(50)]
-    public string? Field { get; set; }
+        /// <summary>
+        /// Identificador del usuario que realizó la acción.
+        /// </summary>
+        [Required]
+        public Guid UserId { get; set; }
 
-    [MaxLength(200)]
-    public string? OldValue { get; set; }
+        /// <summary>
+        /// Usuario que realizó la acción.
+        /// </summary>
+        [ForeignKey(nameof(UserId))]
+        public User User { get; set; } = null!;
 
-    [MaxLength(200)]
-    public string? NewValue { get; set; }
+        /// <summary>
+        /// Descripción de la acción realizada.
+        /// </summary>
+        [Required, MaxLength(100)]
+        public string Action { get; set; } = string.Empty;
 
-    [Required, MaxLength(500)]
-    public string Details { get; set; } = string.Empty;
+        /// <summary>
+        /// Nombre del campo modificado, si aplica.
+        /// </summary>
+        [MaxLength(50)]
+        public string? Field { get; set; }
 
-    [Required]
-    public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+        /// <summary>
+        /// Valor anterior del campo, si corresponde.
+        /// </summary>
+        [MaxLength(200)]
+        public string? OldValue { get; set; }
+
+        /// <summary>
+        /// Nuevo valor del campo, si corresponde.
+        /// </summary>
+        [MaxLength(200)]
+        public string? NewValue { get; set; }
+
+        /// <summary>
+        /// Detalles adicionales de la actividad.
+        /// </summary>
+        [Required, MaxLength(500)]
+        public string Details { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Fecha y hora en que se registró la actividad (UTC).
+        /// </summary>
+        [Required]
+        public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+    }
 }
