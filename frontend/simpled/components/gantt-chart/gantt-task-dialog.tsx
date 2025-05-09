@@ -151,22 +151,6 @@ export function GanttTaskDialog({
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="progress">Progreso (%)</Label>
-              <div className="flex items-center gap-4">
-                <Input
-                  id="progress"
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={editedTask.progress}
-                  onChange={(e) => handleChange('progress', Number.parseInt(e.target.value))}
-                  className="flex-1"
-                />
-                <span className="w-12 text-center">{editedTask.progress}%</span>
-              </div>
-            </div>
-
-            <div className="grid gap-2">
               <Label htmlFor="status">Estado</Label>
               <Select
                 value={editedTask.status}
