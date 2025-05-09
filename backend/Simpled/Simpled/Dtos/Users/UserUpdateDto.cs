@@ -20,13 +20,13 @@ namespace Simpled.Dtos.Users
         public string Name { get; set; } = string.Empty;
 
         /// <summary>
-        /// Correo electrónico del usuario (válido).
+        /// Correo electrónico del usuario.
         /// </summary>
         [Required, EmailAddress]
         public string Email { get; set; } = default!;
 
         /// <summary>
-        /// Contraseña en texto plano (opcional, para cambio).
+        /// Contraseña en texto plano.
         /// </summary>
         public string? Password { get; set; }
 

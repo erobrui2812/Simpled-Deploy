@@ -18,7 +18,7 @@ namespace Simpled.Models
         public string Name { get; set; } = "Dummy";
 
         /// <summary>
-        /// Correo electrónico del usuario (válido).
+        /// Correo electrónico del usuario
         /// </summary>
         [Required, EmailAddress]
         public string Email { get; set; } = default!;

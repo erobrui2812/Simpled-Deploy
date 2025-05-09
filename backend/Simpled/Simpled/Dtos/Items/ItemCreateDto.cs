@@ -8,13 +8,13 @@ namespace Simpled.Dtos.Items
     public class ItemCreateDto
     {
         /// <summary>
-        /// Título de la tarea (máx. 100 caracteres).
+        /// Título de la tarea.
         /// </summary>
         [Required, MaxLength(100)]
         public string Title { get; set; } = default!;
 
         /// <summary>
-        /// Descripción opcional de la tarea (máx. 500 caracteres).
+        /// Descripción opcional de la tarea.
         /// </summary>
         [MaxLength(500)]
         public string? Description { get; set; }
