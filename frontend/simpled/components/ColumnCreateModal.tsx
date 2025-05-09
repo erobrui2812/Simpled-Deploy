@@ -11,6 +11,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
+import { motion } from 'framer-motion';
 import { Check, X } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'react-toastify';
@@ -64,12 +65,17 @@ export default function ColumnCreateModal({ boardId, onClose, onCreated }: Props
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="animate-scaleIn sm:max-w-md">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Nueva columna</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
+        <motion.div
+          className="space-y-4 py-4"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
           <div className="space-y-2">
             <Label htmlFor="title">Título</Label>
             <Input
@@ -80,7 +86,7 @@ export default function ColumnCreateModal({ boardId, onClose, onCreated }: Props
               autoFocus
             />
           </div>
-        </div>
+        </motion.div>
 
         <DialogFooter className="flex sm:justify-between">
           <Button variant="outline" onClick={onClose} disabled={loading}>
