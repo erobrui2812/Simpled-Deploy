@@ -6,6 +6,10 @@ using Simpled.Repository;
 
 namespace Simpled.Services
 {
+    /// <summary>
+    /// Servicio para la gestión de comentarios en ítems.
+    /// Implementa ICommentRepository.
+    /// </summary>
     public class CommentService : ICommentRepository
     {
         private readonly SimpledDbContext _context;
@@ -15,6 +19,11 @@ namespace Simpled.Services
             _context = context;
         }
 
+        /// <summary>
+        /// Obtiene los comentarios asociados a un ítem.
+        /// </summary>
+        /// <param name="itemId">ID del ítem.</param>
+        /// <returns>Lista de comentarios.</returns>
         public async Task<IEnumerable<CommentReadDto>> GetByItemIdAsync(Guid itemId)
         {
             return await _context.Comments
@@ -34,6 +43,12 @@ namespace Simpled.Services
                 .ToListAsync();
         }
 
+        /// <summary>
+        /// Crea un nuevo comentario para un ítem.
+        /// </summary>
+        /// <param name="userId">ID del usuario.</param>
+        /// <param name="dto">Datos del comentario.</param>
+        /// <returns>DTO del comentario creado.</returns>
         public async Task<CommentReadDto> CreateAsync(Guid userId, CommentCreateDto dto)
         {
             var comment = new Comment
@@ -60,6 +75,12 @@ namespace Simpled.Services
             };
         }
 
+        /// <summary>
+        /// Elimina un comentario de un ítem.
+        /// </summary>
+        /// <param name="commentId">ID del comentario.</param>
+        /// <param name="userId">ID del usuario.</param>
+        /// <returns>True si la eliminación fue exitosa.</returns>
         public async Task<bool> DeleteAsync(Guid commentId, Guid userId)
         {
             var comment = await _context.Comments.FirstOrDefaultAsync(c => c.Id == commentId && c.UserId == userId);
@@ -70,6 +91,13 @@ namespace Simpled.Services
             return true;
         }
 
+        /// <summary>
+        /// Marca un comentario como resuelto o no resuelto.
+        /// </summary>
+        /// <param name="commentId">ID del comentario.</param>
+        /// <param name="userId">ID del usuario.</param>
+        /// <param name="resolved">Estado de resolución.</param>
+        /// <returns>True si la operación fue exitosa.</returns>
         public async Task<bool> MarkAsResolvedAsync(Guid commentId, Guid userId, bool resolved)
         {
             var comment = await _context.Comments.FirstOrDefaultAsync(c => c.Id == commentId && c.UserId == userId);
@@ -82,6 +110,13 @@ namespace Simpled.Services
             return true;
         }
 
+        /// <summary>
+        /// Actualiza el texto de un comentario.
+        /// </summary>
+        /// <param name="userId">ID del usuario.</param>
+        /// <param name="commentId">ID del comentario.</param>
+        /// <param name="dto">Datos actualizados del comentario.</param>
+        /// <returns>DTO actualizado o null si no existe.</returns>
         public async Task<CommentReadDto?> UpdateAsync(Guid userId, Guid commentId, CommentUpdateDto dto)
         {
             if (commentId != dto.CommentId)

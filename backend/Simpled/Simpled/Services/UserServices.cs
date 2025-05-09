@@ -10,6 +10,10 @@ using Simpled.Dtos.Teams.TeamMembers;
 
 namespace Simpled.Services
 {
+    /// <summary>
+    /// Servicio para la gestión de usuarios.
+    /// Implementa IUserRepository.
+    /// </summary>
     public class UserService : IUserRepository
     {
         private readonly SimpledDbContext _context;
@@ -19,6 +23,10 @@ namespace Simpled.Services
             _context = context;
         }
 
+        /// <summary>
+        /// Obtiene todos los usuarios del sistema.
+        /// </summary>
+        /// <returns>Lista de usuarios.</returns>
         public async Task<IEnumerable<UserReadDto>> GetAllUsersAsync()
         {
             var users = await _context.Users.Include(u => u.Roles).ToListAsync();
@@ -34,6 +42,11 @@ namespace Simpled.Services
             });
         }
 
+        /// <summary>
+        /// Obtiene un usuario por su ID, incluyendo sus equipos y logros.
+        /// </summary>
+        /// <param name="id">ID del usuario.</param>
+        /// <returns>DTO del usuario o excepción si no existe.</returns>
         public async Task<UserReadDto?> GetUserByIdAsync(Guid id)
         {
             var user = await _context.Users
@@ -81,7 +94,12 @@ namespace Simpled.Services
             };
         }
 
-
+        /// <summary>
+        /// Registra un nuevo usuario en el sistema.
+        /// </summary>
+        /// <param name="userDto">Datos del usuario a registrar.</param>
+        /// <param name="image">Imagen de perfil (opcional).</param>
+        /// <returns>DTO del usuario registrado.</returns>
         public async Task<UserReadDto> RegisterAsync(UserRegisterDto userDto, IFormFile ?image)
         {
             var user = new User
@@ -142,8 +160,13 @@ namespace Simpled.Services
             };
         }
 
-
-
+        /// <summary>
+        /// Actualiza los datos de un usuario existente.
+        /// </summary>
+        /// <param name="updatedDto">Datos actualizados del usuario.</param>
+        /// <param name="image">Imagen de perfil (opcional).</param>
+        /// <returns>True si la actualización fue exitosa.</returns>
+        /// <exception cref="NotFoundException">Si el usuario no existe.</exception>
         public async Task<bool> UpdateAsync(UserUpdateDto updatedDto, IFormFile? image)
         {
             var existing = await _context.Users.Include(u => u.Roles).FirstOrDefaultAsync(u => u.Id == updatedDto.Id);
@@ -217,6 +240,12 @@ namespace Simpled.Services
             return true;
         }
 
+        /// <summary>
+        /// Elimina un usuario por su ID.
+        /// </summary>
+        /// <param name="id">ID del usuario.</param>
+        /// <returns>True si la eliminación fue exitosa.</returns>
+        /// <exception cref="NotFoundException">Si el usuario no existe.</exception>
         public async Task<bool> DeleteAsync(Guid id)
         {
             var user = await _context.Users.FindAsync(id);

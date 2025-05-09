@@ -5,6 +5,9 @@ using Simpled.Models;
 
 namespace Simpled.Services
 {
+    /// <summary>
+    /// Servicio para la gestión y procesamiento de logros (achievements).
+    /// </summary>
     public class AchievementsService
     {
         private readonly List<AchievementDefinition> _achievements;
@@ -18,6 +21,13 @@ namespace Simpled.Services
             _achievements = JsonConvert.DeserializeObject<List<AchievementDefinition>>(json)!;
         }
 
+        /// <summary>
+        /// Procesa una acción del usuario y desbloquea logros si corresponde.
+        /// </summary>
+        /// <param name="user">Usuario que realiza la acción.</param>
+        /// <param name="action">Acción realizada.</param>
+        /// <param name="newValue">Nuevo valor asociado a la acción.</param>
+        /// <returns>Lista de mensajes de logros desbloqueados.</returns>
         public async Task<List<string>> ProcessActionAsync(User user, string action, int newValue)
         {
             var newAchievements = new List<string>();
@@ -56,6 +66,10 @@ namespace Simpled.Services
             return newAchievements;
         }
 
+        /// <summary>
+        /// Obtiene todos los logros definidos en el sistema.
+        /// </summary>
+        /// <returns>Lista de logros.</returns>
         public List<object> GetAllAchievements()
         {
             var achievements = _achievements
@@ -70,6 +84,9 @@ namespace Simpled.Services
             return achievements.Cast<object>().ToList();
         }
 
+        /// <summary>
+        /// Definición interna de un logro.
+        /// </summary>
         private class AchievementDefinition
         {
             public int Value { get; set; }

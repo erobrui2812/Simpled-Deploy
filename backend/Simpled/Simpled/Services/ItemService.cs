@@ -16,6 +16,10 @@ using Simpled.Repository;
 
 namespace Simpled.Services
 {
+    /// <summary>
+    /// Servicio para la gestión de ítems y subtareas.
+    /// Implementa IItemRepository.
+    /// </summary>
     public class ItemService : IItemRepository
     {
         private readonly SimpledDbContext _context;
@@ -27,6 +31,10 @@ namespace Simpled.Services
             _hubContext = hubContext;
         }
 
+        /// <summary>
+        /// Obtiene todos los ítems del sistema.
+        /// </summary>
+        /// <returns>Lista de ítems.</returns>
         public async Task<IEnumerable<ItemReadDto>> GetAllAsync()
         {
             return await _context.Items
@@ -54,6 +62,11 @@ namespace Simpled.Services
                 .ToListAsync();
         }
 
+        /// <summary>
+        /// Obtiene un ítem por su ID.
+        /// </summary>
+        /// <param name="id">ID del ítem.</param>
+        /// <returns>DTO del ítem o excepción si no existe.</returns>
         public async Task<ItemReadDto?> GetByIdAsync(Guid id)
         {
             var i = await _context.Items
@@ -83,6 +96,11 @@ namespace Simpled.Services
             };
         }
 
+        /// <summary>
+        /// Crea un nuevo ítem.
+        /// </summary>
+        /// <param name="dto">Datos del ítem a crear.</param>
+        /// <returns>DTO del ítem creado.</returns>
         public async Task<ItemReadDto> CreateAsync(ItemCreateDto dto)
         {
             var item = new Item
@@ -119,6 +137,12 @@ namespace Simpled.Services
             return result;
         }
 
+        /// <summary>
+        /// Actualiza los datos de un ítem existente.
+        /// </summary>
+        /// <param name="dto">Datos actualizados del ítem.</param>
+        /// <returns>True si la actualización fue exitosa.</returns>
+        /// <exception cref="NotFoundException">Si el ítem no existe.</exception>
         public async Task<bool> UpdateAsync(ItemUpdateDto dto)
         {
             var item = await _context.Items.FindAsync(dto.Id)
@@ -152,6 +176,13 @@ namespace Simpled.Services
             return true;
         }
 
+        /// <summary>
+        /// Actualiza el estado de un ítem.
+        /// </summary>
+        /// <param name="id">ID del ítem.</param>
+        /// <param name="status">Nuevo estado.</param>
+        /// <returns>True si la actualización fue exitosa.</returns>
+        /// <exception cref="NotFoundException">Si el ítem no existe.</exception>
         public async Task<bool> UpdateStatusAsync(Guid id, string status)
         {
             var item = await _context.Items.FindAsync(id)
@@ -168,6 +199,12 @@ namespace Simpled.Services
             return true;
         }
 
+        /// <summary>
+        /// Elimina un ítem por su ID.
+        /// </summary>
+        /// <param name="id">ID del ítem.</param>
+        /// <returns>True si la eliminación fue exitosa.</returns>
+        /// <exception cref="NotFoundException">Si el ítem no existe.</exception>
         public async Task<bool> DeleteAsync(Guid id)
         {
             var item = await _context.Items.FindAsync(id)
@@ -184,6 +221,14 @@ namespace Simpled.Services
             return true;
         }
 
+        /// <summary>
+        /// Sube un archivo asociado a un ítem.
+        /// </summary>
+        /// <param name="itemId">ID del ítem.</param>
+        /// <param name="file">Archivo a subir.</param>
+        /// <returns>Entidad Content creada.</returns>
+        /// <exception cref="NotFoundException">Si el ítem no existe.</exception>
+        /// <exception cref="ApiException">Si el archivo es inválido.</exception>
         public async Task<Content?> UploadFileAsync(Guid itemId, IFormFile file)
         {
             var item = await _context.Items.FindAsync(itemId)
@@ -222,6 +267,12 @@ namespace Simpled.Services
             return content;
         }
 
+        /// <summary>
+        /// Obtiene el ID del tablero al que pertenece una columna.
+        /// </summary>
+        /// <param name="columnId">ID de la columna.</param>
+        /// <returns>ID del tablero.</returns>
+        /// <exception cref="NotFoundException">Si la columna no existe.</exception>
         public async Task<Guid> GetBoardIdByColumnId(Guid columnId)
         {
             var column = await _context.BoardColumns.FindAsync(columnId)
@@ -229,6 +280,12 @@ namespace Simpled.Services
             return column.BoardId;
         }
 
+        /// <summary>
+        /// Obtiene el ID del tablero al que pertenece un ítem.
+        /// </summary>
+        /// <param name="itemId">ID del ítem.</param>
+        /// <returns>ID del tablero.</returns>
+        /// <exception cref="NotFoundException">Si el ítem o la columna no existen.</exception>
         public async Task<Guid> GetBoardIdByItemId(Guid itemId)
         {
             var item = await _context.Items.FindAsync(itemId)
@@ -238,6 +295,11 @@ namespace Simpled.Services
             return column.BoardId;
         }
 
+        /// <summary>
+        /// Obtiene las subtareas asociadas a un ítem.
+        /// </summary>
+        /// <param name="itemId">ID del ítem.</param>
+        /// <returns>Lista de subtareas.</returns>
         public async Task<IEnumerable<SubtaskDto>> GetSubtasksByItemIdAsync(Guid itemId)
         {
             return await _context.Subtasks
@@ -252,6 +314,11 @@ namespace Simpled.Services
                 .ToListAsync();
         }
 
+        /// <summary>
+        /// Crea una nueva subtarea para un ítem.
+        /// </summary>
+        /// <param name="dto">Datos de la subtarea.</param>
+        /// <returns>DTO de la subtarea creada.</returns>
         public async Task<SubtaskDto> CreateSubtaskAsync(SubtaskCreateDto dto)
         {
             var subtask = new Subtask
@@ -279,6 +346,12 @@ namespace Simpled.Services
             return result;
         }
 
+        /// <summary>
+        /// Actualiza los datos de una subtarea existente.
+        /// </summary>
+        /// <param name="dto">Datos actualizados de la subtarea.</param>
+        /// <returns>True si la actualización fue exitosa.</returns>
+        /// <exception cref="NotFoundException">Si la subtarea no existe.</exception>
         public async Task<bool> UpdateSubtaskAsync(SubtaskUpdateDto dto)
         {
             var subtask = await _context.Subtasks.FindAsync(dto.Id)
@@ -302,6 +375,12 @@ namespace Simpled.Services
             return true;
         }
 
+        /// <summary>
+        /// Elimina una subtarea por su ID.
+        /// </summary>
+        /// <param name="subtaskId">ID de la subtarea.</param>
+        /// <returns>True si la eliminación fue exitosa.</returns>
+        /// <exception cref="NotFoundException">Si la subtarea no existe.</exception>
         public async Task<bool> DeleteSubtaskAsync(Guid subtaskId)
         {
             var subtask = await _context.Subtasks.FindAsync(subtaskId)

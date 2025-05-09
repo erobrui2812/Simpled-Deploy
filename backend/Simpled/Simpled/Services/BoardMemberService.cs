@@ -7,6 +7,10 @@ using Simpled.Exception;
 
 namespace Simpled.Services
 {
+    /// <summary>
+    /// Servicio para la gestión de miembros de tableros.
+    /// Implementa IBoardMemberRepository.
+    /// </summary>
     public class BoardMemberService : IBoardMemberRepository
     {
         private readonly SimpledDbContext _context;
@@ -16,6 +20,10 @@ namespace Simpled.Services
             _context = context;
         }
 
+        /// <summary>
+        /// Obtiene todos los miembros de todos los tableros.
+        /// </summary>
+        /// <returns>Lista de miembros.</returns>
         public async Task<IEnumerable<BoardMemberReadDto>> GetAllAsync()
         {
             return await _context.BoardMembers
@@ -27,6 +35,11 @@ namespace Simpled.Services
                 }).ToListAsync();
         }
 
+        /// <summary>
+        /// Obtiene los miembros de un tablero específico.
+        /// </summary>
+        /// <param name="boardId">ID del tablero.</param>
+        /// <returns>Lista de miembros del tablero.</returns>
         public async Task<IEnumerable<BoardMemberReadDto>> GetByBoardIdAsync(Guid boardId)
         {
             return await _context.BoardMembers
@@ -39,6 +52,12 @@ namespace Simpled.Services
                 }).ToListAsync();
         }
 
+        /// <summary>
+        /// Obtiene un miembro específico por IDs de tablero y usuario.
+        /// </summary>
+        /// <param name="boardId">ID del tablero.</param>
+        /// <param name="userId">ID del usuario.</param>
+        /// <returns>DTO del miembro o null si no existe.</returns>
         public async Task<BoardMemberReadDto?> GetByIdsAsync(Guid boardId, Guid userId)
         {
             var member = await _context.BoardMembers.FirstOrDefaultAsync(m => m.BoardId == boardId && m.UserId == userId);
@@ -53,6 +72,11 @@ namespace Simpled.Services
             };
         }
 
+        /// <summary>
+        /// Añade un nuevo miembro a un tablero.
+        /// </summary>
+        /// <param name="dto">Datos del miembro a añadir.</param>
+        /// <exception cref="ApiException">Si el miembro ya existe.</exception>
         public async Task AddAsync(BoardMemberCreateDto dto)
         {
             bool exists = await _context.BoardMembers.AnyAsync(m =>
@@ -71,6 +95,10 @@ namespace Simpled.Services
             await _context.SaveChangesAsync();
         }
 
+        /// <summary>
+        /// Añade varios miembros a tableros.
+        /// </summary>
+        /// <param name="dtos">Lista de miembros a añadir.</param>
         public async Task AddManyAsync(List<BoardMemberCreateDto> dtos)
         {
             var newMembers = new List<BoardMember>();
@@ -95,6 +123,12 @@ namespace Simpled.Services
             await _context.SaveChangesAsync();
         }
 
+        /// <summary>
+        /// Actualiza el rol de un miembro en un tablero.
+        /// </summary>
+        /// <param name="dto">Datos del miembro a actualizar.</param>
+        /// <returns>True si la actualización fue exitosa.</returns>
+        /// <exception cref="NotFoundException">Si el miembro no existe.</exception>
         public async Task<bool> UpdateAsync(BoardMemberUpdateDto dto)
         {
             var existing = await _context.BoardMembers.FirstOrDefaultAsync(m =>
@@ -107,6 +141,13 @@ namespace Simpled.Services
             return true;
         }
 
+        /// <summary>
+        /// Elimina un miembro de un tablero.
+        /// </summary>
+        /// <param name="boardId">ID del tablero.</param>
+        /// <param name="userId">ID del usuario.</param>
+        /// <returns>True si la eliminación fue exitosa.</returns>
+        /// <exception cref="NotFoundException">Si el miembro no existe.</exception>
         public async Task<bool> DeleteAsync(Guid boardId, Guid userId)
         {
             var member = await _context.BoardMembers.FirstOrDefaultAsync(m =>
