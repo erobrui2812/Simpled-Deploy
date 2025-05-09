@@ -6,7 +6,7 @@ using Simpled.Models;
 namespace Simpled.Services
 {
     /// <summary>
-    /// Servicio para la gestión y procesamiento de logros (achievements).
+    /// Servicio para la gestión y procesamiento de logros
     /// </summary>
     public class AchievementsService
     {

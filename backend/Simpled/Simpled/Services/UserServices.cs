@@ -163,81 +163,79 @@ namespace Simpled.Services
         /// <summary>
         /// Actualiza los datos de un usuario existente.
         /// </summary>
-        /// <param name="updatedDto">Datos actualizados del usuario.</param>
+        /// <param name="userDto">Datos actualizados del usuario.</param>
         /// <param name="image">Imagen de perfil (opcional).</param>
         /// <returns>True si la actualización fue exitosa.</returns>
         /// <exception cref="NotFoundException">Si el usuario no existe.</exception>
-        public async Task<bool> UpdateAsync(UserUpdateDto updatedDto, IFormFile? image)
+        public async Task<bool> UpdateAsync(UserUpdateDto userDto, IFormFile? image)
         {
-            var existing = await _context.Users.Include(u => u.Roles).FirstOrDefaultAsync(u => u.Id == updatedDto.Id);
+            var existing = await _context.Users.Include(u => u.Roles).FirstOrDefaultAsync(u => u.Id == userDto.Id);
             if (existing == null)
                 throw new NotFoundException("Usuario no encontrado.");
 
-            existing.Email = updatedDto.Email;
-            existing.Name = updatedDto.Name;
+            existing.Email = userDto.Email;
+            existing.Name = userDto.Name;
 
-            if (!string.IsNullOrWhiteSpace(updatedDto.Password))
+            await ActualizarPasswordSiEsNecesario(existing, userDto.Password);
+            await ActualizarImagenUsuario(existing, userDto.ImageUrl, image);
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        private Task ActualizarPasswordSiEsNecesario(User existing, string? nuevaPassword)
+        {
+            if (!string.IsNullOrWhiteSpace(nuevaPassword))
             {
-                bool samePassword = BCrypt.Net.BCrypt.Verify(updatedDto.Password, existing.PasswordHash);
+                bool samePassword = BCrypt.Net.BCrypt.Verify(nuevaPassword, existing.PasswordHash);
                 if (!samePassword)
                 {
-                    existing.PasswordHash = BCrypt.Net.BCrypt.HashPassword(updatedDto.Password);
+                    existing.PasswordHash = BCrypt.Net.BCrypt.HashPassword(nuevaPassword);
                 }
             }
+            return Task.CompletedTask;
+        }
 
-            if (!string.IsNullOrWhiteSpace(updatedDto.ImageUrl))
+        private async Task ActualizarImagenUsuario(User existing, string? nuevaImageUrl, IFormFile? image)
+        {
+            if (!string.IsNullOrWhiteSpace(nuevaImageUrl))
             {
                 if (!existing.ImageUrl.Contains("avatar-default.jpg"))
                 {
                     string oldImagePath = Path.Combine("wwwroot", existing.ImageUrl.TrimStart('/'));
-                    
                     if (File.Exists(oldImagePath))
                     {
                         File.Delete(oldImagePath);
                     }
-
                     var directory = Path.GetDirectoryName(oldImagePath);
-                    
                     if (Directory.Exists(directory) && Directory.GetFiles(directory).Length == 0)
                     {
                         Directory.Delete(directory);
                     }
                 }
-
                 existing.ImageUrl = "/images/default/avatar-default.jpg";
-            
-            } else {
-
-                if (image != null)
-                {
-                    string uploadsFolder = Path.Combine("wwwroot", "images", existing.Id.ToString());
-
-                    if (!Directory.Exists(uploadsFolder))
-                    {
-                        Directory.CreateDirectory(uploadsFolder);
-                        Console.WriteLine($"Carpeta creada: {uploadsFolder}");
-                    }
-
-                    string filePath = Path.Combine(uploadsFolder, "image.jpg");
-
-                    if (File.Exists(filePath))
-                    {
-                        File.Delete(filePath);
-                    }
-
-                    using (var fileStream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await image.CopyToAsync(fileStream);
-                    }
-
-                    existing.ImageUrl = $"/images/{existing.Id.ToString()}/image.jpg";
-                    _context.Users.Update(existing);
-                    await _context.SaveChangesAsync();
-                }
             }
-
-            await _context.SaveChangesAsync();
-            return true;
+            else if (image != null)
+            {
+                string uploadsFolder = Path.Combine("wwwroot", "images", existing.Id.ToString());
+                if (!Directory.Exists(uploadsFolder))
+                {
+                    Directory.CreateDirectory(uploadsFolder);
+                    Console.WriteLine($"Carpeta creada: {uploadsFolder}");
+                }
+                string filePath = Path.Combine(uploadsFolder, "image.jpg");
+                if (File.Exists(filePath))
+                {
+                    File.Delete(filePath);
+                }
+                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    await image.CopyToAsync(fileStream);
+                }
+                existing.ImageUrl = $"/images/{existing.Id.ToString()}/image.jpg";
+                _context.Users.Update(existing);
+                await _context.SaveChangesAsync();
+            }
         }
 
         /// <summary>
