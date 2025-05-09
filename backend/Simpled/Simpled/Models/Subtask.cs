@@ -1,9 +1,8 @@
-﻿using System;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace Simpled.Models
 {
-      /// <summary>
+    /// <summary>
     /// Representa una subtarea relacionada con un ítem.
     /// </summary>
     public class Subtask

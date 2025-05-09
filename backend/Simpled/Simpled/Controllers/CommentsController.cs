@@ -1,10 +1,7 @@
-﻿using System;
-using System.Security.Claims;
-using System.Threading.Tasks;
+﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Simpled.Dtos.Comments;
-using Simpled.Helpers;
 using Simpled.Models;
 using Simpled.Repository;
 

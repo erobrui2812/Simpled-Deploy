@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Simpled.Dtos.Comments
+﻿namespace Simpled.Dtos.Comments
 {
     /// <summary>
     /// DTO para la lectura de un comentario.
@@ -45,6 +43,6 @@ namespace Simpled.Dtos.Comments
         /// <summary>
         /// URL del avatar del usuario (opcional).
         /// </summary>
-        public string? UserAvatarUrl { get; set; } // opcional si tienes imagen
+        public string? UserAvatarUrl { get; set; } 
     }
 }

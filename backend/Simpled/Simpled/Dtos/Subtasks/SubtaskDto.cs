@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Simpled.Dtos.Subtasks
+﻿namespace Simpled.Dtos.Subtasks
 {
     /// <summary>
     /// DTO para la lectura de una subtarea.
