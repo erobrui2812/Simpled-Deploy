@@ -178,12 +178,6 @@ builder.Services.AddScoped<DependencyService>();
 builder.Services.AddScoped<ICommentRepository, CommentService>();
 builder.Services.AddScoped<IActivityLogRepository, ActivityLogService>();
 
-
-
-
-
-
-
 var app = builder.Build();
 
 // --------------------------------------------------
@@ -192,7 +186,7 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<SimpledDbContext>();
-    db.Database.EnsureCreated();
+    await db.Database.EnsureCreatedAsync();
 }
 
 // --------------------------------------------------
@@ -216,4 +210,4 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapHub<BoardHub>("/hubs/board");
 
-app.Run();
+await app.RunAsync();
