@@ -13,6 +13,8 @@ using Simpled.Exception;
 using Simpled.Hubs;
 using Simpled.Models;
 using Simpled.Repository;
+using Simpled.Validators;
+using FluentValidation;
 
 namespace Simpled.Services
 {
@@ -103,6 +105,10 @@ namespace Simpled.Services
         /// <returns>DTO del ítem creado.</returns>
         public async Task<ItemReadDto> CreateAsync(ItemCreateDto dto)
         {
+            var validator = new ItemCreateValidator();
+            var validationResult = validator.Validate(dto);
+            if (!validationResult.IsValid)
+                throw new ApiException(validationResult.Errors.First().ErrorMessage, 400);
             var item = new Item
             {
                 Id = Guid.NewGuid(),
@@ -145,6 +151,10 @@ namespace Simpled.Services
         /// <exception cref="NotFoundException">Si el ítem no existe.</exception>
         public async Task<bool> UpdateAsync(ItemUpdateDto dto)
         {
+            var validator = new ItemUpdateValidator();
+            var validationResult = validator.Validate(dto);
+            if (!validationResult.IsValid)
+                throw new ApiException(validationResult.Errors.First().ErrorMessage, 400);
             var item = await _context.Items.FindAsync(dto.Id)
                 ?? throw new NotFoundException("Ítem no encontrado.");
 

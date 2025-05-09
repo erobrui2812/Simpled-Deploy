@@ -6,6 +6,8 @@ using Simpled.Exception;
 using Simpled.Hubs;
 using Simpled.Models;
 using Simpled.Repository;
+using Simpled.Validators;
+using FluentValidation;
 
 namespace Simpled.Services
 {
@@ -68,6 +70,10 @@ namespace Simpled.Services
         /// <returns>DTO de la columna creada.</returns>
         public async Task<BoardColumnReadDto> CreateAsync(BoardColumnCreateDto dto)
         {
+            var validator = new ColumnCreateValidator();
+            var validationResult = validator.Validate(dto);
+            if (!validationResult.IsValid)
+                throw new ApiException(validationResult.Errors.First().ErrorMessage, 400);
             var newColumn = new BoardColumn
             {
                 Id = Guid.NewGuid(),
@@ -102,6 +108,10 @@ namespace Simpled.Services
         /// <returns>True si la actualización fue exitosa.</returns>
         public async Task<bool> UpdateAsync(BoardColumnUpdateDto dto)
         {
+            var validator = new ColumnUpdateValidator();
+            var validationResult = validator.Validate(dto);
+            if (!validationResult.IsValid)
+                throw new ApiException(validationResult.Errors.First().ErrorMessage, 400);
             var column = await _context.BoardColumns.FindAsync(dto.Id);
             if (column == null)
                 throw new NotFoundException("Columna no encontrada.");

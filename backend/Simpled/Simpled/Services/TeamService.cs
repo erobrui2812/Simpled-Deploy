@@ -9,6 +9,8 @@ using Simpled.Dtos.Teams.TeamMembers;
 using Simpled.Exception;
 using Simpled.Models;
 using Simpled.Repository;
+using Simpled.Validators;
+using FluentValidation;
 
 namespace Simpled.Services
 {
@@ -94,6 +96,8 @@ namespace Simpled.Services
         /// <returns>DTO del equipo creado.</returns>
         public async Task<TeamReadDto> CreateAsync(TeamCreateDto dto, Guid ownerId)
         {
+            if (string.IsNullOrWhiteSpace(dto.Name))
+                throw new ApiException("El nombre del equipo es obligatorio.", 400);
             var team = new Team
             {
                 Id = Guid.NewGuid(),
@@ -123,6 +127,8 @@ namespace Simpled.Services
         /// <exception cref="ApiException">Si el usuario no tiene permisos.</exception>
         public async Task<bool> UpdateAsync(TeamUpdateDto dto, Guid ownerId)
         {
+            if (string.IsNullOrWhiteSpace(dto.Name))
+                throw new ApiException("El nombre del equipo es obligatorio.", 400);
             var team = await _context.Teams.FindAsync(dto.Id);
             if (team == null) throw new NotFoundException("Equipo no encontrado.");
             if (team.OwnerId != ownerId) throw new ApiException("No tienes permisos para modificar este equipo.", 403);
@@ -182,6 +188,8 @@ namespace Simpled.Services
         /// <exception cref="ApiException">Si el usuario no tiene permisos o el miembro ya existe.</exception>
         public async Task AddMemberAsync(TeamMemberCreateDto dto, Guid ownerId)
         {
+            if (dto.TeamId == Guid.Empty || dto.UserId == Guid.Empty || string.IsNullOrWhiteSpace(dto.Role))
+                throw new ApiException("Todos los campos del miembro son obligatorios.", 400);
             var team = await _context.Teams.FindAsync(dto.TeamId);
             if (team == null) throw new NotFoundException("Equipo no encontrado.");
             if (team.OwnerId != ownerId) throw new ApiException("No tienes permisos para invitar a este equipo.", 403);
@@ -209,6 +217,8 @@ namespace Simpled.Services
         /// <exception cref="ApiException">Si el usuario no tiene permisos.</exception>
         public async Task<bool> UpdateMemberAsync(TeamMemberUpdateDto dto, Guid ownerId)
         {
+            if (dto.TeamId == Guid.Empty || dto.UserId == Guid.Empty || string.IsNullOrWhiteSpace(dto.Role))
+                throw new ApiException("Todos los campos del miembro son obligatorios.", 400);
             var team = await _context.Teams.FindAsync(dto.TeamId);
             if (team == null) throw new NotFoundException("Equipo no encontrado.");
             if (team.OwnerId != ownerId) throw new ApiException("No tienes permisos para modificar miembros.", 403);

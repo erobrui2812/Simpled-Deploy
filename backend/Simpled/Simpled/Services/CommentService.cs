@@ -3,6 +3,9 @@ using Simpled.Data;
 using Simpled.Dtos.Comments;
 using Simpled.Models;
 using Simpled.Repository;
+using Simpled.Exception;
+using Simpled.Validators;
+using FluentValidation;
 
 namespace Simpled.Services
 {
@@ -51,6 +54,11 @@ namespace Simpled.Services
         /// <returns>DTO del comentario creado.</returns>
         public async Task<CommentReadDto> CreateAsync(Guid userId, CommentCreateDto dto)
         {
+            var validator = new CommentCreateValidator();
+            var validationResult = validator.Validate(dto);
+            if (!validationResult.IsValid)
+                throw new ApiException(validationResult.Errors.First().ErrorMessage, 400);
+
             var comment = new Comment
             {
                 Id = Guid.NewGuid(),
@@ -84,7 +92,7 @@ namespace Simpled.Services
         public async Task<bool> DeleteAsync(Guid commentId, Guid userId)
         {
             var comment = await _context.Comments.FirstOrDefaultAsync(c => c.Id == commentId && c.UserId == userId);
-            if (comment == null) return false;
+            if (comment == null) throw new NotFoundException("Comentario no encontrado o no tienes permisos para eliminarlo.");
 
             _context.Comments.Remove(comment);
             await _context.SaveChangesAsync();
@@ -101,7 +109,7 @@ namespace Simpled.Services
         public async Task<bool> MarkAsResolvedAsync(Guid commentId, Guid userId, bool resolved)
         {
             var comment = await _context.Comments.FirstOrDefaultAsync(c => c.Id == commentId && c.UserId == userId);
-            if (comment == null) return false;
+            if (comment == null) throw new NotFoundException("Comentario no encontrado o no tienes permisos para modificarlo.");
 
             comment.IsResolved = resolved;
             comment.EditedAt = DateTime.UtcNow;
@@ -120,11 +128,16 @@ namespace Simpled.Services
         public async Task<CommentReadDto?> UpdateAsync(Guid userId, Guid commentId, CommentUpdateDto dto)
         {
             if (commentId != dto.CommentId)
-                return null;
+                throw new ApiException("El ID del comentario no coincide.", 400);
+
+            var validator = new CommentUpdateValidator();
+            var validationResult = validator.Validate(dto);
+            if (!validationResult.IsValid)
+                throw new ApiException(validationResult.Errors.First().ErrorMessage, 400);
 
             var comment = await _context.Comments
                 .FirstOrDefaultAsync(c => c.Id == commentId && c.UserId == userId);
-            if (comment == null) return null;
+            if (comment == null) throw new NotFoundException("Comentario no encontrado o no tienes permisos para editarlo.");
 
             comment.Text = dto.Text;
             comment.EditedAt = DateTime.UtcNow;

@@ -2,6 +2,7 @@
 using Simpled.Data;
 using Simpled.Models;
 using Simpled.Repository;
+using Simpled.Exception;
 
 namespace Simpled.Services
 {
@@ -29,6 +30,8 @@ namespace Simpled.Services
         /// <returns>Lista de dependencias.</returns>
         public async Task<IEnumerable<Dependency>> GetByBoardAsync(Guid boardId)
         {
+            if (boardId == Guid.Empty)
+                throw new ApiException("El ID del tablero es obligatorio.", 400);
             return await _context.Dependencies
                 .Where(d => d.BoardId == boardId)
                 .AsNoTracking()
@@ -44,7 +47,11 @@ namespace Simpled.Services
         public async Task<Dependency> CreateAsync(Dependency dependency)
         {
             if (dependency == null)
-                throw new ArgumentNullException(nameof(dependency));
+                throw new ApiException("La dependencia no puede ser nula.", 400);
+            if (dependency.BoardId == Guid.Empty)
+                throw new ApiException("El ID del tablero es obligatorio.", 400);
+            if (dependency.FromTaskId == Guid.Empty || dependency.ToTaskId == Guid.Empty)
+                throw new ApiException("Los IDs de la tarea dependiente y prerequisito son obligatorios.", 400);
 
             dependency.Id = Guid.NewGuid();
             _context.Dependencies.Add(dependency);
@@ -61,7 +68,7 @@ namespace Simpled.Services
         {
             var entity = await _context.Dependencies.FindAsync(id);
             if (entity == null)
-                throw new KeyNotFoundException($"Dependencia con id {id} no encontrada.");
+                throw new NotFoundException($"Dependencia con id {id} no encontrada.");
 
             _context.Dependencies.Remove(entity);
             await _context.SaveChangesAsync();

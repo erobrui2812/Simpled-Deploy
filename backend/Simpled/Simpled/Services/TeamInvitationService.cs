@@ -73,6 +73,8 @@ namespace Simpled.Services
         /// <exception cref="ApiException">Si ya existe una invitación pendiente.</exception>
         public async Task<TeamInvitation> CreateAsync(TeamInvitationCreateDto dto)
         {
+            if (dto.TeamId == Guid.Empty || string.IsNullOrWhiteSpace(dto.Email))
+                throw new ApiException("El ID del equipo y el email son obligatorios.", 400);
             if (await _context.TeamInvitations.AnyAsync(i =>
                     i.TeamId == dto.TeamId && i.Email == dto.Email && !i.Accepted))
                 throw new ApiException("Ya existe invitación pendiente para este usuario.", 409);

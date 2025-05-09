@@ -4,6 +4,8 @@ using Simpled.Dtos.BoardMembers;
 using Simpled.Models;
 using Simpled.Repository;
 using Simpled.Exception;
+using Simpled.Validators;
+using FluentValidation;
 
 namespace Simpled.Services
 {
@@ -79,6 +81,10 @@ namespace Simpled.Services
         /// <exception cref="ApiException">Si el miembro ya existe.</exception>
         public async Task AddAsync(BoardMemberCreateDto dto)
         {
+            var validator = new BoardMemberCreateValidator();
+            var validationResult = validator.Validate(dto);
+            if (!validationResult.IsValid)
+                throw new ApiException(validationResult.Errors.First().ErrorMessage, 400);
             bool exists = await _context.BoardMembers.AnyAsync(m =>
                 m.BoardId == dto.BoardId && m.UserId == dto.UserId);
             if (exists)
@@ -131,6 +137,10 @@ namespace Simpled.Services
         /// <exception cref="NotFoundException">Si el miembro no existe.</exception>
         public async Task<bool> UpdateAsync(BoardMemberUpdateDto dto)
         {
+            var validator = new BoardMemberUpdateValidator();
+            var validationResult = validator.Validate(dto);
+            if (!validationResult.IsValid)
+                throw new ApiException(validationResult.Errors.First().ErrorMessage, 400);
             var existing = await _context.BoardMembers.FirstOrDefaultAsync(m =>
                 m.BoardId == dto.BoardId && m.UserId == dto.UserId);
             if (existing == null)

@@ -73,6 +73,8 @@ namespace Simpled.Services
         /// <exception cref="ApiException">Si ya existe una invitación pendiente.</exception>
         public async Task<BoardInvitation> CreateAsync(BoardInvitationCreateDto dto)
         {
+            if (dto.BoardId == Guid.Empty || string.IsNullOrWhiteSpace(dto.Email) || string.IsNullOrWhiteSpace(dto.Role))
+                throw new ApiException("El ID del tablero, el email y el rol son obligatorios.", 400);
             var exists = await _context.BoardInvitations.AnyAsync(i =>
                 i.BoardId == dto.BoardId && i.Email == dto.Email && !i.Accepted);
 

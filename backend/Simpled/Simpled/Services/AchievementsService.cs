@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using Simpled.Data;
 using Simpled.Models;
+using Simpled.Exception;
 
 
 namespace Simpled.Services
@@ -30,6 +31,12 @@ namespace Simpled.Services
         /// <returns>Lista de mensajes de logros desbloqueados.</returns>
         public async Task<List<string>> ProcessActionAsync(User user, string action, int newValue)
         {
+            if (user == null)
+                throw new ApiException("El usuario no puede ser nulo.", 400);
+            if (string.IsNullOrWhiteSpace(action))
+                throw new ApiException("La acción es obligatoria.", 400);
+            if (newValue < 0)
+                throw new ApiException("El valor de la acción no puede ser negativo.", 400);
             var newAchievements = new List<string>();
 
             var achievementsPerAction = _achievements

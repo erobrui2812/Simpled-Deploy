@@ -6,7 +6,8 @@ using Simpled.Repository;
 using Simpled.Exception;
 using Simpled.Dtos.Teams;
 using Simpled.Dtos.Teams.TeamMembers;
-
+using Simpled.Validators;
+using FluentValidation;
 
 namespace Simpled.Services
 {
@@ -102,6 +103,10 @@ namespace Simpled.Services
         /// <returns>DTO del usuario registrado.</returns>
         public async Task<UserReadDto> RegisterAsync(UserRegisterDto userDto, IFormFile ?image)
         {
+            var validator = new UserRegisterValidator();
+            var validationResult = validator.Validate(userDto);
+            if (!validationResult.IsValid)
+                throw new ApiException(validationResult.Errors.First().ErrorMessage, 400);
             var user = new User
             {
                 Id = Guid.NewGuid(),
@@ -169,6 +174,10 @@ namespace Simpled.Services
         /// <exception cref="NotFoundException">Si el usuario no existe.</exception>
         public async Task<bool> UpdateAsync(UserUpdateDto userDto, IFormFile? image)
         {
+            var validator = new UserUpdateValidator();
+            var validationResult = validator.Validate(userDto);
+            if (!validationResult.IsValid)
+                throw new ApiException(validationResult.Errors.First().ErrorMessage, 400);
             var existing = await _context.Users.Include(u => u.Roles).FirstOrDefaultAsync(u => u.Id == userDto.Id);
             if (existing == null)
                 throw new NotFoundException("Usuario no encontrado.");

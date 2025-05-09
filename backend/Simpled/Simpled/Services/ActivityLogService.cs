@@ -3,6 +3,7 @@ using Simpled.Data;
 using Simpled.Dtos.ActivityLogs;
 using Simpled.Models;
 using Simpled.Repository;
+using Simpled.Exception;
 
 namespace Simpled.Services
 {
@@ -55,6 +56,12 @@ namespace Simpled.Services
         /// <inheritdoc />  
         public async Task AddAsync(ActivityLog log)
         {
+            if (log == null)
+                throw new ApiException("El log de actividad no puede ser nulo.", 400);
+            if (log.ItemId == Guid.Empty || log.UserId == Guid.Empty)
+                throw new ApiException("El ID del ítem y del usuario son obligatorios.", 400);
+            if (string.IsNullOrWhiteSpace(log.Action))
+                throw new ApiException("La acción es obligatoria.", 400);
             _context.ActivityLogs.Add(log);
             await _context.SaveChangesAsync();
         }
