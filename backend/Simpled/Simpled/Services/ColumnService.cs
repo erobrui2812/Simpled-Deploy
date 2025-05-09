@@ -73,7 +73,7 @@ namespace Simpled.Services
             var validator = new ColumnCreateValidator();
             var validationResult = validator.Validate(dto);
             if (!validationResult.IsValid)
-                throw new ApiException(validationResult.Errors.First().ErrorMessage, 400);
+                throw new ApiException(validationResult.Errors[0].ErrorMessage, 400);
             var newColumn = new BoardColumn
             {
                 Id = Guid.NewGuid(),
@@ -111,7 +111,7 @@ namespace Simpled.Services
             var validator = new ColumnUpdateValidator();
             var validationResult = validator.Validate(dto);
             if (!validationResult.IsValid)
-                throw new ApiException(validationResult.Errors.First().ErrorMessage, 400);
+                throw new ApiException(validationResult.Errors[0].ErrorMessage, 400);
             var column = await _context.BoardColumns.FindAsync(dto.Id);
             if (column == null)
                 throw new NotFoundException("Columna no encontrada.");

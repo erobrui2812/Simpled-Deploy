@@ -108,7 +108,7 @@ namespace Simpled.Services
             var validator = new ItemCreateValidator();
             var validationResult = validator.Validate(dto);
             if (!validationResult.IsValid)
-                throw new ApiException(validationResult.Errors.First().ErrorMessage, 400);
+                throw new ApiException(validationResult.Errors[0].ErrorMessage, 400);
             var item = new Item
             {
                 Id = Guid.NewGuid(),
@@ -154,7 +154,7 @@ namespace Simpled.Services
             var validator = new ItemUpdateValidator();
             var validationResult = validator.Validate(dto);
             if (!validationResult.IsValid)
-                throw new ApiException(validationResult.Errors.First().ErrorMessage, 400);
+                throw new ApiException(validationResult.Errors[0].ErrorMessage, 400);
             var item = await _context.Items.FindAsync(dto.Id)
                 ?? throw new NotFoundException("Ítem no encontrado.");
 

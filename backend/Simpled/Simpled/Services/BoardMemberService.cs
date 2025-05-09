@@ -84,7 +84,7 @@ namespace Simpled.Services
             var validator = new BoardMemberCreateValidator();
             var validationResult = validator.Validate(dto);
             if (!validationResult.IsValid)
-                throw new ApiException(validationResult.Errors.First().ErrorMessage, 400);
+                throw new ApiException(validationResult.Errors[0].ErrorMessage, 400);
             bool exists = await _context.BoardMembers.AnyAsync(m =>
                 m.BoardId == dto.BoardId && m.UserId == dto.UserId);
             if (exists)
@@ -140,7 +140,7 @@ namespace Simpled.Services
             var validator = new BoardMemberUpdateValidator();
             var validationResult = validator.Validate(dto);
             if (!validationResult.IsValid)
-                throw new ApiException(validationResult.Errors.First().ErrorMessage, 400);
+                throw new ApiException(validationResult.Errors[0].ErrorMessage, 400);
             var existing = await _context.BoardMembers.FirstOrDefaultAsync(m =>
                 m.BoardId == dto.BoardId && m.UserId == dto.UserId);
             if (existing == null)

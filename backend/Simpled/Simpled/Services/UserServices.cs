@@ -70,16 +70,17 @@ namespace Simpled.Services
             var teamDtos = memberships.Select(tm => new TeamReadDto
             {
                 Id = tm.TeamId,
-                Name = tm.Team!.Name,
-                OwnerId = tm.Team.OwnerId,
-                OwnerName = tm.Team.Owner!.Name,
-                Role = tm.Role,  
-                Members = tm.Team.Members.Select(m => new TeamMemberDto
-                {
-                    UserId = m.UserId,
-                    UserName = m.User!.Name,
-                    Role = m.Role
-                })
+                Name = tm.Team != null ? tm.Team.Name : string.Empty,
+                OwnerId = tm.Team != null ? tm.Team.OwnerId : Guid.Empty,
+                OwnerName = tm.Team != null && tm.Team.Owner != null ? tm.Team.Owner.Name : string.Empty,
+                Role = tm.Role,
+                Members = tm.Team != null && tm.Team.Members != null ?
+                    tm.Team.Members.Select(m => new TeamMemberDto
+                    {
+                        UserId = m.UserId,
+                        UserName = m.User != null ? m.User.Name : string.Empty,
+                        Role = m.Role
+                    }) : new List<TeamMemberDto>()
             });
 
             return new UserReadDto
@@ -106,7 +107,7 @@ namespace Simpled.Services
             var validator = new UserRegisterValidator();
             var validationResult = validator.Validate(userDto);
             if (!validationResult.IsValid)
-                throw new ApiException(validationResult.Errors.First().ErrorMessage, 400);
+                throw new ApiException(validationResult.Errors[0].ErrorMessage, 400);
             var user = new User
             {
                 Id = Guid.NewGuid(),
@@ -177,7 +178,7 @@ namespace Simpled.Services
             var validator = new UserUpdateValidator();
             var validationResult = validator.Validate(userDto);
             if (!validationResult.IsValid)
-                throw new ApiException(validationResult.Errors.First().ErrorMessage, 400);
+                throw new ApiException(validationResult.Errors[0].ErrorMessage, 400);
             var existing = await _context.Users.Include(u => u.Roles).FirstOrDefaultAsync(u => u.Id == userDto.Id);
             if (existing == null)
                 throw new NotFoundException("Usuario no encontrado.");
@@ -192,7 +193,7 @@ namespace Simpled.Services
             return true;
         }
 
-        private Task ActualizarPasswordSiEsNecesario(User existing, string? nuevaPassword)
+        private static Task ActualizarPasswordSiEsNecesario(User existing, string? nuevaPassword)
         {
             if (!string.IsNullOrWhiteSpace(nuevaPassword))
             {

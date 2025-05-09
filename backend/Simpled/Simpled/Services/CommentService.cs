@@ -57,7 +57,7 @@ namespace Simpled.Services
             var validator = new CommentCreateValidator();
             var validationResult = validator.Validate(dto);
             if (!validationResult.IsValid)
-                throw new ApiException(validationResult.Errors.First().ErrorMessage, 400);
+                throw new ApiException(validationResult.Errors[0].ErrorMessage, 400);
 
             var comment = new Comment
             {
@@ -133,7 +133,7 @@ namespace Simpled.Services
             var validator = new CommentUpdateValidator();
             var validationResult = validator.Validate(dto);
             if (!validationResult.IsValid)
-                throw new ApiException(validationResult.Errors.First().ErrorMessage, 400);
+                throw new ApiException(validationResult.Errors[0].ErrorMessage, 400);
 
             var comment = await _context.Comments
                 .FirstOrDefaultAsync(c => c.Id == commentId && c.UserId == userId);
