@@ -85,6 +85,9 @@ Registro de tareas realizadas durante el desarrollo del proyecto **Simpled**.
 | 2025-05-06  | Adrián Jiménez   | Fixes varios gracias a Sonar, limpieza de codigo|
 | 2025-05-08  | Adrián Jiménez   | Implementación de combinaciones de teclas para acciones rapidas|
 | 2025-05-08  | Adrián Jiménez   | Implementación de comentarios en tareas, y historial de acciones en Columnas |
+| 2025-05-09  | Adrián Jiménez   | Documentación de toda la parte backend, refactorizacion y limpieza de código backend. |
+| 2025-05-09  | Adrián Jiménez   | Implementado `Frame`, una libreria para implentar animaciones a componentes del Front, implmentadas animaciones varias a lo largo de la app web. |
+| 2025-05-09  | Adrián Jiménez   | Implementada funciones de navegación/acceso rápido mediante combinaciones de teclas. |
 
 ---
 
