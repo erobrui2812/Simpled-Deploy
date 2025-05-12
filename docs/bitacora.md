@@ -88,6 +88,7 @@ Registro de tareas realizadas durante el desarrollo del proyecto **Simpled**.
 | 2025-05-09  | Adrián Jiménez   | Documentación de toda la parte backend, refactorizacion y limpieza de código backend. |
 | 2025-05-09  | Adrián Jiménez   | Implementado `Frame`, una libreria para implentar animaciones a componentes del Front, implmentadas animaciones varias a lo largo de la app web. |
 | 2025-05-09  | Adrián Jiménez   | Implementada funciones de navegación/acceso rápido mediante combinaciones de teclas. |
+| 2025-05-12  | Adrián Jiménez   | Figma vistas; Login/Registro - Perfil/Logros - Tableros/Gestión/Gantt - Sobre Nosotros |
 
 ---
 
