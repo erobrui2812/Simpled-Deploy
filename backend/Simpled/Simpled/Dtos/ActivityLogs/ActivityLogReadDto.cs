@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using System;
+using System.Text.Json.Serialization;
 
 namespace Simpled.Dtos.ActivityLogs
 {
@@ -39,7 +40,7 @@ namespace Simpled.Dtos.ActivityLogs
         public ActivityType Type { get; set; }
 
         /// <summary>
-        /// Campo modificado, si aplica.
+        /// Nombre del campo modificado, si aplica.
         /// </summary>
         public string? Field { get; set; }
 
@@ -54,14 +55,24 @@ namespace Simpled.Dtos.ActivityLogs
         public string? NewValue { get; set; }
 
         /// <summary>
+        /// Nombre legible del valor anterior (en caso de IDs de usuario).
+        /// </summary>
+        public string? OldValueName { get; set; }
+
+        /// <summary>
+        /// Nombre legible del nuevo valor (en caso de IDs de usuario).
+        /// </summary>
+        public string? NewValueName { get; set; }
+
+        /// <summary>
         /// Detalles adicionales de la actividad.
         /// </summary>
         public string Details { get; set; } = string.Empty;
 
         /// <summary>
-        /// Marca de tiempo en que se registró la actividad (UTC).
+        /// Marca de tiempo en que se registró la actividad (UTC con offset).
         /// </summary>
-        public DateTime Timestamp { get; set; }
+        public DateTimeOffset Timestamp { get; set; }
     }
 
     /// <summary>
@@ -69,33 +80,19 @@ namespace Simpled.Dtos.ActivityLogs
     /// </summary>
     public enum ActivityType
     {
-        /// <summary>Se creó el ítem.</summary>
         Created,
-        /// <summary>Se actualizó el ítem.</summary>
         Updated,
-        /// <summary>Cambio de estado del ítem.</summary>
         StatusChanged,
-        /// <summary>Asignación de usuario al ítem.</summary>
         Assigned,
-        /// <summary>Cambio en fechas del ítem.</summary>
         DateChanged,
-        /// <summary>El ítem fue eliminado.</summary>
         Deleted,
-        /// <summary>Se subió un archivo al ítem.</summary>
         FileUploaded,
-        /// <summary>Se creó una subtarea.</summary>
         SubtaskCreated,
-        /// <summary>Se actualizó una subtarea.</summary>
         SubtaskUpdated,
-        /// <summary>Se eliminó una subtarea.</summary>
         SubtaskDeleted,
-        /// <summary>Se añadió un comentario.</summary>
         CommentAdded,
-        /// <summary>Se editó un comentario.</summary>
         CommentEdited,
-        /// <summary>Se eliminó un comentario.</summary>
         CommentDeleted,
-        /// <summary>Se resolvió un comentario.</summary>
         CommentResolved
     }
 }

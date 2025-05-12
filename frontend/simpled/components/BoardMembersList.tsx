@@ -91,7 +91,13 @@ export default function BoardMembersList({
                 className="flex flex-col items-center gap-2 px-4 py-3 sm:flex-row sm:gap-4"
               >
                 <img
-                  src={user?.imageUrl || '/default-avatar.png'}
+                  src={
+                    user?.imageUrl
+                      ? user.imageUrl.startsWith('http')
+                        ? user.imageUrl
+                        : `http://localhost:5193${user.imageUrl}`
+                      : '/images/default/avatar-default.jpg'
+                  }
                   alt={user?.name}
                   className="h-8 w-8 rounded-full border object-cover"
                 />

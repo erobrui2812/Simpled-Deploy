@@ -2,32 +2,139 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
-import type { ActivityLog } from '@/types';
-import { formatDistanceToNow } from 'date-fns';
+import type { ActivityLog as ActivityLogBase } from '@/types';
+import { formatDistanceToNow, isValid } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { CheckCircle2, Clock, Edit, MessageSquare, Tag, Trash2, UserPlus } from 'lucide-react';
 import React from 'react';
 
+type ActivityLog = ActivityLogBase & {
+  oldValueName?: string;
+  newValueName?: string;
+};
+
 interface ActivityLogProps {
   logs: ActivityLog[];
+  users?: { id: string; name: string }[];
 }
 
-function getActivityMessage(log: ActivityLog) {
-  console.log('log.type:', log.type, log);
+function getUserNameById(id?: string | null, users?: { id: string; name: string }[]) {
+  if (!id) return 'Sin asignar';
+  if (!users) return id;
+  const user = users.find((u) => u.id === id);
+  return user ? user.name : id;
+}
+
+function formatDateString(dateStr?: string | null) {
+  if (!dateStr) return '';
+  // Intenta parsear la fecha
+  let date: Date;
+  try {
+    date = new Date(dateStr);
+  } catch {
+    return dateStr;
+  }
+  if (!isValid(date)) return dateStr;
+  // Formato local: dd/MM/yyyy HH:mm
+  return date.toLocaleString(undefined, {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
+}
+
+function getActivityMessage(log: ActivityLog, users?: { id: string; name: string }[]) {
   switch (log.type) {
     case 'Created':
       return `Tarea creada por ${log.userName}`;
     case 'Updated':
       if (['StartDate', 'DueDate'].includes(log.field || '')) {
-        return `${log.userName} cambió la fecha: '${log.oldValue}' → '${log.newValue}'`;
+        return (
+          <>
+            {log.userName} cambió la fecha:{' '}
+            <span className="font-semibold">'{formatDateString(log.oldValue)}'</span> →{' '}
+            <span className="font-semibold">'{formatDateString(log.newValue)}'</span>
+          </>
+        );
       }
-      return log.field
-        ? `${log.userName} actualizó ${log.field}: '${log.oldValue}' → '${log.newValue}'`
-        : `${log.userName} actualizó la tarea`;
+      if (log.field === 'assigneeId') {
+        return (
+          <>
+            {log.userName} cambió el responsable:{' '}
+            <span className="font-semibold">
+              {log.oldValueName ||
+                getUserNameById(
+                  log.oldValue && typeof log.oldValue === 'string' ? log.oldValue : undefined,
+                  users,
+                )}
+            </span>{' '}
+            →{' '}
+            <span className="font-semibold">
+              {log.newValueName ||
+                getUserNameById(
+                  log.newValue && typeof log.newValue === 'string' ? log.newValue : undefined,
+                  users,
+                )}
+            </span>
+          </>
+        );
+      }
+      // Si el campo parece una fecha, también lo formateo
+      if (log.field && /date/i.test(log.field)) {
+        return (
+          <>
+            {log.userName} actualizó <span className="font-semibold">{log.field}</span>: '
+            {formatDateString(log.oldValue)}' → '{formatDateString(log.newValue)}'
+          </>
+        );
+      }
+      return log.field ? (
+        <>
+          {log.userName} actualizó <span className="font-semibold">{log.field}</span>: '
+          {log.oldValue}' → '{log.newValue}'
+        </>
+      ) : (
+        `${log.userName} actualizó la tarea`
+      );
     case 'StatusChanged':
-      return `${log.userName} cambió el estado: '${log.oldValue}' → '${log.newValue}'`;
+      return (
+        <>
+          {log.userName} cambió el estado: <span className="font-semibold">{log.oldValue}</span> →{' '}
+          <span className="font-semibold">{log.newValue}</span>
+        </>
+      );
     case 'Assigned':
-      return `${log.userName} cambió el responsable: '${log.oldValue}' → '${log.newValue}'`;
+      return (
+        <>
+          {log.userName} cambió el responsable:{' '}
+          <span className="font-semibold">
+            {log.oldValueName ||
+              getUserNameById(
+                log.oldValue && typeof log.oldValue === 'string' ? log.oldValue : undefined,
+                users,
+              )}
+          </span>{' '}
+          →{' '}
+          <span className="font-semibold">
+            {log.newValueName ||
+              getUserNameById(
+                log.newValue && typeof log.newValue === 'string' ? log.newValue : undefined,
+                users,
+              )}
+          </span>
+        </>
+      );
+    case 'DateChanged':
+      return (
+        <>
+          {log.userName} cambió la fecha:{' '}
+          <span className="font-semibold">'{formatDateString(log.oldValue)}'</span> →{' '}
+          <span className="font-semibold">'{formatDateString(log.newValue)}'</span>
+        </>
+      );
     case 'Deleted':
       return `${log.userName} eliminó la tarea`;
     case 'FileUploaded':
@@ -71,7 +178,7 @@ const getActivityIcon = (type: string, field?: string) => {
   }
 };
 
-export const ActivityLogComponent: React.FC<ActivityLogProps> = ({ logs }) => (
+export const ActivityLogComponent: React.FC<ActivityLogProps> = ({ logs, users }) => (
   <div className="space-y-4">
     <h3 className="text-lg font-medium">Historial de Actividad</h3>
     {logs.length > 0 ? (
@@ -81,13 +188,25 @@ export const ActivityLogComponent: React.FC<ActivityLogProps> = ({ logs }) => (
             <CardContent className="p-3">
               <div className="flex gap-3">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src={log.userAvatarUrl ?? '/placeholder.svg'} alt={log.userName} />
+                  <AvatarImage
+                    src={
+                      log.userAvatarUrl
+                        ? log.userAvatarUrl.startsWith('http')
+                          ? log.userAvatarUrl
+                          : `http://localhost:5193${log.userAvatarUrl}`
+                        : '/images/default/avatar-default.jpg'
+                    }
+                    alt={log.userName}
+                  />
                   <AvatarFallback>{log.userName.charAt(0)}</AvatarFallback>
                 </Avatar>
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    {getActivityIcon(log.type, log.field)}
-                    <span className="font-medium">{getActivityMessage(log)}</span>
+                    {getActivityIcon(
+                      log.type,
+                      log.field && typeof log.field === 'string' ? log.field : undefined,
+                    )}
+                    <span className="font-medium">{getActivityMessage(log, users)}</span>
                     <span className="text-muted-foreground text-xs">
                       {formatDistanceToNow(new Date(log.timestamp), {
                         addSuffix: true,

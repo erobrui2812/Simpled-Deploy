@@ -96,7 +96,12 @@ export default function KanbanItem({ item, users, onClick, isOverlay = false }: 
             {assignee && (
               <div className="flex items-center gap-2">
                 <Avatar className="h-6 w-6">
-                  <AvatarImage src={assignee.imageUrl || '/placeholder.svg'} alt={assignee.name} />
+                  <AvatarImage
+                    src={
+                      assignee.imageUrl ? assignee.imageUrl : '/images/default/avatar-default.jpg'
+                    }
+                    alt={assignee.name}
+                  />
                   <AvatarFallback className="text-xs">{getInitials(assignee.name)}</AvatarFallback>
                 </Avatar>
                 <span className="text-muted-foreground text-xs">{assignee.name}</span>

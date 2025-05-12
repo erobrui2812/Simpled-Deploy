@@ -13,27 +13,22 @@ namespace Simpled.Services
 {
     /// <summary>
     /// Servicio para la gestión de logs de actividad.
-    /// Implementa <see cref="IActivityLogRepository"/>.
+    /// Implementa IActivityLogRepository.
     /// </summary>
     public class ActivityLogService : IActivityLogRepository
     {
         private readonly SimpledDbContext _context;
 
-        /// <summary>
-        /// Constructor que inyecta el contexto de datos.
-        /// </summary>
         public ActivityLogService(SimpledDbContext context)
         {
             _context = context;
         }
 
-        /// <summary>
-        /// Obtiene todos los registros de actividad asociados a un ítem, ordenados por fecha descendente.
-        /// </summary>
-        /// <param name="itemId">Identificador del ítem.</param>
+        /// <inheritdoc/>
         public async Task<IEnumerable<ActivityLogReadDto>> GetByItemIdAsync(Guid itemId)
         {
-            return await _context.ActivityLogs
+            
+            var logs = await _context.ActivityLogs
                 .Include(a => a.User)
                 .Where(a => a.ItemId == itemId)
                 .OrderByDescending(a => a.Timestamp)
@@ -42,22 +37,53 @@ namespace Simpled.Services
                     Id = a.Id,
                     ItemId = a.ItemId,
                     UserId = a.UserId,
-                    UserName = a.User.Name,
+                    UserName = a.User.Email,
                     UserAvatarUrl = a.User.ImageUrl,
                     Type = ParseActivityType(a.Action),
                     Field = a.Field,
                     OldValue = a.OldValue,
                     NewValue = a.NewValue,
                     Details = a.Details,
-                    Timestamp = a.Timestamp
+                    Timestamp = new DateTimeOffset(a.Timestamp, TimeSpan.Zero)
                 })
                 .ToListAsync();
+
+            var userIdStrings = logs
+                .Where(l => l.Type == ActivityType.Assigned)
+                .SelectMany(l => new[] { l.OldValue, l.NewValue })
+                .Where(s => !string.IsNullOrEmpty(s))
+                .Distinct()
+                .ToList();
+
+            var guidSet = userIdStrings
+                .Select(s => Guid.TryParse(s, out var g) ? g : (Guid?)null)
+                .Where(g => g.HasValue)
+                .Select(g => g!.Value)
+                .ToHashSet();
+
+            if (guidSet.Any())
+            {
+                var users = await _context.Users
+                    .Where(u => guidSet.Contains(u.Id))
+                    .Select(u => new { u.Id, u.Name })
+                    .ToListAsync();
+
+                var nameMap = users.ToDictionary(u => u.Id.ToString(), u => u.Name);
+
+
+                foreach (var log in logs.Where(l => l.Type == ActivityType.Assigned))
+                {
+                    if (log.OldValue != null && nameMap.TryGetValue(log.OldValue, out var oldName))
+                        log.OldValueName = oldName;
+                    if (log.NewValue != null && nameMap.TryGetValue(log.NewValue, out var newName))
+                        log.NewValueName = newName;
+                }
+            }
+
+            return logs;
         }
 
-        /// <summary>
-        /// Añade un nuevo registro de actividad.
-        /// </summary>
-        /// <param name="log">Entidad <see cref="ActivityLog"/> a registrar.</param>
+        /// <inheritdoc/>
         public async Task AddAsync(ActivityLog log)
         {
             if (log == null)
@@ -65,24 +91,18 @@ namespace Simpled.Services
             if (log.ItemId == Guid.Empty || log.UserId == Guid.Empty)
                 throw new ApiException("El ID del ítem y del usuario son obligatorios.", 400);
             if (string.IsNullOrWhiteSpace(log.Action))
-                throw new ApiException("El tipo de acción es obligatorio.", 400);
-
-            // Asegurar timestamp UTC actual
-            log.Timestamp = DateTime.UtcNow;
+                throw new ApiException("La acción es obligatoria.", 400);
 
             _context.ActivityLogs.Add(log);
             await _context.SaveChangesAsync();
         }
 
         /// <summary>
-        /// Parsea el tipo de actividad a partir de la cadena de acción.
+        /// Parsea el tipo de actividad a partir de la acción.
         /// </summary>
-        /// <param name="action">Acción registrada.</param>
         private static ActivityType ParseActivityType(string action)
-        {
-            return Enum.TryParse<ActivityType>(action, ignoreCase: true, out var result)
-                ? result
-                : ActivityType.Updated;
-        }
+            => Enum.TryParse<ActivityType>(action, out var result)
+               ? result
+               : ActivityType.Updated;
     }
 }

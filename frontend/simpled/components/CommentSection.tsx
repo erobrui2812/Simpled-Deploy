@@ -130,7 +130,13 @@ export function CommentSection({
                   <div className="flex gap-3">
                     <Avatar className="h-8 w-8">
                       <AvatarImage
-                        src={comment.userImageUrl ?? '/placeholder.svg'}
+                        src={
+                          comment.userImageUrl
+                            ? comment.userImageUrl.startsWith('http')
+                              ? comment.userImageUrl
+                              : `http://localhost:5193${comment.userImageUrl}`
+                            : '/images/default/avatar-default.jpg'
+                        }
                         alt={comment.userName}
                       />
                       <AvatarFallback>{comment.userName.charAt(0)}</AvatarFallback>
@@ -237,7 +243,16 @@ export function CommentSection({
 
       <div className="flex gap-3">
         <Avatar className="h-8 w-8">
-          <AvatarImage src={userData?.imageUrl ?? '/placeholder.svg'} alt={userData?.name} />
+          <AvatarImage
+            src={
+              userData?.imageUrl
+                ? userData.imageUrl.startsWith('http')
+                  ? userData.imageUrl
+                  : `http://localhost:5193${userData.imageUrl}`
+                : '/images/default/avatar-default.jpg'
+            }
+            alt={userData?.name || 'U'}
+          />
           <AvatarFallback>{userData?.name?.charAt(0) ?? 'U'}</AvatarFallback>
         </Avatar>
         <div className="flex-1 space-y-2">
