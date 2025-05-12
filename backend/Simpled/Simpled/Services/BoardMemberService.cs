@@ -23,55 +23,113 @@ namespace Simpled.Services
         }
 
         /// <summary>
-        /// Obtiene todos los miembros de todos los tableros.
+        /// Obtiene todos los miembros de todos los tableros, incluyendo al owner como admin.
         /// </summary>
         /// <returns>Lista de miembros.</returns>
         public async Task<IEnumerable<BoardMemberReadDto>> GetAllAsync()
         {
-            return await _context.BoardMembers
+            var members = await _context.BoardMembers
                 .Select(m => new BoardMemberReadDto
                 {
                     BoardId = m.BoardId,
                     UserId = m.UserId,
                     Role = m.Role
-                }).ToListAsync();
+                })
+                .ToListAsync();
+
+            // Añadimos los owners de cada tablero si no están incluidos
+            var boardOwners = await _context.Boards
+                .Select(b => new { b.Id, b.OwnerId })
+                .ToListAsync();
+
+            foreach (var bo in boardOwners)
+            {
+                if (!members.Any(m => m.BoardId == bo.Id && m.UserId == bo.OwnerId))
+                {
+                    members.Add(new BoardMemberReadDto
+                    {
+                        BoardId = bo.Id,
+                        UserId = bo.OwnerId,
+                        Role = "admin"
+                    });
+                }
+            }
+
+            return members;
         }
 
         /// <summary>
-        /// Obtiene los miembros de un tablero específico.
+        /// Obtiene los miembros de un tablero específico, incluyendo al owner como admin.
         /// </summary>
         /// <param name="boardId">ID del tablero.</param>
         /// <returns>Lista de miembros del tablero.</returns>
         public async Task<IEnumerable<BoardMemberReadDto>> GetByBoardIdAsync(Guid boardId)
         {
-            return await _context.BoardMembers
+            // Cargamos miembros registrados de la tabla
+            var members = await _context.BoardMembers
                 .Where(m => m.BoardId == boardId)
                 .Select(m => new BoardMemberReadDto
                 {
                     BoardId = m.BoardId,
                     UserId = m.UserId,
                     Role = m.Role
-                }).ToListAsync();
+                })
+                .ToListAsync();
+
+            // Comprobamos el owner
+            var board = await _context.Boards
+                .AsNoTracking()
+                .FirstOrDefaultAsync(b => b.Id == boardId);
+
+            if (board != null && !members.Any(m => m.UserId == board.OwnerId))
+            {
+                members.Add(new BoardMemberReadDto
+                {
+                    BoardId = boardId,
+                    UserId = board.OwnerId,
+                    Role = "admin"
+                });
+            }
+
+            return members;
         }
 
         /// <summary>
         /// Obtiene un miembro específico por IDs de tablero y usuario.
+        /// Si no existe en BoardMembers, comprueba si es el owner y devuelve admin.
         /// </summary>
         /// <param name="boardId">ID del tablero.</param>
         /// <param name="userId">ID del usuario.</param>
         /// <returns>DTO del miembro o null si no existe.</returns>
         public async Task<BoardMemberReadDto?> GetByIdsAsync(Guid boardId, Guid userId)
         {
-            var member = await _context.BoardMembers.FirstOrDefaultAsync(m => m.BoardId == boardId && m.UserId == userId);
-            if (member == null)
-                return null;
-
-            return new BoardMemberReadDto
+            var member = await _context.BoardMembers
+                .FirstOrDefaultAsync(m => m.BoardId == boardId && m.UserId == userId);
+            if (member != null)
             {
-                BoardId = member.BoardId,
-                UserId = member.UserId,
-                Role = member.Role
-            };
+                return new BoardMemberReadDto
+                {
+                    BoardId = member.BoardId,
+                    UserId = member.UserId,
+                    Role = member.Role
+                };
+            }
+
+            // Si no es miembro, comprobamos si es el owner del tablero
+            var board = await _context.Boards
+                .AsNoTracking()
+                .FirstOrDefaultAsync(b => b.Id == boardId);
+            if (board != null && board.OwnerId == userId)
+            {
+                return new BoardMemberReadDto
+                {
+                    BoardId = boardId,
+                    UserId = userId,
+                    Role = "admin"
+                };
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -85,8 +143,9 @@ namespace Simpled.Services
             var validationResult = validator.Validate(dto);
             if (!validationResult.IsValid)
                 throw new ApiException(validationResult.Errors[0].ErrorMessage, 400);
-            bool exists = await _context.BoardMembers.AnyAsync(m =>
-                m.BoardId == dto.BoardId && m.UserId == dto.UserId);
+
+            bool exists = await _context.BoardMembers
+                .AnyAsync(m => m.BoardId == dto.BoardId && m.UserId == dto.UserId);
             if (exists)
                 throw new ApiException("El miembro ya existe en el tablero.", 409);
 
@@ -111,8 +170,8 @@ namespace Simpled.Services
 
             foreach (var dto in dtos)
             {
-                bool exists = await _context.BoardMembers.AnyAsync(m =>
-                    m.BoardId == dto.BoardId && m.UserId == dto.UserId);
+                bool exists = await _context.BoardMembers
+                    .AnyAsync(m => m.BoardId == dto.BoardId && m.UserId == dto.UserId);
 
                 if (!exists)
                 {
@@ -125,8 +184,11 @@ namespace Simpled.Services
                 }
             }
 
-            _context.BoardMembers.AddRange(newMembers);
-            await _context.SaveChangesAsync();
+            if (newMembers.Any())
+            {
+                _context.BoardMembers.AddRange(newMembers);
+                await _context.SaveChangesAsync();
+            }
         }
 
         /// <summary>
@@ -141,8 +203,9 @@ namespace Simpled.Services
             var validationResult = validator.Validate(dto);
             if (!validationResult.IsValid)
                 throw new ApiException(validationResult.Errors[0].ErrorMessage, 400);
-            var existing = await _context.BoardMembers.FirstOrDefaultAsync(m =>
-                m.BoardId == dto.BoardId && m.UserId == dto.UserId);
+
+            var existing = await _context.BoardMembers
+                .FirstOrDefaultAsync(m => m.BoardId == dto.BoardId && m.UserId == dto.UserId);
             if (existing == null)
                 throw new NotFoundException("Miembro no encontrado.");
 
@@ -160,8 +223,8 @@ namespace Simpled.Services
         /// <exception cref="NotFoundException">Si el miembro no existe.</exception>
         public async Task<bool> DeleteAsync(Guid boardId, Guid userId)
         {
-            var member = await _context.BoardMembers.FirstOrDefaultAsync(m =>
-                m.BoardId == boardId && m.UserId == userId);
+            var member = await _context.BoardMembers
+                .FirstOrDefaultAsync(m => m.BoardId == boardId && m.UserId == userId);
             if (member == null)
                 throw new NotFoundException("Miembro no encontrado.");
 

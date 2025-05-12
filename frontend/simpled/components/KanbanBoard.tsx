@@ -606,10 +606,7 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
             }}
             onCreated={fetchData}
             assignees={
-              members
-                .filter((m) => m.role === 'editor')
-                .map((m) => users.find((u) => u.id === m.userId))
-                .filter(Boolean) as User[]
+              members.map((m) => users.find((u) => u.id === m.userId)).filter(Boolean) as User[]
             }
             userRole={userRole}
           />
@@ -642,10 +639,7 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
             }}
             onUpdated={fetchData}
             assignees={
-              members
-                .filter((m) => m.role === 'editor')
-                .map((m) => users.find((u) => u.id === m.userId))
-                .filter(Boolean) as User[]
+              members.map((m) => users.find((u) => u.id === m.userId)).filter(Boolean) as User[]
             }
             userRole={userRole}
             currentUserId={userId!}
