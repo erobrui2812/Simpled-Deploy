@@ -125,7 +125,7 @@ Simpled/
 
 ## 🗃️ Base de datos y E/R
 
-![Esquema E/R](docs/Simpled_ER.png)
+![Esquema E/R](docs/Simpler_ER.png)
 
 
 ---
