@@ -13,6 +13,8 @@ import {
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 
+const API_URL = 'http://localhost:5193';
+
 interface MemberInfo {
   userId: string;
   name: string;
@@ -119,14 +121,16 @@ export default function ChatPanel({ roomType, entityId, members }: ChatPanelProp
     return { name: 'Usuario', imageUrl: undefined };
   };
 
+  console.log(messages);
+
   return (
-    <Card className="flex h-full flex-col">
+    <Card className="relative flex h-full flex-col">
       <CardHeader className="pb-2">
         <CardTitle className="text-lg">
           Chat {roomType === 'Team' ? 'del Equipo' : 'del Tablero'}
         </CardTitle>
       </CardHeader>
-      <CardContent className="flex-1 overflow-y-auto px-0">
+      <CardContent className="mb-10 max-h-[500px] flex-1 overflow-y-scroll px-0 pb-1">
         {loading ? (
           <div className="text-muted-foreground py-8 text-center">Cargando chat…</div>
         ) : (
@@ -148,7 +152,7 @@ export default function ChatPanel({ roomType, entityId, members }: ChatPanelProp
                       <Avatar className="h-8 w-8">
                         {user.imageUrl ? (
                           <img
-                            src={user.imageUrl}
+                            src={`${API_URL}${user.imageUrl}`}
                             alt={user.name}
                             className="h-8 w-8 rounded-full object-cover"
                             onError={(e) => (e.currentTarget.style.display = 'none')}
@@ -180,7 +184,7 @@ export default function ChatPanel({ roomType, entityId, members }: ChatPanelProp
                       <Avatar className="h-8 w-8">
                         {userData?.imageUrl ? (
                           <img
-                            src={userData.imageUrl}
+                            src={`${API_URL}${userData.imageUrl}`}
                             alt={userData.name}
                             className="h-8 w-8 rounded-full object-cover"
                             onError={(e) => (e.currentTarget.style.display = 'none')}
@@ -200,7 +204,10 @@ export default function ChatPanel({ roomType, entityId, members }: ChatPanelProp
           </div>
         )}
       </CardContent>
-      <form onSubmit={handleSend} className="flex gap-2 border-t bg-white p-2 dark:bg-gray-950">
+      <form
+        onSubmit={handleSend}
+        className="absolute right-0 bottom-0 left-0 flex items-center gap-2 p-3"
+      >
         <Input
           value={input}
           onChange={(e) => setInput(e.target.value)}
