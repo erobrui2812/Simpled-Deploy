@@ -25,6 +25,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 import BoardInviteModal from './BoardInviteModal';
 import BoardMembersList from './BoardMembersList';
+import ChatPanel from './ChatPanel';
 import ColumnCreateModal from './ColumnCreateModal';
 import ColumnEditModal from './ColumnEditModal';
 import ItemCreateModal from './ItemCreateModal';
@@ -464,201 +465,215 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
   if (!board) return <div className="p-8 text-red-600">Tablero no encontrado</div>;
 
   return (
-    <motion.div className="mx-auto p-4" initial="hidden" animate="visible" variants={fadeIn}>
-      <motion.div
-        className="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center"
-        variants={slideUp}
-      >
-        <div>
-          <div className="flex items-center gap-2">
-            <motion.button
-              onClick={toggleFavorite}
-              disabled={isFavoriteToggling}
-              title={isFavorite ? 'Quitar de favoritos' : 'Marcar como favorito'}
-              className="text-yellow-500 transition-all duration-300 hover:scale-110 disabled:opacity-50"
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              {isFavorite ? (
-                <Star className="size-6 fill-yellow-500" />
-              ) : (
-                <StarOff className="size-6" />
+    <div className="flex flex-row gap-6">
+      <div className="min-w-0 flex-1">
+        <motion.div className="mx-auto p-4" initial="hidden" animate="visible" variants={fadeIn}>
+          <motion.div
+            className="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center"
+            variants={slideUp}
+          >
+            <div>
+              <div className="flex items-center gap-2">
+                <motion.button
+                  onClick={toggleFavorite}
+                  disabled={isFavoriteToggling}
+                  title={isFavorite ? 'Quitar de favoritos' : 'Marcar como favorito'}
+                  className="text-yellow-500 transition-all duration-300 hover:scale-110 disabled:opacity-50"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  {isFavorite ? (
+                    <Star className="size-6 fill-yellow-500" />
+                  ) : (
+                    <StarOff className="size-6" />
+                  )}
+                </motion.button>
+                <motion.h1 className="align-middle text-2xl font-bold">{board.name}</motion.h1>
+              </div>
+              <motion.p className="text-muted-foreground text-sm">
+                {board.isPublic ? 'Público' : 'Privado'} • Miembros: {members.length}
+              </motion.p>
+            </div>
+
+            <motion.div className="flex flex-wrap gap-2">
+              {userRole === 'admin' && (
+                <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+                  <Button
+                    onClick={() => setShowInvite(true)}
+                    size="sm"
+                    className="flex items-center gap-1"
+                  >
+                    <Users className="h-4 w-4" /> Invitar
+                  </Button>
+                </motion.div>
               )}
-            </motion.button>
-            <motion.h1 className="align-middle text-2xl font-bold">{board.name}</motion.h1>
-          </div>
-          <motion.p className="text-muted-foreground text-sm">
-            {board.isPublic ? 'Público' : 'Privado'} • Miembros: {members.length}
-          </motion.p>
-        </div>
-
-        <motion.div className="flex flex-wrap gap-2">
-          {userRole === 'admin' && (
-            <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-              <Button
-                onClick={() => setShowInvite(true)}
-                size="sm"
-                className="flex items-center gap-1"
-              >
-                <Users className="h-4 w-4" /> Invitar
-              </Button>
-            </motion.div>
-          )}
-          {canEdit && (
-            <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-              <Button
-                onClick={() => setShowCreateColumn(true)}
-                size="sm"
-                className="flex items-center gap-1"
-              >
-                <Plus className="h-4 w-4" /> Añadir columna
-              </Button>
-            </motion.div>
-          )}
-          <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-            <Link href={`/tableros/${boardId}/gantt`}>
-              <Button variant="outline" size="sm" className="flex items-center gap-1">
-                <Calendar className="h-4 w-4" /> Vista Gantt
-              </Button>
-            </Link>
-          </motion.div>
-        </motion.div>
-      </motion.div>
-
-      {/* Gestión de miembros y roles */}
-      {userRole === 'admin' && (
-        <div className="mb-6">
-          <BoardMembersList
-            members={members}
-            users={users}
-            currentUserRole={userRole}
-            boardId={boardId}
-            onRoleUpdated={fetchData}
-            onMemberRemoved={fetchData}
-          />
-        </div>
-      )}
-
-      <DndContext
-        sensors={sensors}
-        collisionDetection={pointerWithin}
-        onDragStart={handleDragStart}
-        onDragOver={handleDragOver}
-        onDragEnd={handleDragEnd}
-      >
-        <div className="flex gap-6 overflow-x-auto pt-2 pb-4">
-          <AnimatePresence>
-            {columns.map((col) => (
-              <motion.div
-                key={col.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 20 }}
-                transition={{ type: 'spring', stiffness: 300, damping: 24 }}
-                layout
-              >
-                <KanbanColumn
-                  column={col}
-                  items={items.filter((i) => i.columnId === col.id)}
-                  users={users}
-                  canEdit={canEdit}
-                  onAddItem={() => setCreateItemColumnId(col.id)}
-                  onEditColumn={() => {
-                    setEditColumnId(col.id);
-                    setEditColumnTitle(col.title);
-                  }}
-                  onEditItem={(it) => {
-                    if (userRole === 'admin' || it.assigneeId === userId) {
-                      setEditItem(it);
-                    }
-                  }}
-                  onDeleteColumn={() => handleDeleteColumn(col.id)}
-                />
+              {canEdit && (
+                <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+                  <Button
+                    onClick={() => setShowCreateColumn(true)}
+                    size="sm"
+                    className="flex items-center gap-1"
+                  >
+                    <Plus className="h-4 w-4" /> Añadir columna
+                  </Button>
+                </motion.div>
+              )}
+              <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+                <Link href={`/tableros/${boardId}/gantt`}>
+                  <Button variant="outline" size="sm" className="flex items-center gap-1">
+                    <Calendar className="h-4 w-4" /> Vista Gantt
+                  </Button>
+                </Link>
               </motion.div>
-            ))}
+            </motion.div>
+          </motion.div>
+
+          {/* Gestión de miembros y roles */}
+          {userRole === 'admin' && (
+            <div className="mb-6">
+              <BoardMembersList
+                members={members}
+                users={users}
+                currentUserRole={userRole}
+                boardId={boardId}
+                onRoleUpdated={fetchData}
+                onMemberRemoved={fetchData}
+              />
+            </div>
+          )}
+
+          <DndContext
+            sensors={sensors}
+            collisionDetection={pointerWithin}
+            onDragStart={handleDragStart}
+            onDragOver={handleDragOver}
+            onDragEnd={handleDragEnd}
+          >
+            <div className="flex gap-6 overflow-x-auto pt-2 pb-4">
+              <AnimatePresence>
+                {columns.map((col) => (
+                  <motion.div
+                    key={col.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 20 }}
+                    transition={{ type: 'spring', stiffness: 300, damping: 24 }}
+                    layout
+                  >
+                    <KanbanColumn
+                      column={col}
+                      items={items.filter((i) => i.columnId === col.id)}
+                      users={users}
+                      canEdit={canEdit}
+                      onAddItem={() => setCreateItemColumnId(col.id)}
+                      onEditColumn={() => {
+                        setEditColumnId(col.id);
+                        setEditColumnTitle(col.title);
+                      }}
+                      onEditItem={(it) => {
+                        if (userRole === 'admin' || it.assigneeId === userId) {
+                          setEditItem(it);
+                        }
+                      }}
+                      onDeleteColumn={() => handleDeleteColumn(col.id)}
+                    />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </div>
+            <DragOverlay>
+              {activeItem && <KanbanItem item={activeItem} users={users} isOverlay />}
+            </DragOverlay>
+          </DndContext>
+
+          <AnimatePresence>
+            {showInvite && (
+              <BoardInviteModal
+                boardId={boardId}
+                onClose={() => {
+                  setShowInvite(false);
+                  setTimeout(() => fetchData(), 100);
+                }}
+                onInvited={() => {
+                  setShowInvite(false);
+                  fetchData();
+                }}
+              />
+            )}
           </AnimatePresence>
-        </div>
-        <DragOverlay>
-          {activeItem && <KanbanItem item={activeItem} users={users} isOverlay />}
-        </DragOverlay>
-      </DndContext>
 
-      <AnimatePresence>
-        {showInvite && (
-          <BoardInviteModal
-            boardId={boardId}
-            onClose={() => {
-              setShowInvite(false);
-              setTimeout(() => fetchData(), 100);
-            }}
-            onInvited={() => {
-              setShowInvite(false);
-              fetchData();
-            }}
-          />
-        )}
-      </AnimatePresence>
+          <AnimatePresence>
+            {showCreateColumn && (
+              <ColumnCreateModal
+                boardId={boardId}
+                onClose={() => setShowCreateColumn(false)}
+                onCreated={fetchData}
+              />
+            )}
+          </AnimatePresence>
 
-      <AnimatePresence>
-        {showCreateColumn && (
-          <ColumnCreateModal
-            boardId={boardId}
-            onClose={() => setShowCreateColumn(false)}
-            onCreated={fetchData}
-          />
-        )}
-      </AnimatePresence>
+          <AnimatePresence>
+            {createItemColumnId && (
+              <ItemCreateModal
+                columnId={createItemColumnId}
+                onClose={() => {
+                  setCreateItemColumnId(null);
+                  setTimeout(() => fetchData(), 100);
+                }}
+                onCreated={fetchData}
+                assignees={
+                  members.map((m) => users.find((u) => u.id === m.userId)).filter(Boolean) as User[]
+                }
+                userRole={userRole}
+              />
+            )}
+          </AnimatePresence>
 
-      <AnimatePresence>
-        {createItemColumnId && (
-          <ItemCreateModal
-            columnId={createItemColumnId}
-            onClose={() => {
-              setCreateItemColumnId(null);
-              setTimeout(() => fetchData(), 100);
-            }}
-            onCreated={fetchData}
-            assignees={
-              members.map((m) => users.find((u) => u.id === m.userId)).filter(Boolean) as User[]
-            }
-            userRole={userRole}
-          />
-        )}
-      </AnimatePresence>
+          <AnimatePresence>
+            {editColumnId && (
+              <ColumnEditModal
+                columnId={editColumnId}
+                currentTitle={editColumnTitle}
+                boardId={boardId}
+                token={auth.token!}
+                onClose={() => setEditColumnId(null)}
+                onUpdated={fetchData}
+              />
+            )}
+          </AnimatePresence>
 
-      <AnimatePresence>
-        {editColumnId && (
-          <ColumnEditModal
-            columnId={editColumnId}
-            currentTitle={editColumnTitle}
-            boardId={boardId}
-            token={auth.token!}
-            onClose={() => setEditColumnId(null)}
-            onUpdated={fetchData}
-          />
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {editItem && (
-          <ItemEditModal
-            item={{
-              ...editItem,
-              status: editItem.status ?? 'pending',
-            }}
-            onClose={() => {
-              setEditItem(null);
-              setTimeout(() => fetchData(), 100);
-            }}
-            onUpdated={fetchData}
-            assignees={
-              members.map((m) => users.find((u) => u.id === m.userId)).filter(Boolean) as User[]
-            }
-            userRole={userRole}
-            currentUserId={userId!}
-          />
-        )}
-      </AnimatePresence>
-    </motion.div>
+          <AnimatePresence>
+            {editItem && (
+              <ItemEditModal
+                item={{
+                  ...editItem,
+                  status: editItem.status ?? 'pending',
+                }}
+                onClose={() => {
+                  setEditItem(null);
+                  setTimeout(() => fetchData(), 100);
+                }}
+                onUpdated={fetchData}
+                assignees={
+                  members.map((m) => users.find((u) => u.id === m.userId)).filter(Boolean) as User[]
+                }
+                userRole={userRole}
+                currentUserId={userId!}
+              />
+            )}
+          </AnimatePresence>
+        </motion.div>
+      </div>
+      <div className="flex min-h-[600px] w-[380px] flex-col border-l pl-4">
+        <ChatPanel
+          roomType="Board"
+          entityId={boardId}
+          members={members.map((m) => {
+            const user = users.find((u) => u.id === m.userId);
+            return { userId: m.userId, name: user?.name || 'Usuario', imageUrl: user?.imageUrl };
+          })}
+        />
+      </div>
+    </div>
   );
 }

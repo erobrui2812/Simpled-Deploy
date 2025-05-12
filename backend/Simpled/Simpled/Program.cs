@@ -177,6 +177,8 @@ builder.Services.AddScoped<IDependencyRepository, DependencyService>();
 builder.Services.AddScoped<DependencyService>();
 builder.Services.AddScoped<ICommentRepository, CommentService>();
 builder.Services.AddScoped<IActivityLogRepository, ActivityLogService>();
+builder.Services.AddScoped<IChatRepository, ChatService>();
+
 
 var app = builder.Build();
 
@@ -209,5 +211,6 @@ app.UseAuthorization();
 
 app.MapControllers();
 app.MapHub<BoardHub>("/hubs/board");
+app.MapHub<ChatHub>("/hubs/chat");
 
 await app.RunAsync();

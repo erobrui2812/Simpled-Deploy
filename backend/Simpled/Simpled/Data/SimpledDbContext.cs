@@ -8,61 +8,30 @@ namespace Simpled.Data
     /// </summary>
     public class SimpledDbContext : DbContext
     {
-
         public SimpledDbContext(DbContextOptions<SimpledDbContext> options)
             : base(options)
         {
         }
 
-     
         public DbSet<User> Users => Set<User>();
-
- 
         public DbSet<UserRole> UserRoles => Set<UserRole>();
-
-   
         public DbSet<Board> Boards => Set<Board>();
-
-
         public DbSet<BoardColumn> BoardColumns => Set<BoardColumn>();
-
-  
         public DbSet<Item> Items => Set<Item>();
-
-   
         public DbSet<Subtask> Subtasks => Set<Subtask>();
-
- 
         public DbSet<Content> Contents => Set<Content>();
-
-    
         public DbSet<BoardMember> BoardMembers => Set<BoardMember>();
-
-    
         public DbSet<BoardInvitation> BoardInvitations => Set<BoardInvitation>();
-
-    
         public DbSet<UserAchievement> UserAchievements => Set<UserAchievement>();
-
-
         public DbSet<Team> Teams => Set<Team>();
-
-      
         public DbSet<TeamMember> TeamMembers => Set<TeamMember>();
-
-     
         public DbSet<TeamInvitation> TeamInvitations => Set<TeamInvitation>();
-
-  
         public DbSet<FavoriteBoards> FavoriteBoards => Set<FavoriteBoards>();
-
- 
         public DbSet<Dependency> Dependencies => Set<Dependency>();
-
-     
         public DbSet<Comment> Comments => Set<Comment>();
-
-            public DbSet<ActivityLog> ActivityLogs => Set<ActivityLog>();
+        public DbSet<ChatRoom> ChatRooms => Set<ChatRoom>();
+        public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
+        public DbSet<ActivityLog> ActivityLogs => Set<ActivityLog>();
 
         /// <summary>
         /// Configura las relaciones y restricciones entre las entidades.
@@ -188,6 +157,13 @@ namespace Simpled.Data
                 .HasOne(c => c.User)
                 .WithMany()
                 .HasForeignKey(c => c.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // ChatRoom ↔ ChatMessage (1:N, eliminación en cascada)
+            modelBuilder.Entity<ChatRoom>()
+                .HasMany(cr => cr.ChatMessages)
+                .WithOne(m => m.ChatRoom)
+                .HasForeignKey(m => m.ChatRoomId)
                 .OnDelete(DeleteBehavior.Cascade);
         }
     }
