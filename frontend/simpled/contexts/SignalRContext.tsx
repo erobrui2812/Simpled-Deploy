@@ -69,6 +69,7 @@ function ConnectionBanner({ status }: { status: 'connected' | 'reconnecting' | '
 
 export const SignalRProvider = ({ children }: { children: React.ReactNode }) => {
   const { auth } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
   const [status, setStatus] = useState<'connected' | 'reconnecting' | 'disconnected'>(
     'disconnected',
@@ -188,7 +189,7 @@ export const SignalRProvider = ({ children }: { children: React.ReactNode }) => 
 
   return (
     <SignalRContext.Provider value={value}>
-      <ConnectionBanner status={status} />
+      {isAuthenticated && <ConnectionBanner status={status} />}
       {children}
     </SignalRContext.Provider>
   );
