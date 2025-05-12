@@ -39,7 +39,7 @@ export async function updateComment(
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ itemId, text }),
+    body: JSON.stringify({ itemId, commentId, text }),
   });
   if (!res.ok) {
     throw new Error('Error al editar comentario');

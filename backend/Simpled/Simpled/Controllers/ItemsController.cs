@@ -1,4 +1,7 @@
-﻿using System.Security.Claims;
+﻿using System;
+using System.Linq;
+using System.Security.Claims;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Simpled.Dtos.Items;
@@ -6,6 +9,7 @@ using Simpled.Exception;
 using Simpled.Helpers;
 using Simpled.Models;
 using Simpled.Repository;
+using Simpled.Dtos.ActivityLogs;
 
 namespace Simpled.Controllers
 {
@@ -88,13 +92,13 @@ namespace Simpled.Controllers
             var created = await _itemService.CreateAsync(dto);
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-            // Registrar creación
+            // Registrar creación con tipo estándar
             await _logRepo.AddAsync(new ActivityLog
             {
                 Id = Guid.NewGuid(),
                 ItemId = created.Id,
                 UserId = userId,
-                Action = "Tarea creada",
+                Action = ActivityType.Created.ToString(),
                 Details = created.Title,
                 Timestamp = DateTime.UtcNow
             });
@@ -121,15 +125,14 @@ namespace Simpled.Controllers
             if (member == null)
                 return Forbid("No eres miembro de este tablero.");
 
-            // Obtener antes del cambio para comparaciones
             var before = await _itemService.GetByIdAsync(id);
 
             // Admin: puede cambiar todos los campos
-            if (member.Role == "admin")
+            if (member.Role.ToLower() == "admin")
             {
                 await _itemService.UpdateAsync(dto);
 
-                // Registrar cambios de título
+                // Título
                 if (!string.Equals(before.Title, dto.Title, StringComparison.Ordinal))
                 {
                     await _logRepo.AddAsync(new ActivityLog
@@ -137,13 +140,16 @@ namespace Simpled.Controllers
                         Id = Guid.NewGuid(),
                         ItemId = id,
                         UserId = userId,
-                        Action = "Título actualizado",
-                        Details = $"De '{before.Title}' a '{dto.Title}'",
+                        Action = ActivityType.Updated.ToString(),
+                        Field = "Title",
+                        OldValue = before.Title,
+                        NewValue = dto.Title,
+                        Details = "Cambio de título",
                         Timestamp = DateTime.UtcNow
                     });
                 }
 
-                // Registrar cambios de descripción
+                // Descripción
                 if ((before.Description ?? string.Empty) != (dto.Description ?? string.Empty))
                 {
                     await _logRepo.AddAsync(new ActivityLog
@@ -151,13 +157,16 @@ namespace Simpled.Controllers
                         Id = Guid.NewGuid(),
                         ItemId = id,
                         UserId = userId,
-                        Action = "Descripción actualizada",
-                        Details = "Se actualizó la descripción",
+                        Action = ActivityType.Updated.ToString(),
+                        Field = "Description",
+                        OldValue = before.Description,
+                        NewValue = dto.Description,
+                        Details = "Cambio de descripción",
                         Timestamp = DateTime.UtcNow
                     });
                 }
 
-                // Registrar cambios de responsable
+                // Responsable
                 if (before.AssigneeId != dto.AssigneeId)
                 {
                     await _logRepo.AddAsync(new ActivityLog
@@ -165,13 +174,16 @@ namespace Simpled.Controllers
                         Id = Guid.NewGuid(),
                         ItemId = id,
                         UserId = userId,
-                        Action = "Responsable cambiado",
+                        Action = ActivityType.Assigned.ToString(),
+                        Field = "AssigneeId",
+                        OldValue = before.AssigneeId?.ToString(),
+                        NewValue = dto.AssigneeId?.ToString(),
                         Details = dto.AssigneeId.HasValue ? $"Asignado a {dto.AssigneeId}" : "Sin asignar",
                         Timestamp = DateTime.UtcNow
                     });
                 }
 
-                // Registrar cambios de fechas
+                // Fecha de inicio
                 if (before.StartDate != dto.StartDate)
                 {
                     await _logRepo.AddAsync(new ActivityLog
@@ -179,11 +191,16 @@ namespace Simpled.Controllers
                         Id = Guid.NewGuid(),
                         ItemId = id,
                         UserId = userId,
-                        Action = "Fecha de inicio cambiada",
-                        Details = dto.StartDate?.ToString("o") ?? "Ninguna",
+                        Action = ActivityType.Updated.ToString(),
+                        Field = "StartDate",
+                        OldValue = before.StartDate?.ToString("o"),
+                        NewValue = dto.StartDate?.ToString("o"),
+                        Details = "Cambio de fecha de inicio",
                         Timestamp = DateTime.UtcNow
                     });
                 }
+
+                // Fecha de vencimiento
                 if (before.DueDate != dto.DueDate)
                 {
                     await _logRepo.AddAsync(new ActivityLog
@@ -191,13 +208,16 @@ namespace Simpled.Controllers
                         Id = Guid.NewGuid(),
                         ItemId = id,
                         UserId = userId,
-                        Action = "Fecha de vencimiento cambiada",
-                        Details = dto.DueDate?.ToString("o") ?? "Ninguna",
+                        Action = ActivityType.Updated.ToString(),
+                        Field = "DueDate",
+                        OldValue = before.DueDate?.ToString("o"),
+                        NewValue = dto.DueDate?.ToString("o"),
+                        Details = "Cambio de fecha de vencimiento",
                         Timestamp = DateTime.UtcNow
                     });
                 }
 
-                // Registrar cambio de estado
+                // Estado
                 if (!string.Equals(before.Status, dto.Status, StringComparison.Ordinal))
                 {
                     await _logRepo.AddAsync(new ActivityLog
@@ -205,8 +225,11 @@ namespace Simpled.Controllers
                         Id = Guid.NewGuid(),
                         ItemId = id,
                         UserId = userId,
-                        Action = "Estado cambiado",
-                        Details = dto.Status,
+                        Action = ActivityType.StatusChanged.ToString(),
+                        Field = "Status",
+                        OldValue = before.Status,
+                        NewValue = dto.Status,
+                        Details = $"Estado cambiado a {dto.Status}",
                         Timestamp = DateTime.UtcNow
                     });
                 }
@@ -214,7 +237,7 @@ namespace Simpled.Controllers
                 return NoContent();
             }
             // Editor: solo puede cambiar estado si es responsable
-            else if (member.Role == "editor" && dto.AssigneeId == userId)
+            else if (member.Role.ToLower() == "editor" && dto.AssigneeId == userId)
             {
                 await _itemService.UpdateStatusAsync(id, dto.Status);
                 await _logRepo.AddAsync(new ActivityLog
@@ -222,7 +245,7 @@ namespace Simpled.Controllers
                     Id = Guid.NewGuid(),
                     ItemId = id,
                     UserId = userId,
-                    Action = "Estado cambiado",
+                    Action = ActivityType.StatusChanged.ToString(),
                     Details = dto.Status,
                     Timestamp = DateTime.UtcNow
                 });
@@ -259,7 +282,8 @@ namespace Simpled.Controllers
                     Id = Guid.NewGuid(),
                     ItemId = id,
                     UserId = userId,
-                    Action = "Tarea eliminada",
+                    Action = ActivityType.Deleted.ToString(),
+                    Details = "Tarea eliminada",
                     Timestamp = DateTime.UtcNow
                 });
 
@@ -291,13 +315,12 @@ namespace Simpled.Controllers
             if (content == null)
                 return BadRequest("Error al subir archivo o ítem no encontrado.");
 
-            // Registrar subida de archivo
             await _logRepo.AddAsync(new ActivityLog
             {
                 Id = Guid.NewGuid(),
                 ItemId = id,
                 UserId = userId,
-                Action = "Archivo subido",
+                Action = ActivityType.FileUploaded.ToString(),
                 Details = file.FileName,
                 Timestamp = DateTime.UtcNow
             });

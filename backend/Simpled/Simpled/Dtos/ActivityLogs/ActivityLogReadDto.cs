@@ -1,4 +1,6 @@
-﻿namespace Simpled.Dtos.ActivityLogs
+﻿using System.Text.Json.Serialization;
+
+namespace Simpled.Dtos.ActivityLogs
 {
     /// <summary>
     /// DTO para lectura de registros de actividad sobre ítems.
@@ -33,6 +35,7 @@
         /// <summary>
         /// Tipo de acción registrada.
         /// </summary>
+        [JsonConverter(typeof(JsonStringEnumConverter))]
         public ActivityType Type { get; set; }
 
         /// <summary>

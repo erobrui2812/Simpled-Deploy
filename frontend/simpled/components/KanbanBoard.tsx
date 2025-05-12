@@ -24,6 +24,7 @@ import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 import BoardInviteModal from './BoardInviteModal';
+import BoardMembersList from './BoardMembersList';
 import ColumnCreateModal from './ColumnCreateModal';
 import ColumnEditModal from './ColumnEditModal';
 import ItemCreateModal from './ItemCreateModal';
@@ -462,8 +463,6 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
 
   if (!board) return <div className="p-8 text-red-600">Tablero no encontrado</div>;
 
-  console.log('columns en render', columns);
-
   return (
     <motion.div className="mx-auto p-4" initial="hidden" animate="visible" variants={fadeIn}>
       <motion.div
@@ -525,6 +524,20 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
           </motion.div>
         </motion.div>
       </motion.div>
+
+      {/* Gestión de miembros y roles */}
+      {userRole === 'admin' && (
+        <div className="mb-6">
+          <BoardMembersList
+            members={members}
+            users={users}
+            currentUserRole={userRole}
+            boardId={boardId}
+            onRoleUpdated={fetchData}
+            onMemberRemoved={fetchData}
+          />
+        </div>
+      )}
 
       <DndContext
         sensors={sensors}
