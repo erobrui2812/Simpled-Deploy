@@ -82,6 +82,19 @@ export function GanttTaskDialog({
     }
   };
 
+  const getStatusColor = (status?: string) => {
+    switch (status) {
+      case 'completed':
+        return 'bg-emerald-500';
+      case 'delayed':
+        return 'bg-rose-500';
+      case 'in-progress':
+        return 'bg-blue-500';
+      default:
+        return 'bg-amber-500';
+    }
+  };
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="z-[1100] sm:max-w-md">
@@ -138,22 +151,6 @@ export function GanttTaskDialog({
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="progress">Progreso (%)</Label>
-              <div className="flex items-center gap-4">
-                <Input
-                  id="progress"
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={editedTask.progress}
-                  onChange={(e) => handleChange('progress', Number.parseInt(e.target.value))}
-                  className="flex-1"
-                />
-                <span className="w-12 text-center">{editedTask.progress}%</span>
-              </div>
-            </div>
-
-            <div className="grid gap-2">
               <Label htmlFor="status">Estado</Label>
               <Select
                 value={editedTask.status}
@@ -201,6 +198,28 @@ export function GanttTaskDialog({
               Gestionar dependencias
             </Button>
 
+            <div className="mt-4 border-t pt-4">
+              <h3 className="mb-2 text-sm font-medium">Información de dependencias</h3>
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  <div className="h-1 w-8 bg-blue-500"></div>
+                  <span className="text-xs">Fin a Inicio (FS)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="h-1 w-8 border-t border-dashed border-green-500 bg-green-500"></div>
+                  <span className="text-xs">Inicio a Inicio (SS)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="h-1 w-8 border-t-2 border-dashed border-amber-500 bg-amber-500"></div>
+                  <span className="text-xs">Fin a Fin (FF)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="h-1 w-8 border-t-2 border-dotted border-red-500 bg-red-500"></div>
+                  <span className="text-xs">Inicio a Fin (SF)</span>
+                </div>
+              </div>
+            </div>
+
             <div className="mt-2">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">Estado actual:</span>
@@ -217,6 +236,27 @@ export function GanttTaskDialog({
                     1}{' '}
                   días
                 </span>
+              </div>
+              <div className="mt-4 w-full rounded-md bg-gray-100 p-3 dark:bg-gray-800">
+                <h4 className="mb-2 text-sm font-medium">Visualización de duración</h4>
+                <div className="relative h-6 w-full rounded bg-gray-200 dark:bg-gray-700">
+                  <div
+                    className={`absolute top-0 left-0 h-full rounded ${getStatusColor(editedTask.status)}`}
+                    style={{ width: '100%' }}
+                  >
+                    <span className="absolute inset-0 flex items-center justify-center text-xs font-medium text-white">
+                      {differenceInDays(
+                        new Date(editedTask.endDate),
+                        new Date(editedTask.startDate),
+                      ) + 1}{' '}
+                      días
+                    </span>
+                  </div>
+                </div>
+                <div className="mt-1 flex justify-between text-xs text-gray-500">
+                  <span>{format(new Date(editedTask.startDate), 'dd/MM/yyyy')}</span>
+                  <span>{format(new Date(editedTask.endDate), 'dd/MM/yyyy')}</span>
+                </div>
               </div>
             </div>
           </div>

@@ -1,75 +1,83 @@
+'use client';
+
+import { cardHover } from '@/lib/animation-variants';
+import { cn } from '@/lib/utils';
+import { motion } from 'framer-motion';
 import * as React from 'react';
 
-import { cn } from '@/lib/utils';
-
-function Card({ className, ...props }: React.ComponentProps<'div'>) {
+const Card = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement> & { interactive?: boolean }
+>(({ className, interactive = false, ...props }, ref) => {
+  // Extraer los props de drag para evitar conflicto de tipos con motion.div
+  const { onDrag, onDragEnd, onDragStart, ...rest } = props as any;
   return (
-    <div
-      data-slot="card"
+    <motion.div
+      ref={ref}
       className={cn(
         'bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm',
         className,
       )}
-      {...props}
+      whileHover={interactive ? cardHover : undefined}
+      {...rest}
     />
   );
-}
+});
+Card.displayName = 'Card';
 
-function CardHeader({ className, ...props }: React.ComponentProps<'div'>) {
-  return (
+const CardHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => (
     <div
-      data-slot="card-header"
+      ref={ref}
       className={cn(
         '@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6',
         className,
       )}
       {...props}
     />
-  );
-}
+  ),
+);
+CardHeader.displayName = 'CardHeader';
 
-function CardTitle({ className, ...props }: React.ComponentProps<'div'>) {
-  return (
-    <div
-      data-slot="card-title"
-      className={cn('leading-none font-semibold', className)}
-      {...props}
-    />
-  );
-}
+const CardTitle = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => (
+    <div ref={ref} className={cn('leading-none font-semibold', className)} {...props} />
+  ),
+);
+CardTitle.displayName = 'CardTitle';
 
-function CardDescription({ className, ...props }: React.ComponentProps<'div'>) {
-  return (
-    <div
-      data-slot="card-description"
-      className={cn('text-muted-foreground text-sm', className)}
-      {...props}
-    />
-  );
-}
+const CardDescription = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => (
+    <div ref={ref} className={cn('text-muted-foreground text-sm', className)} {...props} />
+  ),
+);
+CardDescription.displayName = 'CardDescription';
 
-function CardAction({ className, ...props }: React.ComponentProps<'div'>) {
-  return (
+const CardAction = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => (
     <div
-      data-slot="card-action"
+      ref={ref}
       className={cn('col-start-2 row-span-2 row-start-1 self-start justify-self-end', className)}
       {...props}
     />
-  );
-}
+  ),
+);
+CardAction.displayName = 'CardAction';
 
-function CardContent({ className, ...props }: React.ComponentProps<'div'>) {
-  return <div data-slot="card-content" className={cn('px-6', className)} {...props} />;
-}
+const CardContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => <div ref={ref} className={cn('px-6', className)} {...props} />,
+);
+CardContent.displayName = 'CardContent';
 
-function CardFooter({ className, ...props }: React.ComponentProps<'div'>) {
-  return (
+const CardFooter = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => (
     <div
-      data-slot="card-footer"
+      ref={ref}
       className={cn('flex items-center px-6 [.border-t]:pt-6', className)}
       {...props}
     />
-  );
-}
+  ),
+);
+CardFooter.displayName = 'CardFooter';
 
-export { Card, CardHeader, CardFooter, CardTitle, CardAction, CardDescription, CardContent };
+export { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle };

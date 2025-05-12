@@ -1,4 +1,15 @@
 'use client';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Board, useBoards } from '@/contexts/BoardsContext';
 import { useState } from 'react';
 
@@ -17,40 +28,44 @@ export default function BoardEditModal({
   };
 
   return (
-    <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black">
-      <div className="w-full max-w-sm rounded bg-white p-6 shadow-md dark:bg-neutral-900">
-        <h2 className="mb-4 text-lg font-semibold">Editar tablero</h2>
+    <Dialog open={true} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Editar tablero</DialogTitle>
+        </DialogHeader>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="rounded border px-3 py-2"
-            placeholder="Nombre del tablero"
-            required
-          />
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={isPublic}
-              onChange={(e) => setIsPublic(e.target.checked)}
+          <div className="space-y-2">
+            <Label htmlFor="board-name">Nombre del tablero</Label>
+            <Input
+              id="board-name"
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Nombre del tablero"
+              required
+              autoFocus
             />
-            <span>Hacer público</span>
-          </label>
-
-          <div className="mt-4 flex justify-end gap-2">
-            <button type="button" onClick={onClose} className="text-gray-600 hover:underline">
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-            >
-              Guardar
-            </button>
           </div>
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="is-public"
+              checked={isPublic}
+              onCheckedChange={(checked) => setIsPublic(!!checked)}
+            />
+            <Label htmlFor="is-public" className="cursor-pointer text-sm font-normal">
+              Hacer público
+            </Label>
+          </div>
+          <DialogFooter className="flex justify-end gap-2 pt-2">
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancelar
+            </Button>
+            <Button type="submit" variant="default">
+              Guardar
+            </Button>
+          </DialogFooter>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

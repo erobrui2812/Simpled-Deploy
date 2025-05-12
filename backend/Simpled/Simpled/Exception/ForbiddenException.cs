@@ -1,12 +1,12 @@
-﻿using System.Runtime.Serialization;
-
-public class ForbiddenException : Exception, ISerializable
+﻿namespace Simpled.Exception
 {
-    public ForbiddenException() { }
+    [System.Serializable]
+    public class ForbiddenException : System.Exception
+    {
+        public ForbiddenException() { }
 
-    public ForbiddenException(string message) : base(message) { }
+        public ForbiddenException(string message) : base(message) { }
 
-    public ForbiddenException(string message, Exception inner) : base(message, inner) { }
-
-    protected ForbiddenException(SerializationInfo info, StreamingContext context) : base(info, context) { }
+        public ForbiddenException(string message, System.Exception inner) : base(message, inner) { }
+    }
 }

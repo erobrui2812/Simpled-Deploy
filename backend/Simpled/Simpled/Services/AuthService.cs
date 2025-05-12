@@ -10,6 +10,10 @@ using Simpled.Repository;
 
 namespace Simpled.Services
 {
+    /// <summary>
+    /// Servicio para la autenticación y login de usuarios.
+    /// Implementa IAuthRepository.
+    /// </summary>
     public class AuthService : IAuthRepository
     {
         private readonly SimpledDbContext _context;
@@ -26,6 +30,11 @@ namespace Simpled.Services
             _configuration = configuration;
         }
 
+        /// <summary>
+        /// Realiza el login de un usuario con email y contraseña.
+        /// </summary>
+        /// <param name="loginDto">Datos de login.</param>
+        /// <returns>DTO con el token y el ID del usuario, o null si las credenciales son inválidas.</returns>
         public async Task<LoginResultDto?> LoginAsync(LoginRequestDto loginDto)
         {
             var user = await _context.Users
@@ -77,6 +86,11 @@ namespace Simpled.Services
             };
         }
 
+        /// <summary>
+        /// Realiza el login externo (por ejemplo, Google).
+        /// </summary>
+        /// <param name="dto">Datos del login externo.</param>
+        /// <returns>DTO con el token y el ID del usuario.</returns>
         public async Task<LoginResultDto?> ExternalLoginAsync(ExternalLoginDto dto)
         {
 

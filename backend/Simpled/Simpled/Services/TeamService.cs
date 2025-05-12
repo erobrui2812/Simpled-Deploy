@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿
 using Microsoft.EntityFrameworkCore;
 using Simpled.Data;
 using Simpled.Dtos.Teams;
@@ -9,9 +6,14 @@ using Simpled.Dtos.Teams.TeamMembers;
 using Simpled.Exception;
 using Simpled.Models;
 using Simpled.Repository;
+using FluentValidation;
 
 namespace Simpled.Services
 {
+    /// <summary>
+    /// Servicio para la gestión de equipos y sus miembros.
+    /// Implementa ITeamRepository e ITeamMemberRepository.
+    /// </summary>
     public class TeamService : ITeamRepository, ITeamMemberRepository
     {
         private readonly SimpledDbContext _context;
@@ -23,6 +25,11 @@ namespace Simpled.Services
 
         // ITeamRepository
 
+        /// <summary>
+        /// Obtiene todos los equipos donde el usuario es owner o miembro.
+        /// </summary>
+        /// <param name="userId">ID del usuario.</param>
+        /// <returns>Lista de equipos.</returns>
         public async Task<IEnumerable<TeamReadDto>> GetAllByUserAsync(Guid userId)
         {
             // Equipos donde es owner o miembro
@@ -48,6 +55,11 @@ namespace Simpled.Services
             });
         }
 
+        /// <summary>
+        /// Obtiene un equipo por su ID.
+        /// </summary>
+        /// <param name="id">ID del equipo.</param>
+        /// <returns>DTO del equipo o null si no existe.</returns>
         public async Task<TeamReadDto?> GetByIdAsync(Guid id)
         {
             var team = await _context.Teams
@@ -72,8 +84,16 @@ namespace Simpled.Services
             };
         }
 
+        /// <summary>
+        /// Crea un nuevo equipo y lo asigna a un owner.
+        /// </summary>
+        /// <param name="dto">Datos del equipo a crear.</param>
+        /// <param name="ownerId">ID del owner.</param>
+        /// <returns>DTO del equipo creado.</returns>
         public async Task<TeamReadDto> CreateAsync(TeamCreateDto dto, Guid ownerId)
         {
+            if (string.IsNullOrWhiteSpace(dto.Name))
+                throw new ApiException("El nombre del equipo es obligatorio.", 400);
             var team = new Team
             {
                 Id = Guid.NewGuid(),
@@ -93,8 +113,18 @@ namespace Simpled.Services
             };
         }
 
+        /// <summary>
+        /// Actualiza los datos de un equipo existente.
+        /// </summary>
+        /// <param name="dto">Datos actualizados del equipo.</param>
+        /// <param name="ownerId">ID del owner.</param>
+        /// <returns>True si la actualización fue exitosa.</returns>
+        /// <exception cref="NotFoundException">Si el equipo no existe.</exception>
+        /// <exception cref="ApiException">Si el usuario no tiene permisos.</exception>
         public async Task<bool> UpdateAsync(TeamUpdateDto dto, Guid ownerId)
         {
+            if (string.IsNullOrWhiteSpace(dto.Name))
+                throw new ApiException("El nombre del equipo es obligatorio.", 400);
             var team = await _context.Teams.FindAsync(dto.Id);
             if (team == null) throw new NotFoundException("Equipo no encontrado.");
             if (team.OwnerId != ownerId) throw new ApiException("No tienes permisos para modificar este equipo.", 403);
@@ -104,6 +134,14 @@ namespace Simpled.Services
             return true;
         }
 
+        /// <summary>
+        /// Elimina un equipo por su ID.
+        /// </summary>
+        /// <param name="id">ID del equipo.</param>
+        /// <param name="ownerId">ID del owner.</param>
+        /// <returns>True si la eliminación fue exitosa.</returns>
+        /// <exception cref="NotFoundException">Si el equipo no existe.</exception>
+        /// <exception cref="ApiException">Si el usuario no tiene permisos.</exception>
         public async Task<bool> DeleteAsync(Guid id, Guid ownerId)
         {
             var team = await _context.Teams.FindAsync(id);
@@ -117,6 +155,11 @@ namespace Simpled.Services
 
         // ITeamMemberRepository
 
+        /// <summary>
+        /// Obtiene los miembros de un equipo.
+        /// </summary>
+        /// <param name="teamId">ID del equipo.</param>
+        /// <returns>Lista de miembros.</returns>
         public async Task<IEnumerable<TeamMemberDto>> GetMembersAsync(Guid teamId)
         {
             var members = await _context.TeamMembers
@@ -132,8 +175,17 @@ namespace Simpled.Services
             });
         }
 
+        /// <summary>
+        /// Añade un miembro a un equipo.
+        /// </summary>
+        /// <param name="dto">Datos del miembro.</param>
+        /// <param name="ownerId">ID del owner.</param>
+        /// <exception cref="NotFoundException">Si el equipo no existe.</exception>
+        /// <exception cref="ApiException">Si el usuario no tiene permisos o el miembro ya existe.</exception>
         public async Task AddMemberAsync(TeamMemberCreateDto dto, Guid ownerId)
         {
+            if (dto.TeamId == Guid.Empty || dto.UserId == Guid.Empty || string.IsNullOrWhiteSpace(dto.Role))
+                throw new ApiException("Todos los campos del miembro son obligatorios.", 400);
             var team = await _context.Teams.FindAsync(dto.TeamId);
             if (team == null) throw new NotFoundException("Equipo no encontrado.");
             if (team.OwnerId != ownerId) throw new ApiException("No tienes permisos para invitar a este equipo.", 403);
@@ -151,8 +203,18 @@ namespace Simpled.Services
             await _context.SaveChangesAsync();
         }
 
+        /// <summary>
+        /// Actualiza el rol de un miembro de equipo.
+        /// </summary>
+        /// <param name="dto">Datos del miembro.</param>
+        /// <param name="ownerId">ID del owner.</param>
+        /// <returns>True si la actualización fue exitosa.</returns>
+        /// <exception cref="NotFoundException">Si el equipo o miembro no existe.</exception>
+        /// <exception cref="ApiException">Si el usuario no tiene permisos.</exception>
         public async Task<bool> UpdateMemberAsync(TeamMemberUpdateDto dto, Guid ownerId)
         {
+            if (dto.TeamId == Guid.Empty || dto.UserId == Guid.Empty || string.IsNullOrWhiteSpace(dto.Role))
+                throw new ApiException("Todos los campos del miembro son obligatorios.", 400);
             var team = await _context.Teams.FindAsync(dto.TeamId);
             if (team == null) throw new NotFoundException("Equipo no encontrado.");
             if (team.OwnerId != ownerId) throw new ApiException("No tienes permisos para modificar miembros.", 403);
@@ -166,6 +228,15 @@ namespace Simpled.Services
             return true;
         }
 
+        /// <summary>
+        /// Elimina un miembro de un equipo.
+        /// </summary>
+        /// <param name="teamId">ID del equipo.</param>
+        /// <param name="userId">ID del usuario a eliminar.</param>
+        /// <param name="ownerId">ID del owner.</param>
+        /// <returns>True si la eliminación fue exitosa.</returns>
+        /// <exception cref="NotFoundException">Si el equipo o miembro no existe.</exception>
+        /// <exception cref="ApiException">Si el usuario no tiene permisos.</exception>
         public async Task<bool> RemoveMemberAsync(Guid teamId, Guid userId, Guid ownerId)
         {
             var team = await _context.Teams.FindAsync(teamId);

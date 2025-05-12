@@ -96,7 +96,6 @@ export default function BoardDetails({ boardId }: Readonly<{ boardId: string }>)
   if (!board) return <div className="p-8 text-red-600">Tablero no encontrado</div>;
 
   const assignees: User[] = members
-    .filter((m) => m.role === 'editor')
     .map((m) => users.find((u) => u.id === m.userId))
     .filter((u): u is User => Boolean(u));
 

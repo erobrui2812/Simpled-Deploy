@@ -3,6 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSignalR } from '@/contexts/SignalRContext';
+import { fadeIn, slideUp } from '@/lib/animation-variants';
 import type { Column, Item, User } from '@/types';
 import {
   DndContext,
@@ -17,11 +18,14 @@ import {
   type DragStartEvent,
 } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
-import { Calendar, Plus, Users } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Calendar, Plus, Star, StarOff, Users } from 'lucide-react';
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 import BoardInviteModal from './BoardInviteModal';
+import BoardMembersList from './BoardMembersList';
+import ChatPanel from './ChatPanel';
 import ColumnCreateModal from './ColumnCreateModal';
 import ColumnEditModal from './ColumnEditModal';
 import ItemCreateModal from './ItemCreateModal';
@@ -31,8 +35,91 @@ import KanbanItem from './KanbanItem';
 
 const API = 'http://localhost:5193';
 
+// Helper functions for subtask, column, and item updates
+function addSubtaskToItem(items: Item[], payload: any): Item[] {
+  return items.map((item) => {
+    if (item.id === payload.itemId) {
+      const subtasks = item.subtasks || [];
+      const newSubtasks = [...subtasks, payload];
+      const subtasksCount = newSubtasks.length;
+      const completedSubtasks = newSubtasks.filter((st) => st.isCompleted).length;
+      const progress =
+        subtasksCount > 0 ? Math.round((completedSubtasks / subtasksCount) * 100) : 0;
+      return { ...item, subtasks: newSubtasks, progress };
+    }
+    return item;
+  });
+}
+
+function updateSubtaskInItem(items: Item[], payload: any): Item[] {
+  return items.map((item) => {
+    if (item.id === payload.itemId) {
+      const subtasks = item.subtasks || [];
+      const updatedSubtasks = subtasks.map((st) => (st.id === payload.id ? payload : st));
+      const subtasksCount = updatedSubtasks.length;
+      const completedSubtasks = updatedSubtasks.filter((st) => st.isCompleted).length;
+      const progress =
+        subtasksCount > 0 ? Math.round((completedSubtasks / subtasksCount) * 100) : 0;
+      return { ...item, subtasks: updatedSubtasks, progress };
+    }
+    return item;
+  });
+}
+
+function deleteSubtaskFromItem(items: Item[], payload: any): Item[] {
+  return items.map((item) => {
+    if (item.id === payload.itemId) {
+      const subtasks = item.subtasks || [];
+      const updatedSubtasks = subtasks.filter((st) => st.id !== payload.id);
+      const subtasksCount = updatedSubtasks.length;
+      const completedSubtasks = updatedSubtasks.filter((st) => st.isCompleted).length;
+      const progress =
+        subtasksCount > 0 ? Math.round((completedSubtasks / subtasksCount) * 100) : 0;
+      return { ...item, subtasks: updatedSubtasks, progress };
+    }
+    return item;
+  });
+}
+
+function updateColumnInList(columns: Column[], payload: any): Column[] {
+  return columns.map((col) =>
+    col.id === payload.id ? { ...col, title: payload.title, order: payload.order } : col,
+  );
+}
+
+function updateItemInList(items: Item[], payload: any): Item[] {
+  return items.map((it) => (it.id === payload.id ? { ...it, ...payload } : it));
+}
+
+function updateItemStatusInList(items: Item[], payload: any): Item[] {
+  return items.map((it) => (it.id === payload.id ? { ...it, status: payload.status } : it));
+}
+
+function removeColumnById(columns: Column[], columnId: string): Column[] {
+  return columns.filter((col) => col.id !== columnId);
+}
+
+function removeItemsByColumnId(items: Item[], columnId: string): Item[] {
+  return items.filter((it) => it.columnId !== columnId);
+}
+
+function handleItemDeleted(
+  payload: any,
+  currentUserId: string,
+  setItems: Function,
+  toast: any,
+  showDesktopNotification: Function,
+) {
+  setItems((i: any[]) => i.filter((it) => it.id !== payload.id));
+  if (payload.assigneeId === currentUserId) {
+    const msg = `Tu tarea "${payload.title}" ha sido eliminada`;
+    toast.info(`🗑️ ${msg}`, { toastId: `item-deleted-${payload.id}` });
+    showDesktopNotification('🗑️ Tarea eliminada', { body: payload.title });
+  }
+}
+
 export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
-  const { auth } = useAuth();
+  const { auth, toggleFavoriteBoard } = useAuth();
   const { connection } = useSignalR();
   const lastRef = useRef<string | null>(null);
 
@@ -53,6 +140,13 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
   const [editItem, setEditItem] = useState<Item | null>(null);
 
   const [showInvite, setShowInvite] = useState(false);
+
+  const [isFavoriteToggling, setIsFavoriteToggling] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
+
+  useEffect(() => {
+    if (board) setIsFavorite(board.isFavorite);
+  }, [board]);
 
   useEffect(() => {
     if (
@@ -121,7 +215,6 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
       const cols = allCols.filter((c: any) => c.boardId === boardId);
       const its = allItems.filter((i: any) => cols.some((c: any) => c.id === i.columnId));
 
-      // For each item, fetch its subtasks
       const itemsWithSubtasks = await Promise.all(
         its.map(async (item: Item) => {
           try {
@@ -129,7 +222,6 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
             if (subtasksRes.ok) {
               const subtasks = await subtasksRes.json();
 
-              // Calculate progress based on subtasks
               const subtasksCount = subtasks.length;
               const completedSubtasks = subtasks.filter((st: any) => st.isCompleted).length;
               const progress =
@@ -184,18 +276,14 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
         case 'ColumnUpdated':
           toast.info('✏️ Columna actualizada');
           showDesktopNotification('✏️ Columna actualizada', { body: payload.title });
-          setColumns((c) =>
-            c.map((col) =>
-              col.id === payload.id ? { ...col, title: payload.title, order: payload.order } : col,
-            ),
-          );
+          setColumns((c) => updateColumnInList(c, payload));
           break;
 
         case 'ColumnDeleted':
           toast.info('🗑️ Columna eliminada');
           showDesktopNotification('🗑️ Columna eliminada', { body: `ID: ${payload.columnId}` });
-          setColumns((c) => c.filter((col) => col.id !== payload.columnId));
-          setItems((i) => i.filter((it) => it.columnId !== payload.columnId));
+          setColumns((c) => removeColumnById(c, payload.columnId));
+          setItems((i) => removeItemsByColumnId(i, payload.columnId));
           break;
 
         case 'ItemCreated':
@@ -208,7 +296,7 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
           break;
 
         case 'ItemUpdated':
-          setItems((i) => i.map((it) => (it.id === payload.id ? { ...it, ...payload } : it)));
+          setItems((i) => updateItemInList(i, payload));
           if (payload.assigneeId === currentUserId) {
             const msg = `La tarea "${payload.title}" ha sido modificada`;
             toast.info(`🔁 ${msg}`, { toastId: `item-updated-${payload.id}` });
@@ -217,18 +305,11 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
           break;
 
         case 'ItemDeleted':
-          setItems((i) => i.filter((it) => it.id !== payload.id));
-          if (payload.assigneeId === currentUserId) {
-            const msg = `Tu tarea "${payload.title}" ha sido eliminada`;
-            toast.info(`🗑️ ${msg}`, { toastId: `item-deleted-${payload.id}` });
-            showDesktopNotification('🗑️ Tarea eliminada', { body: payload.title });
-          }
+          handleItemDeleted(payload, userId ?? '', setItems, toast, showDesktopNotification);
           break;
 
         case 'ItemStatusChanged':
-          setItems((i) =>
-            i.map((it) => (it.id === payload.id ? { ...it, status: payload.status } : it)),
-          );
+          setItems((i) => updateItemStatusInList(i, payload));
           if (payload.assigneeId === currentUserId) {
             const msg = `Estado actualizado de "${payload.title}"`;
             toast.info(`📍 ${msg}`, { toastId: `item-status-${payload.id}` });
@@ -247,63 +328,15 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
           break;
 
         case 'SubtaskCreated':
-          setItems((items) => {
-            return items.map((item) => {
-              if (item.id === payload.itemId) {
-                const subtasks = item.subtasks || [];
-                const newSubtasks = [...subtasks, payload];
-
-                // Calculate new progress
-                const subtasksCount = newSubtasks.length;
-                const completedSubtasks = newSubtasks.filter((st) => st.isCompleted).length;
-                const progress =
-                  subtasksCount > 0 ? Math.round((completedSubtasks / subtasksCount) * 100) : 0;
-
-                return { ...item, subtasks: newSubtasks, progress };
-              }
-              return item;
-            });
-          });
+          setItems((items) => addSubtaskToItem(items, payload));
           break;
 
         case 'SubtaskUpdated':
-          setItems((items) => {
-            return items.map((item) => {
-              if (item.id === payload.itemId) {
-                const subtasks = item.subtasks || [];
-                const updatedSubtasks = subtasks.map((st) => (st.id === payload.id ? payload : st));
-
-                // Calculate new progress
-                const subtasksCount = updatedSubtasks.length;
-                const completedSubtasks = updatedSubtasks.filter((st) => st.isCompleted).length;
-                const progress =
-                  subtasksCount > 0 ? Math.round((completedSubtasks / subtasksCount) * 100) : 0;
-
-                return { ...item, subtasks: updatedSubtasks, progress };
-              }
-              return item;
-            });
-          });
+          setItems((items) => updateSubtaskInItem(items, payload));
           break;
 
         case 'SubtaskDeleted':
-          setItems((items) => {
-            return items.map((item) => {
-              if (item.id === payload.itemId) {
-                const subtasks = item.subtasks || [];
-                const updatedSubtasks = subtasks.filter((st) => st.id !== payload.id);
-
-                // Calculate new progress
-                const subtasksCount = updatedSubtasks.length;
-                const completedSubtasks = updatedSubtasks.filter((st) => st.isCompleted).length;
-                const progress =
-                  subtasksCount > 0 ? Math.round((completedSubtasks / subtasksCount) * 100) : 0;
-
-                return { ...item, subtasks: updatedSubtasks, progress };
-              }
-              return item;
-            });
-          });
+          setItems((items) => deleteSubtaskFromItem(items, payload));
           break;
 
         default:
@@ -312,14 +345,14 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
     };
 
     connection.on('BoardUpdated', handler);
-    return () => void connection.off('BoardUpdated', handler);
+    return () => connection.off('BoardUpdated', handler);
   }, [connection, boardId, fetchData, userId, showDesktopNotification]);
 
   useEffect(() => {
     if (!connection) return;
     connection.invoke('JoinBoardGroup', boardId).catch(console.error);
     return () => {
-      void connection.invoke('LeaveBoardGroup', boardId).catch(console.error);
+      connection.invoke('LeaveBoardGroup', boardId).catch(console.error);
     };
   }, [connection, boardId]);
 
@@ -394,157 +427,253 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
     setActiveItem(null);
   };
 
+  const toggleFavorite = async () => {
+    setIsFavoriteToggling(true);
+    try {
+      toggleFavoriteBoard(board.id);
+      setIsFavorite(!isFavorite);
+    } catch (error) {
+      console.error('Error al actualizar favorito:', error);
+      toast.error('No se pudo actualizar el estado de favorito');
+    } finally {
+      setIsFavoriteToggling(false);
+    }
+  };
+
   if (loading)
     return (
-      <div className="flex h-[80vh] items-center justify-center">
-        <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-blue-600"></div>
-      </div>
+      <motion.div
+        className="flex h-[80vh] items-center justify-center"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+      >
+        <motion.div
+          className="h-12 w-12 rounded-full border-b-2 border-blue-600"
+          animate={{
+            rotate: 360,
+          }}
+          transition={{
+            duration: 1,
+            ease: 'linear',
+            repeat: Number.POSITIVE_INFINITY,
+          }}
+        />
+      </motion.div>
     );
 
   if (!board) return <div className="p-8 text-red-600">Tablero no encontrado</div>;
 
   return (
-    <div className="mx-auto p-4">
-      <div className="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-        <div>
-          <h1 className="text-2xl font-bold">{board.name}</h1>
-          <p className="text-muted-foreground text-sm">
-            {board.isPublic ? 'Público' : 'Privado'} • Miembros: {members.length}
-          </p>
-        </div>
+    <div className="flex flex-row gap-6">
+      <div className="min-w-0 flex-1">
+        <motion.div className="mx-auto p-4" initial="hidden" animate="visible" variants={fadeIn}>
+          <motion.div
+            className="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center"
+            variants={slideUp}
+          >
+            <div>
+              <div className="flex items-center gap-2">
+                <motion.button
+                  onClick={toggleFavorite}
+                  disabled={isFavoriteToggling}
+                  title={isFavorite ? 'Quitar de favoritos' : 'Marcar como favorito'}
+                  className="text-yellow-500 transition-all duration-300 hover:scale-110 disabled:opacity-50"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  {isFavorite ? (
+                    <Star className="size-6 fill-yellow-500" />
+                  ) : (
+                    <StarOff className="size-6" />
+                  )}
+                </motion.button>
+                <motion.h1 className="align-middle text-2xl font-bold">{board.name}</motion.h1>
+              </div>
+              <motion.p className="text-muted-foreground text-sm">
+                {board.isPublic ? 'Público' : 'Privado'} • Miembros: {members.length}
+              </motion.p>
+            </div>
 
-        <div className="flex flex-wrap gap-2">
+            <motion.div className="flex flex-wrap gap-2">
+              {userRole === 'admin' && (
+                <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+                  <Button
+                    onClick={() => setShowInvite(true)}
+                    size="sm"
+                    className="flex items-center gap-1"
+                  >
+                    <Users className="h-4 w-4" /> Invitar
+                  </Button>
+                </motion.div>
+              )}
+              {canEdit && (
+                <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+                  <Button
+                    onClick={() => setShowCreateColumn(true)}
+                    size="sm"
+                    className="flex items-center gap-1"
+                  >
+                    <Plus className="h-4 w-4" /> Añadir columna
+                  </Button>
+                </motion.div>
+              )}
+              <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+                <Link href={`/tableros/${boardId}/gantt`}>
+                  <Button variant="outline" size="sm" className="flex items-center gap-1">
+                    <Calendar className="h-4 w-4" /> Vista Gantt
+                  </Button>
+                </Link>
+              </motion.div>
+            </motion.div>
+          </motion.div>
+
+          {/* Gestión de miembros y roles */}
           {userRole === 'admin' && (
-            <Button
-              onClick={() => setShowInvite(true)}
-              size="sm"
-              className="flex items-center gap-1"
-            >
-              <Users className="h-4 w-4" /> Invitar
-            </Button>
+            <div className="mb-6">
+              <BoardMembersList
+                members={members}
+                users={users}
+                currentUserRole={userRole}
+                boardId={boardId}
+                onRoleUpdated={fetchData}
+                onMemberRemoved={fetchData}
+              />
+            </div>
           )}
-          {canEdit && (
-            <Button
-              onClick={() => setShowCreateColumn(true)}
-              size="sm"
-              className="flex items-center gap-1"
-            >
-              <Plus className="h-4 w-4" /> Añadir columna
-            </Button>
-          )}
-          <Link href={`/tableros/${boardId}/gantt`}>
-            <Button variant="outline" size="sm" className="flex items-center gap-1">
-              <Calendar className="h-4 w-4" /> Vista Gantt
-            </Button>
-          </Link>
-        </div>
-      </div>
 
-      <DndContext
-        sensors={sensors}
-        collisionDetection={pointerWithin}
-        onDragStart={handleDragStart}
-        onDragOver={handleDragOver}
-        onDragEnd={handleDragEnd}
-      >
-        <div className="flex gap-6 overflow-x-auto pt-2 pb-4">
-          {columns.map((col) => (
-            <KanbanColumn
-              key={col.id}
-              column={col}
-              items={items.filter((i) => i.columnId === col.id)}
-              users={users}
-              canEdit={canEdit}
-              onAddItem={() => setCreateItemColumnId(col.id)}
-              onEditColumn={() => {
-                setEditColumnId(col.id);
-                setEditColumnTitle(col.title);
-              }}
-              onEditItem={(it) => {
-                if (userRole === 'admin' || it.assigneeId === userId) {
-                  setEditItem(it);
+          <DndContext
+            sensors={sensors}
+            collisionDetection={pointerWithin}
+            onDragStart={handleDragStart}
+            onDragOver={handleDragOver}
+            onDragEnd={handleDragEnd}
+          >
+            <div className="flex gap-6 overflow-x-auto pt-2 pb-4">
+              <AnimatePresence>
+                {columns.map((col) => (
+                  <motion.div
+                    key={col.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 20 }}
+                    transition={{ type: 'spring', stiffness: 300, damping: 24 }}
+                    layout
+                  >
+                    <KanbanColumn
+                      column={col}
+                      items={items.filter((i) => i.columnId === col.id)}
+                      users={users}
+                      canEdit={canEdit}
+                      onAddItem={() => setCreateItemColumnId(col.id)}
+                      onEditColumn={() => {
+                        setEditColumnId(col.id);
+                        setEditColumnTitle(col.title);
+                      }}
+                      onEditItem={(it) => {
+                        if (userRole === 'admin' || it.assigneeId === userId) {
+                          setEditItem(it);
+                        }
+                      }}
+                      onDeleteColumn={() => handleDeleteColumn(col.id)}
+                    />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </div>
+            <DragOverlay>
+              {activeItem && <KanbanItem item={activeItem} users={users} isOverlay />}
+            </DragOverlay>
+          </DndContext>
+
+          <AnimatePresence>
+            {showInvite && (
+              <BoardInviteModal
+                boardId={boardId}
+                onClose={() => {
+                  setShowInvite(false);
+                  setTimeout(() => fetchData(), 100);
+                }}
+                onInvited={() => {
+                  setShowInvite(false);
+                  fetchData();
+                }}
+              />
+            )}
+          </AnimatePresence>
+
+          <AnimatePresence>
+            {showCreateColumn && (
+              <ColumnCreateModal
+                boardId={boardId}
+                onClose={() => setShowCreateColumn(false)}
+                onCreated={fetchData}
+              />
+            )}
+          </AnimatePresence>
+
+          <AnimatePresence>
+            {createItemColumnId && (
+              <ItemCreateModal
+                columnId={createItemColumnId}
+                onClose={() => {
+                  setCreateItemColumnId(null);
+                  setTimeout(() => fetchData(), 100);
+                }}
+                onCreated={fetchData}
+                assignees={
+                  members.map((m) => users.find((u) => u.id === m.userId)).filter(Boolean) as User[]
                 }
-              }}
-              onDeleteColumn={() => handleDeleteColumn(col.id)}
-            />
-          ))}
-        </div>
-        <DragOverlay>
-          {activeItem && <KanbanItem item={activeItem} users={users} isOverlay />}
-        </DragOverlay>
-      </DndContext>
+                userRole={userRole}
+              />
+            )}
+          </AnimatePresence>
 
-      {showInvite && (
-        <BoardInviteModal
-          boardId={boardId}
-          onClose={() => {
-            setShowInvite(false);
-            // Ensure state is properly reset
-            setTimeout(() => fetchData(), 100);
-          }}
-          onInvited={() => {
-            setShowInvite(false);
-            fetchData();
-          }}
+          <AnimatePresence>
+            {editColumnId && (
+              <ColumnEditModal
+                columnId={editColumnId}
+                currentTitle={editColumnTitle}
+                boardId={boardId}
+                token={auth.token!}
+                onClose={() => setEditColumnId(null)}
+                onUpdated={fetchData}
+              />
+            )}
+          </AnimatePresence>
+
+          <AnimatePresence>
+            {editItem && (
+              <ItemEditModal
+                item={{
+                  ...editItem,
+                  status: editItem.status ?? 'pending',
+                }}
+                onClose={() => {
+                  setEditItem(null);
+                  setTimeout(() => fetchData(), 100);
+                }}
+                onUpdated={fetchData}
+                assignees={
+                  members.map((m) => users.find((u) => u.id === m.userId)).filter(Boolean) as User[]
+                }
+                userRole={userRole}
+                currentUserId={userId!}
+              />
+            )}
+          </AnimatePresence>
+        </motion.div>
+      </div>
+      <div className="flex min-h-[600px] w-[380px] flex-col border-l pl-4">
+        <ChatPanel
+          roomType="Board"
+          entityId={boardId}
+          members={members.map((m) => {
+            const user = users.find((u) => u.id === m.userId);
+            return { userId: m.userId, name: user?.name || 'Usuario', imageUrl: user?.imageUrl };
+          })}
         />
-      )}
-      {showCreateColumn && (
-        <ColumnCreateModal
-          boardId={boardId}
-          onClose={() => setShowCreateColumn(false)}
-          onCreated={fetchData}
-        />
-      )}
-      {createItemColumnId && (
-        <ItemCreateModal
-          columnId={createItemColumnId}
-          onClose={() => {
-            setCreateItemColumnId(null);
-            // Ensure state is properly reset
-            setTimeout(() => fetchData(), 100);
-          }}
-          onCreated={fetchData}
-          assignees={
-            members
-              .filter((m) => m.role === 'editor')
-              .map((m) => users.find((u) => u.id === m.userId))
-              .filter(Boolean) as User[]
-          }
-          userRole={userRole}
-        />
-      )}
-      {editColumnId && (
-        <ColumnEditModal
-          columnId={editColumnId}
-          currentTitle={editColumnTitle}
-          boardId={boardId}
-          token={auth.token!}
-          onClose={() => setEditColumnId(null)}
-          onUpdated={fetchData}
-        />
-      )}
-      {editItem && (
-        <ItemEditModal
-          item={{
-            ...editItem,
-            status: editItem.status ?? 'pending',
-          }}
-          onClose={() => {
-            setEditItem(null);
-            // Ensure state is properly reset
-            setTimeout(() => fetchData(), 100);
-          }}
-          onUpdated={fetchData}
-          assignees={
-            members
-              .filter((m) => m.role === 'editor')
-              .map((m) => users.find((u) => u.id === m.userId))
-              .filter(Boolean) as User[]
-          }
-          userRole={userRole}
-          currentUserId={userId!}
-        />
-      )}
+      </div>
     </div>
   );
 }

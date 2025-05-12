@@ -2,9 +2,11 @@
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { listItem, staggerChildren } from '@/lib/animation-variants';
 import { cn } from '@/lib/utils';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { AnimatePresence, motion } from 'framer-motion';
 import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react';
 import KanbanItem from './KanbanItem';
 
@@ -45,6 +47,7 @@ export default function KanbanColumn({
         'flex w-[300px] min-w-[300px] flex-col shadow-md transition-all duration-300',
         isOver && 'ring-primary/50 scale-[1.01] shadow-lg ring-2',
       )}
+      interactive
     >
       <CardHeader className="flex flex-row items-center justify-between p-3 pb-2">
         <CardTitle className="text-lg font-medium">{column.title}</CardTitle>
@@ -70,24 +73,41 @@ export default function KanbanColumn({
         )}
       </CardHeader>
       <CardContent className="scrollbar-thin max-h-[calc(100vh-220px)] flex-grow overflow-y-auto p-3 pt-0">
-        <div className="flex flex-col gap-2">
+        <motion.div
+          className="flex flex-col gap-2"
+          variants={staggerChildren}
+          initial="hidden"
+          animate="visible"
+        >
           <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
-            {items.length > 0 ? (
-              items.map((item) => (
-                <KanbanItem
-                  key={item.id}
-                  item={item}
-                  users={users}
-                  onClick={() => canEdit && onEditItem(item)}
-                />
-              ))
-            ) : (
-              <div className="text-muted-foreground rounded-md border border-dashed px-2 py-8 text-center text-sm italic">
-                No hay tareas
-              </div>
-            )}
+            <AnimatePresence>
+              {items.length > 0 ? (
+                items.map((item) => (
+                  <motion.div
+                    key={item.id}
+                    variants={listItem}
+                    layout
+                    exit={{ opacity: 0, y: 10, transition: { duration: 0.2 } }}
+                  >
+                    <KanbanItem
+                      key={item.id}
+                      item={item}
+                      users={users}
+                      onClick={() => canEdit && onEditItem(item)}
+                    />
+                  </motion.div>
+                ))
+              ) : (
+                <motion.div
+                  className="text-muted-foreground rounded-md border border-dashed px-2 py-8 text-center text-sm italic"
+                  variants={listItem}
+                >
+                  No hay tareas
+                </motion.div>
+              )}
+            </AnimatePresence>
           </SortableContext>
-        </div>
+        </motion.div>
 
         {canEdit && (
           <Button

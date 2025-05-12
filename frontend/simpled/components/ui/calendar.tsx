@@ -1,71 +1,71 @@
 'use client';
 
-import type { Locale } from 'date-fns';
-import { es } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import type * as React from 'react';
-import { DayPicker } from 'react-day-picker';
+import { Input } from '@/components/ui/input';
+import { CalendarIcon } from 'lucide-react';
+import Pikaday from 'pikaday';
+import 'pikaday/css/pikaday.css';
+import React, { forwardRef, useEffect, useRef } from 'react';
 
-import { buttonVariants } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-
-export type CalendarProps = React.ComponentProps<typeof DayPicker>;
-
-const IconLeft = () => <ChevronLeft className="h-4 w-4" />;
-const IconRight = () => <ChevronRight className="h-4 w-4" />;
-
-function Calendar({
-  className,
-  classNames,
-  showOutsideDays = true,
-  locale = es,
-  ...props
-}: CalendarProps & { locale?: Locale }) {
-  return (
-    <DayPicker
-      showOutsideDays={showOutsideDays}
-      className={cn('p-3', className)}
-      locale={locale}
-      classNames={{
-        months: 'flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0',
-        month: 'space-y-4',
-        caption: 'flex justify-center pt-1 relative items-center',
-        caption_label: 'text-sm font-medium',
-        nav: 'space-x-1 flex items-center',
-        nav_button: cn(
-          buttonVariants({ variant: 'outline' }),
-          'h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100',
-        ),
-        nav_button_previous: 'absolute left-1',
-        nav_button_next: 'absolute right-1',
-        table: 'w-full border-collapse space-y-1',
-        head_row: 'flex',
-        head_cell: 'text-muted-foreground rounded-md w-9 font-normal text-[0.8rem]',
-        row: 'flex w-full mt-2',
-        cell: 'h-9 w-9 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20',
-        day: cn(
-          buttonVariants({ variant: 'ghost' }),
-          'h-9 w-9 p-0 font-normal aria-selected:opacity-100',
-        ),
-        day_range_end: 'day-range-end',
-        day_selected:
-          'bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground',
-        day_today: 'bg-accent text-accent-foreground',
-        day_outside:
-          'day-outside text-muted-foreground opacity-50 aria-selected:bg-accent/50 aria-selected:text-muted-foreground aria-selected:opacity-30',
-        day_disabled: 'text-muted-foreground opacity-50',
-        day_range_middle: 'aria-selected:bg-accent aria-selected:text-accent-foreground',
-        day_hidden: 'invisible',
-        ...classNames,
-      }}
-      components={{
-        IconLeft,
-        IconRight,
-      }}
-      {...props}
-    />
-  );
+interface LightCalendarProps {
+  date?: Date;
+  onDateChange: (d: Date) => void;
+  placeholder?: string;
+  disabled?: boolean;
 }
-Calendar.displayName = 'Calendar';
 
-export { Calendar };
+export const LightCalendar = forwardRef<HTMLInputElement, LightCalendarProps>(
+  ({ date, onDateChange, placeholder = 'Seleccionar fecha', disabled = false }, ref) => {
+    const inputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+      if (!inputRef.current) return;
+      const picker = new Pikaday({
+        field: inputRef.current,
+        defaultDate: date,
+        setDefaultDate: Boolean(date),
+        onSelect: onDateChange,
+        i18n: {
+          previousMonth: 'Anterior',
+          nextMonth: 'Siguiente',
+          months: [
+            'Enero',
+            'Febrero',
+            'Marzo',
+            'Abril',
+            'Mayo',
+            'Junio',
+            'Julio',
+            'Agosto',
+            'Septiembre',
+            'Octubre',
+            'Noviembre',
+            'Diciembre',
+          ],
+          weekdays: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'],
+          weekdaysShort: ['Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa'],
+        },
+      });
+      return () => picker.destroy();
+    }, [date, onDateChange]);
+
+    return (
+      <div className="relative">
+        <Input
+          ref={(node) => {
+            inputRef.current = node;
+            if (typeof ref === 'function') {
+              ref(node);
+            } else if (ref && typeof ref === 'object' && 'current' in ref) {
+              (ref as React.RefObject<HTMLInputElement | null>).current = node;
+            }
+          }}
+          placeholder={placeholder}
+          disabled={disabled}
+          className="pr-10"
+        />
+        <CalendarIcon className="pointer-events-none absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+      </div>
+    );
+  },
+);
+LightCalendar.displayName = 'LightCalendar';

@@ -9,6 +9,10 @@ using Simpled.Repository;
 
 namespace Simpled.Services
 {
+    /// <summary>
+    /// Servicio para la gestión de tableros (Boards).
+    /// Implementa IBoardRepository.
+    /// </summary>
     public class BoardService : IBoardRepository
     {
         private readonly SimpledDbContext _context;
@@ -20,6 +24,11 @@ namespace Simpled.Services
             _hubContext = hubContext;
         }
 
+        /// <summary>
+        /// Obtiene todos los tableros visibles para un usuario.
+        /// </summary>
+        /// <param name="userId">ID del usuario (opcional).</param>
+        /// <returns>Lista de tableros.</returns>
         public async Task<IEnumerable<BoardReadDto>> GetAllAsync(Guid? userId = null)
         {
             var boards = await _context.Boards
@@ -49,7 +58,14 @@ namespace Simpled.Services
             return boards;
         }
 
-        public async Task<BoardReadDto?> GetByIdAsync(Guid id)
+        /// <summary>
+        /// Obtiene un tablero por su ID y el ID del usuario.
+        /// </summary>
+        /// <param name="id">ID del tablero.</param>
+        /// <param name="userId">ID del usuario.</param>
+        /// <returns>DTO del tablero o null si no existe.</returns>
+        /// <exception cref="NotFoundException">Si el tablero no se encuentra.</exception>
+        public async Task<BoardReadDto?> GetByIdAsync(Guid id, Guid userId)
         {
             var b = await _context.Boards.FindAsync(id);
             if (b == null)
@@ -60,10 +76,18 @@ namespace Simpled.Services
                 Id = b.Id,
                 Name = b.Name,
                 OwnerId = b.OwnerId,
-                IsPublic = b.IsPublic
+                IsPublic = b.IsPublic,
+                IsFavorite = _context.FavoriteBoards
+                                .Any(f => f.BoardId == b.Id && f.UserId == userId)
             };
         }
 
+        /// <summary>
+        /// Crea un nuevo tablero y asigna al usuario como admin.
+        /// </summary>
+        /// <param name="dto">Datos del tablero a crear.</param>
+        /// <param name="userId">ID del usuario creador.</param>
+        /// <returns>DTO del tablero creado.</returns>
         public async Task<BoardReadDto> CreateAsync(BoardCreateDto dto, Guid userId)
         {
             var newBoard = new Board
@@ -100,6 +124,12 @@ namespace Simpled.Services
             return dtoResult;
         }
 
+        /// <summary>
+        /// Actualiza los datos de un tablero existente.
+        /// </summary>
+        /// <param name="dto">Datos actualizados del tablero.</param>
+        /// <returns>True si la actualización fue exitosa.</returns>
+        /// <exception cref="NotFoundException">Si el tablero no se encuentra.</exception>
         public async Task<bool> UpdateAsync(BoardUpdateDto dto)
         {
             var board = await _context.Boards.FindAsync(dto.Id);
@@ -121,6 +151,12 @@ namespace Simpled.Services
             return true;
         }
 
+        /// <summary>
+        /// Elimina un tablero por su ID.
+        /// </summary>
+        /// <param name="id">ID del tablero.</param>
+        /// <returns>True si la eliminación fue exitosa.</returns>
+        /// <exception cref="NotFoundException">Si el tablero no se encuentra.</exception>
         public async Task<bool> DeleteAsync(Guid id)
         {
             var board = await _context.Boards.FindAsync(id);
@@ -136,6 +172,11 @@ namespace Simpled.Services
             return true;
         }
 
+        /// <summary>
+        /// Obtiene un tablero por su ID (sin tracking).
+        /// </summary>
+        /// <param name="id">ID del tablero.</param>
+        /// <returns>Entidad Board o null si no existe.</returns>
         public async Task<Board?> GetBoardByIdAsync(Guid id)
         {
             return await _context.Boards

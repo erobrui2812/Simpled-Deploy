@@ -1,6 +1,7 @@
 'use client';
 
 import AchievementCounter from '@/components/AchievementCounter';
+import FavoriteList from '@/components/FavoriteList';
 import InvitationsModal from '@/components/InvitationModal';
 import ProfileHeader from '@/components/ProfileHeader';
 import TeamsList from '@/components/TeamsList';
@@ -33,7 +34,7 @@ interface Team {
 
 export default function ProfilePage({ params }: { readonly params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const { fetchUserProfile, auth } = useAuth();
+  const { fetchUserProfile, auth, favoriteBoards } = useAuth();
   const [user, setUser] = useState<User | null>(null);
   const [showInvites, setShowInvites] = useState(false);
 
@@ -58,19 +59,11 @@ export default function ProfilePage({ params }: { readonly params: Promise<{ id:
     <div className="container mx-auto min-h-screen px-4 py-8">
       <div className="mx-auto max-w-4xl">
         <ProfileHeader user={user as User & { id: string }} isOwner={isOwner} />
+        <div className="mt-4">
+          <FavoriteList list={favoriteBoards} />
+        </div>
 
-        {isOwner && (
-          <div className="mt-4 flex justify-end">
-            <button
-              onClick={() => setShowInvites(true)}
-              className="rounded bg-blue-600 px-4 py-2 text-white transition hover:bg-blue-700"
-            >
-              Ver invitaciones
-            </button>
-          </div>
-        )}
-
-        <div className="mt-8 grid grid-cols-1 gap-8 md:grid-cols-2">
+        <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
           <AchievementCounter achievements={user.achievementsCompleted} userId={user.id} />
           <TeamsList teams={user.teams} />
         </div>

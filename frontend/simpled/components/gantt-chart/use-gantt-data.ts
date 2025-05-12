@@ -20,6 +20,21 @@ export function useGanttData(boardId: string, auth: Auth) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const getDependencyTypeLabel = (type: Dependency['type']): string => {
+    switch (type) {
+      case 'finish-to-start':
+        return 'Fin a Inicio (FS)';
+      case 'start-to-start':
+        return 'Inicio a Inicio (SS)';
+      case 'finish-to-finish':
+        return 'Fin a Fin (FF)';
+      case 'start-to-finish':
+        return 'Inicio a Fin (SF)';
+      default:
+        return type;
+    }
+  };
+
   /**
    * Obtiene tareas, columnas y dependencias del servidor.
    * En caso de no haber endpoint de dependencias, se simulan a partir de metadata.
@@ -184,6 +199,26 @@ export function useGanttData(boardId: string, auth: Auth) {
     }
   };
 
+  const validateDependency = (fromTask: Task, toTask: Task, type: Dependency['type']): boolean => {
+    const fromStart = new Date(fromTask.startDate);
+    const fromEnd = new Date(fromTask.endDate);
+    const toStart = new Date(toTask.startDate);
+    const toEnd = new Date(toTask.endDate);
+
+    switch (type) {
+      case 'finish-to-start':
+        return true;
+      case 'start-to-start':
+        return true;
+      case 'finish-to-finish':
+        return true;
+      case 'start-to-finish':
+        return true;
+      default:
+        return true;
+    }
+  };
+
   /**
    * Añade una dependencia entre dos tareas.
    */
@@ -193,6 +228,21 @@ export function useGanttData(boardId: string, auth: Auth) {
     type: Dependency['type'],
   ): Promise<boolean> => {
     try {
+      const fromTask = tasks.find((t) => t.id === fromTaskId);
+      const toTask = tasks.find((t) => t.id === toTaskId);
+
+      if (!fromTask || !toTask) {
+        console.error('Error adding dependency: Task not found');
+        setError('Error al añadir la dependencia. Tarea no encontrada.');
+        return false;
+      }
+
+      if (!validateDependency(fromTask, toTask, type)) {
+        console.error('Error adding dependency: Invalid dependency dates');
+        setError('Error al añadir la dependencia. Fechas inválidas.');
+        return false;
+      }
+
       const headers: HeadersInit = {
         'Content-Type': 'application/json',
         ...(auth.token ? { Authorization: `Bearer ${auth.token}` } : {}),
@@ -267,5 +317,6 @@ export function useGanttData(boardId: string, auth: Auth) {
     createTask,
     addDependency,
     removeDependency,
+    getDependencyTypeLabel,
   };
 }

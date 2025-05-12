@@ -8,6 +8,9 @@ using Simpled.Models;
 
 namespace Simpled.Controllers
 {
+    /// <summary>
+    /// Controlador para gestionar los tableros favoritos de los usuarios.
+    /// </summary>
     [ApiController]
     [Route("api/favorite-boards")]
     [Authorize]
@@ -21,10 +24,10 @@ namespace Simpled.Controllers
         }
 
         /// <summary>
-        /// Modifica el estado de favorito de un tablero de true a false 
+        /// Modifica el estado de favorito de un tablero de true a false.
         /// </summary>
-        /// <param name="dto">Id del tablero</param>
-        /// <returns>True de si es favorito o no</returns>
+        /// <param name="dto">DTO con el Id del tablero</param>
+        /// <returns>True si es favorito, false si no lo es</returns>
         [HttpPost("toggle")]
         public async Task<IActionResult> ToggleFavorite([FromBody] FavoriteBoardDto dto)
         {
@@ -53,10 +56,10 @@ namespace Simpled.Controllers
         }
 
         /// <summary>
-        /// Revisa si un tablero es favorito o no
+        /// Revisa si un tablero es favorito o no para el usuario actual.
         /// </summary>
-        /// <param name="dto">Id del tablero</param>
-        /// <returns>True de si es favorito o no</returns>
+        /// <param name="dto">DTO con el Id del tablero</param>
+        /// <returns>True si es favorito, false si no lo es</returns>
         [HttpGet("check-favorite/{boardId}")]
         public async Task<IActionResult> CheckFavorite(FavoriteBoardDto dto)
         {
@@ -71,9 +74,9 @@ namespace Simpled.Controllers
         }
 
         /// <summary>
-        /// Hace una lista con los tableros que tengas marcados como favoritos
+        /// Obtiene la lista de tableros marcados como favoritos por el usuario actual.
         /// </summary>
-        /// <returns>True de si es favorito o no</returns>
+        /// <returns>Lista de tableros favoritos</returns>
         [HttpGet]
         public async Task<IActionResult> GetFavoriteBoardNames()
         {
@@ -81,13 +84,17 @@ namespace Simpled.Controllers
             Guid? userId = string.IsNullOrEmpty(userIdClaim) ? null : Guid.Parse(userIdClaim);
             if (userId == null) return Unauthorized();
 
-            var names = await _context.FavoriteBoards
+            var list = await _context.FavoriteBoards
                 .Where(f => f.UserId == userId)
                 .Include(f => f.Board)
-                .Select(f => f.Board!.Name)
+                .Select(f => new {
+                    Id = f.Board!.Id,
+                    Name = f.Board!.Name
+                })
                 .ToListAsync();
 
-            return Ok(names);
+
+            return Ok(list);
         }
     }
 }

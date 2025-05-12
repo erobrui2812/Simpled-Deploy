@@ -1,4 +1,7 @@
 'use client';
+import { fadeIn, scaleUp } from '@/lib/animation-variants';
+import { motion } from 'framer-motion';
+import type React from 'react';
 import { useState } from 'react';
 import { toast } from 'react-toastify';
 
@@ -54,8 +57,17 @@ export default function ColumnEditModal({
   };
 
   return (
-    <div className="bg-opacity-40 fixed inset-0 z-50 flex items-center justify-center bg-black">
-      <div className="w-full max-w-md rounded bg-white p-6 shadow-lg dark:bg-neutral-900">
+    <motion.div
+      className="bg-opacity-40 fixed inset-0 z-50 flex items-center justify-center bg-black"
+      initial="hidden"
+      animate="visible"
+      exit="exit"
+      variants={fadeIn}
+    >
+      <motion.div
+        className="w-full max-w-md rounded bg-white p-6 shadow-lg dark:bg-neutral-900"
+        variants={scaleUp}
+      >
         <h2 className="mb-4 text-lg font-semibold">Editar columna</h2>
         <form onSubmit={handleUpdate} className="flex flex-col gap-4">
           <input
@@ -66,23 +78,27 @@ export default function ColumnEditModal({
             className="rounded border px-3 py-2"
           />
           <div className="flex justify-end gap-2">
-            <button
+            <motion.button
               type="button"
               onClick={onClose}
               className="rounded border px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-neutral-800"
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
             >
               Cancelar
-            </button>
-            <button
+            </motion.button>
+            <motion.button
               type="submit"
               disabled={loading}
               className="rounded bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700"
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
             >
               {loading ? 'Guardando...' : 'Guardar cambios'}
-            </button>
+            </motion.button>
           </div>
         </form>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }

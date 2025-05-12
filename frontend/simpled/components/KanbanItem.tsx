@@ -4,12 +4,14 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import { listItem } from '@/lib/animation-variants';
 import { cn, getInitials, getStatusBadgeClass, getStatusLabel } from '@/lib/utils';
 import type { Item, User } from '@/types';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { motion } from 'framer-motion';
 import { CalendarIcon, CheckSquare } from 'lucide-react';
 
 interface KanbanItemProps {
@@ -45,62 +47,76 @@ export default function KanbanItem({ item, users, onClick, isOverlay = false }: 
       : (item.progress ?? 0);
 
   return (
-    <Card
+    <motion.div
       ref={setNodeRef}
       style={style}
       {...attributes}
       {...listeners}
       onClick={onClick}
-      className={cn(
-        'cursor-pointer border shadow-sm transition-all duration-200 hover:shadow-md',
-        isDragging && 'scale-95 opacity-50',
-        isOverlay && 'scale-105 rotate-2 shadow-lg',
-      )}
+      variants={listItem}
+      layout
+      initial="hidden"
+      animate="visible"
+      exit={{ opacity: 0, y: 10, transition: { duration: 0.2 } }}
     >
-      <CardContent className="space-y-2 p-3">
-        <div className="flex items-center justify-between">
-          <h3 className="line-clamp-2 text-base font-medium">{item.title}</h3>
-          <Badge className={cn('ml-1 shrink-0', statusClass)}>{statusLabel}</Badge>
-        </div>
-
-        {item.description && (
-          <p className="text-muted-foreground line-clamp-2 text-sm">{item.description}</p>
+      <Card
+        className={cn(
+          'cursor-pointer shadow-sm transition-all duration-200 hover:shadow-md',
+          isDragging && 'scale-95 opacity-50',
+          isOverlay && 'scale-105 rotate-2 shadow-lg',
         )}
-
-        {subtasksCount > 0 && (
-          <div className="space-y-1">
-            <div className="text-muted-foreground flex items-center justify-between text-xs">
-              <div className="flex items-center gap-1">
-                <CheckSquare className="h-3.5 w-3.5" />
-                <span>
-                  {completedSubtasks} de {subtasksCount}
-                </span>
-              </div>
-              <span>{progress}%</span>
-            </div>
-            <Progress value={progress} className="h-1.5" />
+        interactive={!isDragging && !isOverlay}
+      >
+        <CardContent className="space-y-2 p-3">
+          <div className="flex items-center justify-between">
+            <h3 className="line-clamp-2 text-base font-medium">{item.title}</h3>
+            <Badge className={cn('ml-1 shrink-0', statusClass)}>{statusLabel}</Badge>
           </div>
-        )}
 
-        <div className="flex items-center justify-between pt-1">
-          {assignee && (
-            <div className="flex items-center gap-2">
-              <Avatar className="h-6 w-6">
-                <AvatarImage src={assignee.imageUrl || '/placeholder.svg'} alt={assignee.name} />
-                <AvatarFallback className="text-xs">{getInitials(assignee.name)}</AvatarFallback>
-              </Avatar>
-              <span className="text-muted-foreground text-xs">{assignee.name}</span>
+          {item.description && (
+            <p className="text-muted-foreground line-clamp-2 text-sm">{item.description}</p>
+          )}
+
+          {subtasksCount > 0 && (
+            <div className="space-y-1">
+              <div className="text-muted-foreground flex items-center justify-between text-xs">
+                <div className="flex items-center gap-1">
+                  <CheckSquare className="h-3.5 w-3.5" />
+                  <span>
+                    {completedSubtasks} de {subtasksCount}
+                  </span>
+                </div>
+                <span>{progress}%</span>
+              </div>
+              <Progress value={progress} className="h-1.5" />
             </div>
           )}
 
-          {formattedDate && (
-            <div className="text-muted-foreground ml-auto flex items-center text-xs">
-              <CalendarIcon className="mr-1 h-3 w-3" />
-              {formattedDate}
-            </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+          <div className="flex items-center justify-between pt-1">
+            {assignee && (
+              <div className="flex items-center gap-2">
+                <Avatar className="h-6 w-6">
+                  <AvatarImage
+                    src={
+                      assignee.imageUrl ? assignee.imageUrl : '/images/default/avatar-default.jpg'
+                    }
+                    alt={assignee.name}
+                  />
+                  <AvatarFallback className="text-xs">{getInitials(assignee.name)}</AvatarFallback>
+                </Avatar>
+                <span className="text-muted-foreground text-xs">{assignee.name}</span>
+              </div>
+            )}
+
+            {formattedDate && (
+              <div className="text-muted-foreground ml-auto flex items-center text-xs">
+                <CalendarIcon className="mr-1 h-3 w-3" />
+                {formattedDate}
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 }

@@ -7,6 +7,10 @@ using Simpled.Exception;
 
 namespace Simpled.Services
 {
+    /// <summary>
+    /// Servicio para la gestión de invitaciones a tableros.
+    /// Implementa IBoardInvitationRepository.
+    /// </summary>
     public class BoardInvitationService : IBoardInvitationRepository
     {
         private readonly SimpledDbContext _context;
@@ -16,6 +20,11 @@ namespace Simpled.Services
             _context = context;
         }
 
+        /// <summary>
+        /// Obtiene todas las invitaciones pendientes por email.
+        /// </summary>
+        /// <param name="email">Email del usuario.</param>
+        /// <returns>Lista de invitaciones.</returns>
         public async Task<IEnumerable<BoardInvitationReadDto>> GetAllByEmailAsync(string email)
         {
             return await _context.BoardInvitations
@@ -33,6 +42,11 @@ namespace Simpled.Services
                 }).ToListAsync();
         }
 
+        /// <summary>
+        /// Obtiene una invitación por su token.
+        /// </summary>
+        /// <param name="token">Token de la invitación.</param>
+        /// <returns>DTO de la invitación o null si no existe.</returns>
         public async Task<BoardInvitationReadDto?> GetByTokenAsync(string token)
         {
             var i = await _context.BoardInvitations.Include(i => i.Board)
@@ -51,8 +65,16 @@ namespace Simpled.Services
             };
         }
 
+        /// <summary>
+        /// Crea una nueva invitación a un tablero.
+        /// </summary>
+        /// <param name="dto">Datos de la invitación.</param>
+        /// <returns>Entidad BoardInvitation creada.</returns>
+        /// <exception cref="ApiException">Si ya existe una invitación pendiente.</exception>
         public async Task<BoardInvitation> CreateAsync(BoardInvitationCreateDto dto)
         {
+            if (dto.BoardId == Guid.Empty || string.IsNullOrWhiteSpace(dto.Email) || string.IsNullOrWhiteSpace(dto.Role))
+                throw new ApiException("El ID del tablero, el email y el rol son obligatorios.", 400);
             var exists = await _context.BoardInvitations.AnyAsync(i =>
                 i.BoardId == dto.BoardId && i.Email == dto.Email && !i.Accepted);
 
@@ -74,6 +96,13 @@ namespace Simpled.Services
             return invitation;
         }
 
+        /// <summary>
+        /// Acepta una invitación a un tablero.
+        /// </summary>
+        /// <param name="token">Token de la invitación.</param>
+        /// <param name="userId">ID del usuario que acepta.</param>
+        /// <returns>True si la operación fue exitosa.</returns>
+        /// <exception cref="NotFoundException">Si la invitación no existe o ya fue aceptada.</exception>
         public async Task<bool> AcceptAsync(string token, Guid userId)
         {
             var invitation = await _context.BoardInvitations
@@ -95,6 +124,12 @@ namespace Simpled.Services
             return true;
         }
 
+        /// <summary>
+        /// Rechaza una invitación a un tablero.
+        /// </summary>
+        /// <param name="token">Token de la invitación.</param>
+        /// <returns>True si la operación fue exitosa.</returns>
+        /// <exception cref="NotFoundException">Si la invitación no existe o ya fue procesada.</exception>
         public async Task<bool> RejectAsync(string token)
         {
             var invitation = await _context.BoardInvitations

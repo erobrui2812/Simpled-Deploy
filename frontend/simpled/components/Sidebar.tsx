@@ -48,8 +48,6 @@ const Sidebar = () => {
 
       const columnData = await columnRes.json();
 
-      console.log('Columnas:', columnData);
-
       setColumns(columnData);
     } catch (err) {
       console.error('Error al cargar el tablero:', err);

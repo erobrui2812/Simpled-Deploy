@@ -5,7 +5,7 @@ import IconLink from '@/components/IconLink';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useAuth } from '@/contexts/AuthContext';
-import { Bell, Home, Info, Layers, LogIn, LogOut, Menu, User, Users } from 'lucide-react';
+import { Bell, Home, Info, Layers, LogIn, LogOut, Menu, PieChart, User, Users } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import InvitationsModal from './InvitationModal';
@@ -39,6 +39,9 @@ function NavItems({
         </IconLink>
       ) : (
         <>
+          <IconLink href="/dashboard" icon={<PieChart className="size-4" />}>
+            Dashboard
+          </IconLink>
           <IconLink href="/tableros" icon={<Layers className="size-4" />}>
             Tableros
           </IconLink>

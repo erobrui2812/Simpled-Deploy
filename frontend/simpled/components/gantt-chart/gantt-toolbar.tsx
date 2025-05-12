@@ -136,8 +136,13 @@ export function GanttToolbar({
             </PopoverTrigger>
             <PopoverContent className="w-56 p-2">
               <div className="grid gap-2">
-                {dateRangePresets.map((preset, i) => (
-                  <Button key={i} variant="ghost" className="justify-start" onClick={preset.fn}>
+                {dateRangePresets.map((preset) => (
+                  <Button
+                    key={preset.label}
+                    variant="ghost"
+                    className="justify-start"
+                    onClick={preset.fn}
+                  >
                     {preset.label}
                   </Button>
                 ))}

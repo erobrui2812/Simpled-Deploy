@@ -1,14 +1,10 @@
 'use client';
 
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { Input } from '@/components/ui/input';
 import { CalendarIcon } from 'lucide-react';
-import { useState } from 'react';
-
-import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { cn } from '@/lib/utils';
+import Pikaday from 'pikaday';
+import 'pikaday/css/pikaday.css';
+import { forwardRef, Ref, useEffect, useRef } from 'react';
 
 interface DatePickerProps {
   readonly date: Date | undefined;
@@ -17,32 +13,64 @@ interface DatePickerProps {
   readonly disabled?: boolean;
 }
 
-export function DatePicker({
-  date,
-  onDateChange,
-  placeholder = 'Seleccionar fecha',
-  disabled = false,
-}: DatePickerProps) {
-  const [open, setOpen] = useState(false);
+export const DatePicker = forwardRef(
+  (
+    { date, onDateChange, placeholder = 'Seleccionar fecha', disabled = false }: DatePickerProps,
+    ref: Ref<HTMLInputElement>,
+  ) => {
+    const inputRef = useRef<HTMLInputElement>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
 
-  return (
-    <Popover open={open} onOpenChange={setOpen} modal={true}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          className={cn(
-            'w-full justify-start text-left font-normal',
-            !date && 'text-muted-foreground',
-          )}
+    useEffect(() => {
+      if (!inputRef.current || !containerRef.current) return;
+      const picker = new Pikaday({
+        field: inputRef.current,
+        container: containerRef.current,
+        defaultDate: date,
+        setDefaultDate: Boolean(date),
+        onSelect: (d: Date) => onDateChange(d),
+        i18n: {
+          previousMonth: 'Anterior',
+          nextMonth: 'Siguiente',
+          months: [
+            'Enero',
+            'Febrero',
+            'Marzo',
+            'Abril',
+            'Mayo',
+            'Junio',
+            'Julio',
+            'Agosto',
+            'Septiembre',
+            'Octubre',
+            'Noviembre',
+            'Diciembre',
+          ],
+          weekdays: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'],
+          weekdaysShort: ['Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa'],
+        },
+      });
+      return () => picker.destroy();
+    }, [date, onDateChange]);
+
+    const setRefs = (node: HTMLInputElement) => {
+      inputRef.current = node;
+      if (typeof ref === 'function') ref(node);
+      else if (ref) (ref as React.RefObject<HTMLInputElement>).current = node;
+    };
+
+    return (
+      <div ref={containerRef} className="relative">
+        <Input
+          ref={setRefs}
+          type="text"
+          placeholder={placeholder}
           disabled={disabled}
-        >
-          <CalendarIcon className="mr-2 h-4 w-4" />
-          {date ? format(date, 'PPP', { locale: es }) : <span>{placeholder}</span>}
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="z-[1100] w-auto p-0" align="start">
-        <Calendar mode="single" selected={date} onSelect={onDateChange} locale={es} />
-      </PopoverContent>
-    </Popover>
-  );
-}
+          className="w-full pr-10"
+        />
+        <CalendarIcon className="pointer-events-none absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+      </div>
+    );
+  },
+);
+DatePicker.displayName = 'DatePicker';

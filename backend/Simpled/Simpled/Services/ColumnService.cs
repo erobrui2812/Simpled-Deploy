@@ -6,9 +6,13 @@ using Simpled.Exception;
 using Simpled.Hubs;
 using Simpled.Models;
 using Simpled.Repository;
-
+using Simpled.Validators;
 namespace Simpled.Services
 {
+    /// <summary>
+    /// Servicio para la gestión de columnas de tableros.
+    /// Implementa IColumnRepository.
+    /// </summary>
     public class ColumnService : IColumnRepository
     {
         private readonly SimpledDbContext _context;
@@ -20,6 +24,10 @@ namespace Simpled.Services
             _hubContext = hubContext;
         }
 
+        /// <summary>
+        /// Obtiene todas las columnas de todos los tableros.
+        /// </summary>
+        /// <returns>Lista de columnas.</returns>
         public async Task<IEnumerable<BoardColumnReadDto>> GetAllAsync()
         {
             return await _context.BoardColumns
@@ -33,6 +41,11 @@ namespace Simpled.Services
                 .ToListAsync();
         }
 
+        /// <summary>
+        /// Obtiene una columna por su ID.
+        /// </summary>
+        /// <param name="id">ID de la columna.</param>
+        /// <returns>DTO de la columna o excepción si no existe.</returns>
         public async Task<BoardColumnReadDto?> GetByIdAsync(Guid id)
         {
             var column = await _context.BoardColumns.FindAsync(id);
@@ -48,8 +61,17 @@ namespace Simpled.Services
             };
         }
 
+        /// <summary>
+        /// Crea una nueva columna en un tablero.
+        /// </summary>
+        /// <param name="dto">Datos de la columna a crear.</param>
+        /// <returns>DTO de la columna creada.</returns>
         public async Task<BoardColumnReadDto> CreateAsync(BoardColumnCreateDto dto)
         {
+            var validator = new ColumnCreateValidator();
+            var validationResult = validator.Validate(dto);
+            if (!validationResult.IsValid)
+                throw new ApiException(validationResult.Errors[0].ErrorMessage, 400);
             var newColumn = new BoardColumn
             {
                 Id = Guid.NewGuid(),
@@ -77,8 +99,17 @@ namespace Simpled.Services
             return columnDto;
         }
 
+        /// <summary>
+        /// Actualiza los datos de una columna existente.
+        /// </summary>
+        /// <param name="dto">Datos actualizados de la columna.</param>
+        /// <returns>True si la actualización fue exitosa.</returns>
         public async Task<bool> UpdateAsync(BoardColumnUpdateDto dto)
         {
+            var validator = new ColumnUpdateValidator();
+            var validationResult = validator.Validate(dto);
+            if (!validationResult.IsValid)
+                throw new ApiException(validationResult.Errors[0].ErrorMessage, 400);
             var column = await _context.BoardColumns.FindAsync(dto.Id);
             if (column == null)
                 throw new NotFoundException("Columna no encontrada.");
@@ -101,12 +132,24 @@ namespace Simpled.Services
             return true;
         }
 
+        /// <summary>
+        /// Elimina una columna por su ID, con opciones de cascada o mover ítems.
+        /// </summary>
+        /// <param name="id">ID de la columna.</param>
+        /// <returns>True si la eliminación fue exitosa.</returns>
         public Task<bool> DeleteAsync(Guid id)
         {
            
             return DeleteAsync(id, cascadeItems: false, targetColumnId: null);
         }
 
+        /// <summary>
+        /// Elimina una columna con opciones avanzadas.
+        /// </summary>
+        /// <param name="columnId">ID de la columna.</param>
+        /// <param name="cascadeItems">Si es true, elimina los ítems asociados.</param>
+        /// <param name="targetColumnId">Columna destino para mover ítems (opcional).</param>
+        /// <returns>True si la eliminación fue exitosa.</returns>
         public async Task<bool> DeleteAsync(Guid columnId, bool cascadeItems = false, Guid? targetColumnId = null)
         {
             var column = await _context.BoardColumns
@@ -154,6 +197,11 @@ namespace Simpled.Services
             return true;
         }
 
+        /// <summary>
+        /// Obtiene el ID del tablero al que pertenece una columna.
+        /// </summary>
+        /// <param name="columnId">ID de la columna.</param>
+        /// <returns>ID del tablero.</returns>
         public async Task<Guid> GetBoardIdByColumnId(Guid columnId)
         {
             var column = await _context.BoardColumns.FindAsync(columnId);

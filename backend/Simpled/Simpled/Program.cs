@@ -160,6 +160,7 @@ builder.Services.AddSwaggerGen(options =>
 // --------------------------------------------------
 builder.Services.AddSignalR();
 builder.Services.AddAuthorization();
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IAuthRepository, AuthService>();
 builder.Services.AddScoped<IUserRepository, UserService>();
 builder.Services.AddScoped<IBoardRepository, BoardService>();
@@ -173,7 +174,10 @@ builder.Services.AddScoped<ITeamRepository, TeamService>();
 builder.Services.AddScoped<ITeamMemberRepository, TeamService>();
 builder.Services.AddScoped<ITeamInvitationRepository, TeamInvitationService>();
 builder.Services.AddScoped<IDependencyRepository, DependencyService>();
-
+builder.Services.AddScoped<DependencyService>();
+builder.Services.AddScoped<ICommentRepository, CommentService>();
+builder.Services.AddScoped<IActivityLogRepository, ActivityLogService>();
+builder.Services.AddScoped<IChatRepository, ChatService>();
 
 
 var app = builder.Build();
@@ -184,7 +188,7 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<SimpledDbContext>();
-    db.Database.EnsureCreated();
+    await db.Database.EnsureCreatedAsync();
 }
 
 // --------------------------------------------------
@@ -207,5 +211,6 @@ app.UseAuthorization();
 
 app.MapControllers();
 app.MapHub<BoardHub>("/hubs/board");
+app.MapHub<ChatHub>("/hubs/chat");
 
-app.Run();
+await app.RunAsync();

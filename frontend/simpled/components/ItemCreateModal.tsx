@@ -22,6 +22,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
 import type { User } from '@/types';
+import { motion } from 'framer-motion';
 import { Check, Loader2, Trash2, X } from 'lucide-react';
 import { nanoid } from 'nanoid';
 import { useState } from 'react';
@@ -69,7 +70,7 @@ export default function ItemCreateModal({
       const payload: any = {
         title: title.trim(),
         description: description.trim() || null,
-        startDate: startDate ? startDate.toISOString() : null,
+        startDate: startDate ? startDate.toISOString() : new Date().toISOString(),
         dueDate: dueDate ? dueDate.toISOString() : null,
         columnId,
         status,
@@ -129,7 +130,7 @@ export default function ItemCreateModal({
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="animate-scaleIn sm:max-w-md">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Nueva tarea</DialogTitle>
         </DialogHeader>
@@ -141,7 +142,12 @@ export default function ItemCreateModal({
           </TabsList>
 
           <TabsContent value="details" className="space-y-4 py-4">
-            <div className="space-y-2">
+            <motion.div
+              className="space-y-2"
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+            >
               <Label htmlFor="item-title">Título</Label>
               <Input
                 id="item-title"
@@ -150,9 +156,14 @@ export default function ItemCreateModal({
                 onChange={(e) => setTitle(e.target.value)}
                 autoFocus
               />
-            </div>
+            </motion.div>
 
-            <div className="space-y-2">
+            <motion.div
+              className="space-y-2"
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 }}
+            >
               <Label htmlFor="item-description">Descripción</Label>
               <Textarea
                 id="item-description"
@@ -161,9 +172,14 @@ export default function ItemCreateModal({
                 onChange={(e) => setDescription(e.target.value)}
                 rows={3}
               />
-            </div>
+            </motion.div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <motion.div
+              className="grid grid-cols-2 gap-4"
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
               <div className="space-y-2">
                 <Label htmlFor="item-startDate">Fecha de inicio</Label>
                 <DatePicker
@@ -176,9 +192,14 @@ export default function ItemCreateModal({
                 <Label htmlFor="item-dueDate">Fecha de vencimiento</Label>
                 <DatePicker date={dueDate} onDateChange={setDueDate} placeholder="Fecha fin" />
               </div>
-            </div>
+            </motion.div>
 
-            <div className="space-y-2">
+            <motion.div
+              className="space-y-2"
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.25 }}
+            >
               <Label htmlFor="item-status">Estado</Label>
               <Select value={status} onValueChange={(value) => setStatus(value as any)}>
                 <SelectTrigger id="item-status">
@@ -191,10 +212,15 @@ export default function ItemCreateModal({
                   <SelectItem value="delayed">Retrasada</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+            </motion.div>
 
             {userRole === 'admin' && assignees.length > 0 && (
-              <div className="space-y-2">
+              <motion.div
+                className="space-y-2"
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+              >
                 <Label htmlFor="item-assignee">Asignar a</Label>
                 <Select
                   value={assigneeId ?? 'not-assigned'}
@@ -212,18 +238,34 @@ export default function ItemCreateModal({
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
+              </motion.div>
             )}
           </TabsContent>
 
           <TabsContent value="subtasks" className="py-4">
-            <div className="space-y-3">
+            <motion.div
+              className="space-y-3"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.1 }}
+            >
               <h3 className="text-sm font-medium">Subtareas</h3>
 
               {subtasks.length > 0 ? (
-                <ul className="scrollbar-thin max-h-[200px] space-y-2 overflow-y-auto pr-1">
-                  {subtasks.map((subtask) => (
-                    <li key={subtask.id} className="group flex items-center gap-2">
+                <motion.ul
+                  className="scrollbar-thin max-h-[200px] space-y-2 overflow-y-auto pr-1"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ staggerChildren: 0.05, delayChildren: 0.1 }}
+                >
+                  {subtasks.map((subtask, index) => (
+                    <motion.li
+                      key={subtask.id}
+                      className="group flex items-center gap-2"
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                    >
                       <div className="border-primary h-4 w-4 flex-shrink-0 rounded-sm border" />
                       <span className="flex-1 text-sm">{subtask.title}</span>
                       <Button
@@ -234,14 +276,26 @@ export default function ItemCreateModal({
                       >
                         <Trash2 className="text-muted-foreground h-4 w-4" />
                       </Button>
-                    </li>
+                    </motion.li>
                   ))}
-                </ul>
+                </motion.ul>
               ) : (
-                <p className="text-muted-foreground text-sm italic">No hay subtareas</p>
+                <motion.p
+                  className="text-muted-foreground text-sm italic"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.2 }}
+                >
+                  No hay subtareas
+                </motion.p>
               )}
 
-              <div className="flex gap-2 pt-1">
+              <motion.div
+                className="flex gap-2 pt-1"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+              >
                 <Input
                   placeholder="Nueva subtarea"
                   value={newSubtask}
@@ -257,8 +311,8 @@ export default function ItemCreateModal({
                 <Button onClick={handleAddSubtask} disabled={!newSubtask.trim()} size="sm">
                   Añadir
                 </Button>
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
           </TabsContent>
         </Tabs>
 

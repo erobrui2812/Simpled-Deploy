@@ -18,12 +18,14 @@ const winningCombos: number[][] = [
   [2, 4, 6],
 ];
 
+type CellValue = 'X' | 'O' | null;
+
 export default function Custom404() {
   const [userSymbol, setUserSymbol] = useState<'X' | 'O'>('X');
   const [aiSymbol, setAiSymbol] = useState<'X' | 'O'>('O');
 
   // Estado del tablero y juego
-  const [board, setBoard] = useState<Array<'X' | 'O' | null>>(Array(9).fill(null));
+  const [board, setBoard] = useState<Array<CellValue>>(Array(9).fill(null));
   const [winner, setWinner] = useState<'X' | 'O' | 'Draw' | null>(null);
   const [isAiThinking, setIsAiThinking] = useState(false);
 
@@ -31,8 +33,8 @@ export default function Custom404() {
     const rand = Math.random() < 0.5 ? 'X' : 'O';
     const user = rand;
     const ai = user === 'X' ? 'O' : 'X';
-    setUserSymbol(user as 'X' | 'O');
-    setAiSymbol(ai as 'X' | 'O');
+    setUserSymbol(user);
+    setAiSymbol(ai);
     setBoard(Array(9).fill(null));
     setWinner(null);
     setIsAiThinking(false);
@@ -43,7 +45,7 @@ export default function Custom404() {
   }, []);
 
   // Comprueba si hay ganador
-  const checkWinner = (b: Array<'X' | 'O' | null>) => {
+  const checkWinner = (b: Array<CellValue>) => {
     for (const [a, bIdx, c] of winningCombos) {
       if (b[a] && b[a] === b[bIdx] && b[a] === b[c]) {
         return b[a];
@@ -53,10 +55,10 @@ export default function Custom404() {
   };
 
   // Mpvimiento de la IA random
-  const aiMove = (currentBoard: Array<'X' | 'O' | null>) => {
+  const aiMove = (currentBoard: Array<CellValue>) => {
     const emptyIndexes = currentBoard
       .map((cell, idx) => (cell === null ? idx : null))
-      .filter((v) => v !== null) as number[];
+      .filter((v): v is number => v !== null);
     if (emptyIndexes.length === 0) return currentBoard;
     const choice = emptyIndexes[Math.floor(Math.random() * emptyIndexes.length)];
     const newBoard = [...currentBoard];
@@ -115,7 +117,7 @@ export default function Custom404() {
               <div className="grid grid-cols-3 gap-1">
                 {board.map((cell, i) => (
                   <motion.div
-                    key={i}
+                    key={`cell-${i}-${cell}`}
                     className="bg-muted hover:bg-muted/70 flex h-16 w-16 cursor-pointer items-center justify-center"
                     whileTap={{ scale: 0.9 }}
                     onClick={() => handleCellClick(i)}
@@ -133,11 +135,11 @@ export default function Custom404() {
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.5 }}
                 >
-                  {winner === 'Draw'
-                    ? '¡Empate!'
-                    : winner === userSymbol
-                      ? '¡Has ganado!'
-                      : '¡Gana la IA!'}
+                  {(() => {
+                    if (winner === 'Draw') return '¡Empate!';
+                    if (winner === userSymbol) return '¡Has ganado!';
+                    return '¡Gana la IA!';
+                  })()}
                 </motion.div>
               )}
 

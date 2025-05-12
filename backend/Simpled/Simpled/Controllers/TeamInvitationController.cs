@@ -8,6 +8,9 @@ using Simpled.Repository;
 
 namespace Simpled.Controllers
 {
+    /// <summary>
+    /// Controlador para gestionar invitaciones a equipos.
+    /// </summary>
     [Authorize]
     [ApiController]
     [Route("api/[controller]")]
@@ -48,6 +51,7 @@ namespace Simpled.Controllers
         /// Crea una nueva invitación a un equipo (solo owner).
         /// NOTA: No añade inmediatamente al equipo, deja al usuario aceptar o rechazar.
         /// </summary>
+        /// <param name="dto">Datos de la invitación</param>
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] TeamInvitationCreateDto dto)
         {
@@ -71,6 +75,7 @@ namespace Simpled.Controllers
         /// <summary>
         /// Acepta una invitación (añade al usuario al equipo).
         /// </summary>
+        /// <param name="dto">Datos de la invitación a aceptar</param>
         [HttpPost("accept")]
         public async Task<IActionResult> Accept([FromBody] TeamInvitationAcceptDto dto)
         {
@@ -83,6 +88,7 @@ namespace Simpled.Controllers
         /// <summary>
         /// Rechaza una invitación.
         /// </summary>
+        /// <param name="dto">Datos de la invitación a rechazar</param>
         [HttpPost("reject")]
         public async Task<IActionResult> Reject([FromBody] TeamInvitationAcceptDto dto)
         {

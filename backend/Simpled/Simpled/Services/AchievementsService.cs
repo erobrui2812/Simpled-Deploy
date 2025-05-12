@@ -1,10 +1,14 @@
 ﻿using Newtonsoft.Json;
 using Simpled.Data;
 using Simpled.Models;
+using Simpled.Exception;
 
 
 namespace Simpled.Services
 {
+    /// <summary>
+    /// Servicio para la gestión y procesamiento de logros
+    /// </summary>
     public class AchievementsService
     {
         private readonly List<AchievementDefinition> _achievements;
@@ -18,8 +22,21 @@ namespace Simpled.Services
             _achievements = JsonConvert.DeserializeObject<List<AchievementDefinition>>(json)!;
         }
 
+        /// <summary>
+        /// Procesa una acción del usuario y desbloquea logros si corresponde.
+        /// </summary>
+        /// <param name="user">Usuario que realiza la acción.</param>
+        /// <param name="action">Acción realizada.</param>
+        /// <param name="newValue">Nuevo valor asociado a la acción.</param>
+        /// <returns>Lista de mensajes de logros desbloqueados.</returns>
         public async Task<List<string>> ProcessActionAsync(User user, string action, int newValue)
         {
+            if (user == null)
+                throw new ApiException("El usuario no puede ser nulo.", 400);
+            if (string.IsNullOrWhiteSpace(action))
+                throw new ApiException("La acción es obligatoria.", 400);
+            if (newValue < 0)
+                throw new ApiException("El valor de la acción no puede ser negativo.", 400);
             var newAchievements = new List<string>();
 
             var achievementsPerAction = _achievements
@@ -56,6 +73,10 @@ namespace Simpled.Services
             return newAchievements;
         }
 
+        /// <summary>
+        /// Obtiene todos los logros definidos en el sistema.
+        /// </summary>
+        /// <returns>Lista de logros.</returns>
         public List<object> GetAllAchievements()
         {
             var achievements = _achievements
@@ -70,6 +91,9 @@ namespace Simpled.Services
             return achievements.Cast<object>().ToList();
         }
 
+        /// <summary>
+        /// Definición interna de un logro.
+        /// </summary>
         private class AchievementDefinition
         {
             public int Value { get; set; }
