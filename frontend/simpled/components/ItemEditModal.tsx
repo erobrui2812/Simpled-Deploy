@@ -32,7 +32,7 @@ import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import SubtaskList from './SubtaskList';
 
-const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5193';
+const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://54.226.33.124:5193';
 
 type Props = Readonly<{
   item: Item;

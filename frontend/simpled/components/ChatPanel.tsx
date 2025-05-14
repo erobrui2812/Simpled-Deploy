@@ -13,7 +13,7 @@ import {
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 
-const API_URL = 'http://localhost:5193';
+const API_URL = 'http://54.226.33.124:5193';
 
 interface MemberInfo {
   userId: string;
