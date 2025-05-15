@@ -31,6 +31,8 @@ import { Check, Loader2, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import SubtaskList from './SubtaskList';
+import { Editor } from '@tinymce/tinymce-react';
+import { useRef } from 'react';
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5193';
 
@@ -395,13 +397,41 @@ export default function ItemEditModal({
             </div>
             <div className="space-y-2">
               <Label htmlFor="item-description">Descripción</Label>
-              <Textarea
+              <Editor
                 id="item-description"
+                apiKey="e0ysk0ojdthd8om5r7xxpebz9xunokuc9jsw6bno2ovnz5li"
+                onEditorChange={(content) => setDescription(content)}
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
                 disabled={!canChangeAll}
-                placeholder="Descripción de la tarea"
-                rows={3}
+                init={{
+                  height: 300,
+                  menubar: false,
+                  plugins: [
+                    'advlist',
+                    'autolink',
+                    'lists',
+                    'link',
+                    'image',
+                    'charmap',
+                    'preview',
+                    'anchor',
+                    'searchreplace',
+                    'visualblocks',
+                    'code',
+                    'fullscreen',
+                    'insertdatetime',
+                    'media',
+                    'table',
+                    'code',
+                    'help',
+                    'wordcount',
+                  ],
+                  toolbar:
+                    'undo redo | formatselect | bold italic backcolor | \
+                    alignleft aligncenter alignright alignjustify | \
+                    bullist numlist outdent indent | removeformat | help',
+                  content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }',
+                }}
               />
             </div>
             <div className="grid grid-cols-2 gap-4">

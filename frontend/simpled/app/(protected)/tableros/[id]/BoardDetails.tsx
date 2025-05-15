@@ -5,6 +5,7 @@ import ColumnEditModal from '@/components/ColumnEditModal';
 import ItemCreateModal from '@/components/ItemCreateModal';
 import ItemEditModal from '@/components/ItemEditModal';
 import { useAuth } from '@/contexts/AuthContext';
+import { sanitize } from '@/lib/utils';
 import { BookUser, Lock, LockOpen, PenLine, Plus, UserPlus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
@@ -192,7 +193,7 @@ export default function BoardDetails({ boardId }: Readonly<{ boardId: string }>)
                     onClick={() => canEdit && setEditItem(item)}
                   >
                     <strong>{item.title}</strong>
-                    {item.description && <p className="text-sm">{item.description}</p>}
+                    {item.description && <p className="text-sm">{sanitize(item.description)}</p>}
                   </button>
                 ))}
             </div>
