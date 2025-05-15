@@ -91,6 +91,15 @@ Registro de tareas realizadas durante el desarrollo del proyecto **Simpled**.
 | 2025-05-12  | Adrián Jiménez   | Figma vistas; Login/Registro - Perfil/Logros - Tableros/Gestión/Gantt - Sobre Nosotros |
 | 2025-05-12  | Adrián Jiménez   | Arreglos de toda la parte de comentarios y historial de actividad |
 | 2025-05-12  | Adrián Jiménez   | Implementación de CRUD de miembros en vista Tableros, y Chat en Tableros y Equipos |
+| 2025-05-12  | Elías Robles     | Arreglos visuales front   |
+| 2025-05-12  | Elías Robles     | Reactcountup funcional en el sobre nosotros |
+| 2025-05-13  | Elías Robles     | Inicio despliegue básico, testing de compilación, pruebas |
+| 2025-05-14  | Elías Robles     | Despliegue con base de datos |
+| 2025-05-15  | Elías Robles     | TinyMCE integrado en algunas partes del front y testing con el backend |
+
+
+
+
 
 ---
 
