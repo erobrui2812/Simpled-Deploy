@@ -23,6 +23,7 @@ import { Link2 } from 'lucide-react';
 import type React from 'react';
 import { useEffect, useState } from 'react';
 import type { Task } from './index';
+import { Editor } from '@tinymce/tinymce-react';
 
 interface GanttTaskDialogProps {
   readonly task: Task;
@@ -117,10 +118,40 @@ export function GanttTaskDialog({
 
             <div className="grid gap-2">
               <Label htmlFor="description">Descripción</Label>
-              <Input
+              <Editor
                 id="description"
+                apiKey="e0ysk0ojdthd8om5r7xxpebz9xunokuc9jsw6bno2ovnz5li"
+                onEditorChange={(content) => handleChange('description', content)}
                 value={editedTask.description ?? ''}
-                onChange={(e) => handleChange('description', e.target.value)}
+                init={{
+                  height: 300,
+                  menubar: false,
+                  plugins: [
+                    'advlist',
+                    'autolink',
+                    'lists',
+                    'link',
+                    'image',
+                    'charmap',
+                    'preview',
+                    'anchor',
+                    'searchreplace',
+                    'visualblocks',
+                    'code',
+                    'fullscreen',
+                    'insertdatetime',
+                    'media',
+                    'table',
+                    'code',
+                    'help',
+                    'wordcount',
+                  ],
+                  toolbar:
+                    'undo redo | formatselect | bold italic backcolor | \
+                                                alignleft aligncenter alignright alignjustify | \
+                                                bullist numlist outdent indent | removeformat | help',
+                  content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }',
+                }}
               />
             </div>
 
