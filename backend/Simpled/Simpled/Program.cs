@@ -62,7 +62,8 @@ builder.Services.AddAuthentication(options =>
         {
             var accessToken = context.Request.Query["access_token"].FirstOrDefault();
             var path = context.HttpContext.Request.Path;
-            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs/board"))
+            if (!string.IsNullOrEmpty(accessToken) &&
+                (path.StartsWithSegments("/hubs/board") || path.StartsWithSegments("/api/sse/invitations")))
             {
                 context.Token = accessToken;
             }
@@ -178,7 +179,7 @@ builder.Services.AddScoped<DependencyService>();
 builder.Services.AddScoped<ICommentRepository, CommentService>();
 builder.Services.AddScoped<IActivityLogRepository, ActivityLogService>();
 builder.Services.AddScoped<IChatRepository, ChatService>();
-
+builder.Services.AddSingleton<SseInvitationBroadcastService>();
 
 var app = builder.Build();
 
