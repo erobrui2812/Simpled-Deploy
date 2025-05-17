@@ -178,7 +178,7 @@ builder.Services.AddScoped<DependencyService>();
 builder.Services.AddScoped<ICommentRepository, CommentService>();
 builder.Services.AddScoped<IActivityLogRepository, ActivityLogService>();
 builder.Services.AddScoped<IChatRepository, ChatService>();
-
+builder.Services.AddSingleton<SseInvitationBroadcastService>();
 
 var app = builder.Build();
 
