@@ -1,6 +1,13 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSignalR } from '@/contexts/SignalRContext';
 import { fadeIn, slideUp } from '@/lib/animation-variants';
@@ -518,6 +525,33 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
                   </Button>
                 </motion.div>
               )}
+              {userRole === 'admin' && (
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-1"
+                      title="Gestionar miembros del tablero"
+                    >
+                      <Users className="h-4 w-4" /> Gestionar miembros
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                      <DialogTitle>Gestión de miembros</DialogTitle>
+                    </DialogHeader>
+                    <BoardMembersList
+                      members={members}
+                      users={users}
+                      currentUserRole={userRole}
+                      boardId={boardId}
+                      onRoleUpdated={fetchData}
+                      onMemberRemoved={fetchData}
+                    />
+                  </DialogContent>
+                </Dialog>
+              )}
               <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
                 <Link href={`/tableros/${boardId}/gantt`}>
                   <Button variant="outline" size="sm" className="flex items-center gap-1">
@@ -527,20 +561,6 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
               </motion.div>
             </motion.div>
           </motion.div>
-
-          {/* Gestión de miembros y roles */}
-          {userRole === 'admin' && (
-            <div className="mb-6">
-              <BoardMembersList
-                members={members}
-                users={users}
-                currentUserRole={userRole}
-                boardId={boardId}
-                onRoleUpdated={fetchData}
-                onMemberRemoved={fetchData}
-              />
-            </div>
-          )}
 
           <DndContext
             sensors={sensors}
