@@ -5,6 +5,7 @@ using Simpled.Dtos.BoardInvitations;
 using Simpled.Helpers;
 using Simpled.Hubs;
 using Simpled.Repository;
+using Simpled.Services;
 using System.Security.Claims;
 
 namespace Simpled.Controllers

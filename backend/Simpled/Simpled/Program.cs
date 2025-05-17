@@ -62,7 +62,8 @@ builder.Services.AddAuthentication(options =>
         {
             var accessToken = context.Request.Query["access_token"].FirstOrDefault();
             var path = context.HttpContext.Request.Path;
-            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs/board"))
+            if (!string.IsNullOrEmpty(accessToken) &&
+                (path.StartsWithSegments("/hubs/board") || path.StartsWithSegments("/api/sse/invitations")))
             {
                 context.Token = accessToken;
             }

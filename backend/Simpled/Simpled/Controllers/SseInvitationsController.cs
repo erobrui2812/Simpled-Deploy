@@ -19,7 +19,7 @@ namespace Simpled.Controllers
         }
 
         [HttpGet]
-        public async Task Get()
+        public async Task Get([FromQuery(Name = "access_token")] string? accessToken = null)
         {
             Response.Headers.Add("Content-Type", "text/event-stream");
             Response.Headers.Add("Cache-Control", "no-cache");
@@ -31,14 +31,15 @@ namespace Simpled.Controllers
                 await Response.Body.FlushAsync();
                 return;
             }
-            var channel = Channel.CreateUnbounded<string>();
+            var channel = Channel.CreateUnbounded<(string, string)>();
             _broadcastService.Register(email, channel.Writer);
             try
             {
-                await foreach (var message in channel.Reader.ReadAllAsync(HttpContext.RequestAborted))
+                await foreach (var (eventName, message) in channel.Reader.ReadAllAsync(HttpContext.RequestAborted))
                 {
-                    var data = $"data: {message}\n\n";
-                    var bytes = Encoding.UTF8.GetBytes(data);
+                    var eventLine = $"event: {eventName}\n";
+                    var dataLine = $"data: {message}\n\n";
+                    var bytes = Encoding.UTF8.GetBytes(eventLine + dataLine);
                     await Response.Body.WriteAsync(bytes, 0, bytes.Length);
                     await Response.Body.FlushAsync();
                 }
