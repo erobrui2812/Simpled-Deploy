@@ -5,18 +5,19 @@ import IconLink from '@/components/IconLink';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useAuth } from '@/contexts/AuthContext';
+import { useInvitations } from '@/contexts/InvitationsContext';
 import {
   Bell,
   ChevronDown,
   Home,
   Info,
   Layers,
+  LogIn,
   LogOut,
   Menu,
   PieChart,
   User,
   Users,
-  LogIn,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
@@ -37,6 +38,7 @@ function NavItems({
   onShowInvitations,
   className = '',
 }: NavItemsProps) {
+  const { totalInvites } = useInvitations();
   return (
     <nav className={`flex ${className} gap-4`}>
       <IconLink href="/" icon={<Home className="size-4" />}>
@@ -78,10 +80,16 @@ function NavItems({
                 </Link>
                 <button
                   onClick={onShowInvitations}
-                  className="hover:bg-accent hover:text-accent-foreground flex w-full cursor-pointer items-center gap-2 rounded-md px-4 py-2 text-left text-sm"
+                  className="hover:bg-accent relative flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium"
+                  aria-label="Ver invitaciones pendientes"
                 >
-                  <Bell className="size-4 min-w-4" />
-                  <span className="flex-grow">Invitaciones</span>
+                  <Bell className="size-4" />
+                  <span>Invitaciones</span>
+                  {totalInvites > 0 && (
+                    <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-xs text-white shadow">
+                      {totalInvites}
+                    </span>
+                  )}
                 </button>
                 <div className="border-border border-t"></div>
                 <button
@@ -105,6 +113,7 @@ export default function Navbar() {
   const { isAuthenticated, logout, auth } = useAuth();
   const [showInvitations, setShowInvitations] = useState(false);
   const [mobileDropdownOpen, setMobileDropdownOpen] = useState(false);
+  const { totalInvites } = useInvitations();
 
   useEffect(() => {
     setMostrarLogin(!isAuthenticated);
@@ -192,10 +201,15 @@ export default function Navbar() {
                             setShowInvitations(true);
                             setMobileDropdownOpen(false);
                           }}
-                          className="hover:bg-accent hover:text-accent-foreground flex w-full cursor-pointer items-center gap-2 rounded-md px-4 py-2 text-left text-sm"
+                          className="hover:bg-accent hover:text-accent-foreground relative flex w-full cursor-pointer items-center gap-2 rounded-md px-4 py-2 text-left text-sm"
                         >
                           <Bell className="size-4 min-w-4" />
                           <span className="flex-grow">Invitaciones</span>
+                          {totalInvites > 0 && (
+                            <span className="absolute top-1 right-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-xs text-white shadow">
+                              {totalInvites}
+                            </span>
+                          )}
                         </button>
                         <div className="border-border border-t"></div>
                         <button
