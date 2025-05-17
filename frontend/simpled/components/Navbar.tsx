@@ -80,13 +80,13 @@ function NavItems({
                 </Link>
                 <button
                   onClick={onShowInvitations}
-                  className="hover:bg-accent relative flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium"
+                  className="hover:bg-accent hover:text-accent-foreground relative flex w-full cursor-pointer items-center gap-2 rounded-md px-4 py-2 text-left text-sm"
                   aria-label="Ver invitaciones pendientes"
                 >
-                  <Bell className="size-4" />
-                  <span>Invitaciones</span>
+                  <Bell className="size-4 min-w-4" />
+                  <span className="flex-grow">Invitaciones</span>
                   {totalInvites > 0 && (
-                    <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-xs text-white shadow">
+                    <span className="absolute top-1 right-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-xs text-white shadow">
                       {totalInvites}
                     </span>
                   )}
