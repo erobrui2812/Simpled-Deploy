@@ -465,7 +465,7 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
   if (!board) return <div className="p-8 text-red-600">Tablero no encontrado</div>;
 
   return (
-    <div className="flex flex-row gap-6">
+    <div className="flex flex-col gap-6 lg:flex-row">
       <div className="min-w-0 flex-1">
         <motion.div className="mx-auto p-4" initial="hidden" animate="visible" variants={fadeIn}>
           <motion.div
@@ -664,7 +664,7 @@ export default function KanbanBoard({ boardId }: { readonly boardId: string }) {
           </AnimatePresence>
         </motion.div>
       </div>
-      <div className="flex min-h-[600px] w-[380px] flex-col border-l pl-4">
+      <div className="flex min-h-[300px] w-full flex-col border-t pt-4 lg:min-h-[600px] lg:w-[380px] lg:border-t-0 lg:border-l lg:pt-0 lg:pl-4">
         <ChatPanel
           roomType="Board"
           entityId={boardId}

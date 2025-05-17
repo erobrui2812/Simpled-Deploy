@@ -1,11 +1,11 @@
 import Banner from '@/components/Banner';
+import StatCard from '@/components/StatCard';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowRight, CheckCircle2, Heart, Lightbulb, Users, Zap } from 'lucide-react';
 import Image from 'next/image';
 import type React from 'react';
-import StatCard from '@/components/StatCard';
 
 export default function AboutPage() {
   return (
@@ -62,7 +62,7 @@ export default function AboutPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
             <ValueCard
               icon={<Lightbulb className="h-10 w-10 text-indigo-500" />}
               title="Innovación"
@@ -144,7 +144,7 @@ export default function AboutPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
             <TeamMemberCard
               name="Adrián Jiménez Santiago"
               role="CEO & Co-fundador"
@@ -237,11 +237,7 @@ interface TimelineItemProps {
 
 function TimelineItem({ year, title, description, isLeft }: Readonly<TimelineItemProps>) {
   return (
-    <div
-      className={`flex flex-col md:flex-row ${
-        isLeft ? 'md:flex-row' : 'md:flex-row-reverse'
-      } items-center`}
-    >
+    <div className={`flex flex-col ${isLeft ? 'md:flex-row' : 'md:flex-row-reverse'} items-center`}>
       <div className="flex justify-center p-4 md:w-1/2">
         <div className="rounded-lg bg-indigo-500 px-6 py-3 text-2xl font-bold text-white shadow-lg">
           {year}

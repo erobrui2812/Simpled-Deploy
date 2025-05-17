@@ -120,7 +120,7 @@ export default function DashboardPage() {
         <DashboardStats stats={stats} />
       </div>
 
-      <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-2">
+      <div className="mt-8 grid grid-cols-1 gap-8 md:grid-cols-2">
         <TaskProgressChart />
         <TaskDistribution />
       </div>

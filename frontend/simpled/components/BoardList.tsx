@@ -1,10 +1,8 @@
 'use client';
 import { useBoards } from '@/contexts/BoardsContext';
-import { Search, SortAsc, SortDesc } from 'lucide-react';
+import { Layers } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import BoardCard from './BoardCard';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
 
 type SortDirection = 'asc' | 'desc';
 type SortField = 'name' | 'createdAt';
@@ -41,54 +39,22 @@ export default function BoardList() {
     setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
   };
 
-  if (loading)
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-blue-600"></div>
-      </div>
-    );
-
   return (
-    <div className="min-h-screen">
-      <div className="mb-6 flex flex-col items-center gap-4 sm:flex-row">
-        <div className="relative flex-1">
-          <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
-          <Input
-            placeholder="Buscar tableros..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
+    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      {loading ? (
+        <div className="col-span-full flex justify-center py-8">
+          <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-blue-600"></div>
         </div>
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={toggleSort}
-          className="shrink-0"
-          title={`Ordenar ${sortDirection === 'asc' ? 'descendente' : 'ascendente'}`}
-        >
-          {sortDirection === 'asc' ? (
-            <SortAsc className="h-4 w-4" />
-          ) : (
-            <SortDesc className="h-4 w-4" />
-          )}
-        </Button>
-      </div>
-
-      {filteredBoards.length === 0 ? (
-        <div className="rounded-lg border border-dashed py-12 text-center">
-          <p className="text-muted-foreground">
-            {searchTerm
-              ? 'No se encontraron tableros que coincidan con tu búsqueda.'
-              : 'No tienes tableros todavía.'}
+      ) : boards.length === 0 ? (
+        <div className="col-span-full flex flex-col items-center justify-center py-12 text-center">
+          <Layers className="mb-4 h-16 w-16 text-gray-400" />
+          <h2 className="mb-2 text-xl font-semibold">No tienes tableros</h2>
+          <p className="text-muted-foreground mb-6 max-w-md">
+            Crea tu primer tablero para comenzar a organizar tus proyectos y tareas.
           </p>
         </div>
       ) : (
-        <div className="animate-fadeIn grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {filteredBoards.map((board) => (
-            <BoardCard key={board.id} board={board} />
-          ))}
-        </div>
+        boards.map((board) => <BoardCard key={board.id} board={board} />)
       )}
     </div>
   );
