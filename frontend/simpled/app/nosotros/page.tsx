@@ -11,7 +11,7 @@ export default function AboutPage() {
   return (
     <main className="flex min-h-screen flex-col">
       <Banner className="bg-gradient-to-r from-indigo-600 to-purple-600">
-        <h1 className="mb-6 text-4xl font-bold md:text-5xl">Conoce a Simpled</h1>
+        <h1 className="mb-6 text-4xl font-bold md:text-5xl">Conoce a Simpled.</h1>
         <p className="mx-auto mb-8 max-w-3xl text-lg md:text-xl">
           Descubre nuestra historia, misión y el equipo detrás de la plataforma que está
           transformando la gestión de proyectos colaborativos.
@@ -102,13 +102,13 @@ export default function AboutPage() {
             <TimelineItem
               year="2020"
               title="Los inicios"
-              description="Simpled nace como una idea para resolver los problemas de organización que enfrentábamos en nuestros propios proyectos."
+              description="Simpled. nace como una idea para resolver los problemas de organización que enfrentábamos en nuestros propios proyectos."
               isLeft={true}
             />
             <TimelineItem
               year="2021"
               title="Primer lanzamiento"
-              description="Lanzamos la primera versión de Simpled, con funcionalidades básicas de gestión de tableros y tareas."
+              description="Lanzamos la primera versión de Simpled., con funcionalidades básicas de gestión de tableros y tareas."
               isLeft={false}
             />
             <TimelineItem
@@ -137,7 +137,7 @@ export default function AboutPage() {
         <div className="container mx-auto max-w-6xl">
           <div className="mb-16 text-center">
             <Badge className="mb-4">Nuestro Equipo</Badge>
-            <h2 className="mb-4 text-3xl font-bold">Las personas detrás de Simpled</h2>
+            <h2 className="mb-4 text-3xl font-bold">Las personas detrás de Simpled.</h2>
             <p className="text-muted-foreground mx-auto max-w-3xl text-lg">
               Un grupo diverso de profesionales apasionados por crear herramientas que mejoren la
               forma en que trabajamos.
