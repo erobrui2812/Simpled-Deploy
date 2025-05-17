@@ -46,6 +46,11 @@ namespace Simpled.Dtos.Users
         /// Roles globales asignados al usuario.
         /// </summary>
         public List<string> Roles { get; set; } = new();
+
+        /// <summary>
+        /// Indica si el usuario está baneado globalmente. Si es true, el usuario no podrá acceder a la aplicación.
+        /// </summary>
+        public bool IsBanned { get; set; }
     }
 
 }

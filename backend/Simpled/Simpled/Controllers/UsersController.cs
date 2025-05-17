@@ -76,6 +76,32 @@ namespace Simpled.Controllers
             var success = await _userService.DeleteAsync(id);
             return success ? NoContent() : NotFound("User not found.");
         }
+
+        /// <summary>
+        /// Cambia el rol global de un usuario (solo admin).
+        /// </summary>
+        /// <param name="id">ID del usuario.</param>
+        /// <param name="role">Nuevo rol global a asignar (admin, editor, viewer).</param>
+        [Authorize(Roles = "admin")]
+        [HttpPut("{id}/role")]
+        public async Task<IActionResult> ChangeUserRole(Guid id, [FromQuery] string role)
+        {
+            var success = await _userService.ChangeUserRoleAsync(id, role);
+            return success ? NoContent() : BadRequest("No se pudo cambiar el rol.");
+        }
+
+        /// <summary>
+        /// Banea o desbanea a un usuario globalmente (solo admin). Si el usuario está baneado, no podrá acceder a la aplicación.
+        /// </summary>
+        /// <param name="id">ID del usuario.</param>
+        /// <param name="isBanned">True para banear, false para desbanear.</param>
+        [Authorize(Roles = "admin")]
+        [HttpPut("{id}/ban")]
+        public async Task<IActionResult> SetUserBanned(Guid id, [FromQuery] bool isBanned)
+        {
+            var success = await _userService.SetUserBannedAsync(id, isBanned);
+            return success ? NoContent() : BadRequest("No se pudo actualizar el estado de baneo.");
+        }
     }
 }
 

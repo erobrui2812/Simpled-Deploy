@@ -42,6 +42,8 @@ namespace Simpled.Services
                 .FirstOrDefaultAsync(u => u.Email == loginDto.Email);
             if (user == null || !BCrypt.Net.BCrypt.Verify(loginDto.Password, user.PasswordHash))
                 return null;
+            if (user.IsBanned)
+                return null;
 
 
             var claims = new List<Claim>
@@ -97,6 +99,8 @@ namespace Simpled.Services
             var user = await _context.Users
                 .Include(u => u.Roles)
                 .FirstOrDefaultAsync(u => u.Email == dto.Email);
+            if (user != null && user.IsBanned)
+                return null;
 
 
             if (user == null)

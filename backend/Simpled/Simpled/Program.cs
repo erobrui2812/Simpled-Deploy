@@ -208,6 +208,7 @@ app.UseRouting();
 app.UseStaticFiles();
 app.UseGlobalExceptionHandler();
 app.UseAuthentication();
+app.UseMiddleware<Simpled.Helpers.UserBanMiddleware>();
 app.UseAuthorization();
 
 app.MapControllers();

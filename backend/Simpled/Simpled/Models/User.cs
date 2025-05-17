@@ -83,6 +83,11 @@ namespace Simpled.Models
         /// Equipos de los que el usuario es miembro.
         /// </summary>
         public List<TeamMember> TeamMembers { get; set; } = new();
+
+        /// <summary>
+        /// Indica si el usuario está baneado globalmente. Si es true, el usuario no podrá acceder a la aplicación.
+        /// </summary>
+        public bool IsBanned { get; set; } = false;
     }
 
 }

@@ -39,7 +39,8 @@ namespace Simpled.Services
                 ImageUrl = u.ImageUrl,
                 AchievementsCompleted = u.Achievements.Count,
                 CreatedAt = u.CreatedAt,
-                Roles = u.Roles.Select(r => r.Role).ToList()
+                Roles = u.Roles.Select(r => r.Role).ToList(),
+                IsBanned = u.IsBanned
             });
         }
 
@@ -92,7 +93,8 @@ namespace Simpled.Services
                 AchievementsCompleted = user.Achievements.Count,
                 CreatedAt = user.CreatedAt,
                 Roles = user.Roles.Select(r => r.Role).ToList(),
-                Teams = teamDtos.ToList()
+                Teams = teamDtos.ToList(),
+                IsBanned = user.IsBanned
             };
         }
 
@@ -261,6 +263,39 @@ namespace Simpled.Services
                 throw new NotFoundException("Usuario no encontrado.");
 
             _context.Users.Remove(user);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        /// <summary>
+        /// Cambia el rol global de un usuario (admin, editor, viewer).
+        /// </summary>
+        /// <param name="userId">ID del usuario.</param>
+        /// <param name="role">Nuevo rol global a asignar.</param>
+        /// <returns>True si la operación fue exitosa.</returns>
+        public async Task<bool> ChangeUserRoleAsync(Guid userId, string role)
+        {
+            var user = await _context.Users.Include(u => u.Roles).FirstOrDefaultAsync(u => u.Id == userId);
+            if (user == null) throw new NotFoundException("Usuario no encontrado.");
+            if (!new[] { "admin", "editor", "viewer" }.Contains(role))
+                throw new ApiException("Rol no válido.", 400);
+            user.Roles.Clear();
+            user.Roles.Add(new UserRole { UserId = userId, Role = role });
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        /// <summary>
+        /// Banea o desbanea a un usuario globalmente.
+        /// </summary>
+        /// <param name="userId">ID del usuario.</param>
+        /// <param name="isBanned">True para banear, false para desbanear.</param>
+        /// <returns>True si la operación fue exitosa.</returns>
+        public async Task<bool> SetUserBannedAsync(Guid userId, bool isBanned)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            if (user == null) throw new NotFoundException("Usuario no encontrado.");
+            user.IsBanned = isBanned;
             await _context.SaveChangesAsync();
             return true;
         }
