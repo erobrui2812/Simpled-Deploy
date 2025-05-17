@@ -1,16 +1,9 @@
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import sanitizeHtml from 'sanitize-html';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
-
-export const sanitize = (dirty: string): string =>
-  sanitizeHtml(dirty, {
-    allowedTags: [],
-    allowedAttributes: {},
-  });
 
 export function getInitials(name: string) {
   if (!name) return '??';

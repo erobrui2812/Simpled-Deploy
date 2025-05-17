@@ -23,7 +23,6 @@
     "@radix-ui/react-slot": "^1.1.2",
     "@radix-ui/react-tabs": "^1.1.11",
     "@radix-ui/react-tooltip": "^1.2.6",
-    "@tinymce/tinymce-react": "^6.1.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
@@ -38,7 +37,6 @@
     "react-intersection-observer": "^9.16.0",
     "react-toastify": "^11.0.5",
     "recharts": "^2.15.3",
-    "sanitize-html": "^2.17.0",
     "tailwind-merge": "^3.0.2",
     "tw-animate-css": "^1.2.4"
   },
@@ -48,7 +46,6 @@
     "@types/pikaday": "^1.7.9",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@types/sanitize-html": "^2.16.0",
     "eslint-config-prettier": "^10.1.2",
     "eslint-plugin-prettier": "^5.2.6",
     "prettier": "^3.5.3",

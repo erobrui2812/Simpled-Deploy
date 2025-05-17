@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { listItem } from '@/lib/animation-variants';
-import { cn, getInitials, getStatusBadgeClass, getStatusLabel, sanitize } from '@/lib/utils';
+import { cn, getInitials, getStatusBadgeClass, getStatusLabel } from '@/lib/utils';
 import type { Item, User } from '@/types';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -74,9 +74,7 @@ export default function KanbanItem({ item, users, onClick, isOverlay = false }: 
           </div>
 
           {item.description && (
-            <p className="text-muted-foreground line-clamp-2 text-sm">
-              {sanitize(item.description)}
-            </p>
+            <p className="text-muted-foreground line-clamp-2 text-sm">{item.description}</p>
           )}
 
           {subtasksCount > 0 && (
