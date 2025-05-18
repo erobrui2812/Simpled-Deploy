@@ -190,6 +190,30 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<SimpledDbContext>();
     await db.Database.EnsureCreatedAsync();
+
+    // Crear usuario admin global por defecto si no existe
+    var adminEmail = "admin@admin.es";
+    var admin = db.Users.Include(u => u.Roles).FirstOrDefault(u => u.Email == adminEmail);
+    if (admin == null)
+    {
+        var adminUser = new Simpled.Models.User
+        {
+            Id = Guid.NewGuid(),
+            Name = "Administrador",
+            Email = adminEmail,
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword("administrador"),
+            CreatedAt = DateTime.UtcNow,
+            ImageUrl = "/images/default/avatar-default.jpg",
+            Roles = new List<Simpled.Models.UserRole>()
+        };
+        adminUser.Roles.Add(new Simpled.Models.UserRole
+        {
+            UserId = adminUser.Id,
+            Role = "admin"
+        });
+        db.Users.Add(adminUser);
+        db.SaveChanges();
+    }
 }
 
 // --------------------------------------------------

@@ -44,8 +44,12 @@ namespace Simpled.Services
             if (user == null || !BCrypt.Net.BCrypt.Verify(loginDto.Password, user.PasswordHash))
                 return null;
             if (user.IsBanned)
-                return null;
-
+                return new LoginResultDto
+                {
+                    IsBanned = true,
+                    UserId = user.Id.ToString(),
+                    Token = string.Empty
+                };
 
             var claims = new List<Claim>
             {
@@ -53,7 +57,6 @@ namespace Simpled.Services
                 new Claim(ClaimTypes.Email, user.Email),
                 new Claim(ClaimTypes.Role, user.WebRole.ToString())
             };
-
 
             var jwtSettings = _configuration.GetSection("JwtSettings");
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"]!));
@@ -66,7 +69,6 @@ namespace Simpled.Services
                 signingCredentials: creds
             );
             var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
-
 
             user.CreatedBoardsCount = 10;
             user.CreatedTasksCount = 50;
@@ -85,7 +87,8 @@ namespace Simpled.Services
             return new LoginResultDto
             {
                 Token = tokenString,
-                UserId = user.Id.ToString()
+                UserId = user.Id.ToString(),
+                IsBanned = false
             };
         }
 
@@ -96,13 +99,16 @@ namespace Simpled.Services
         /// <returns>DTO con el token y el ID del usuario.</returns>
         public async Task<LoginResultDto?> ExternalLoginAsync(ExternalLoginDto dto)
         {
-
             var user = await _context.Users
                 .Include(u => u.Roles)
                 .FirstOrDefaultAsync(u => u.Email == dto.Email);
             if (user != null && user.IsBanned)
-                return null;
-
+                return new LoginResultDto
+                {
+                    IsBanned = true,
+                    UserId = user.Id.ToString(),
+                    Token = string.Empty
+                };
 
             if (user == null)
             {
@@ -117,14 +123,12 @@ namespace Simpled.Services
                 await _context.SaveChangesAsync();
             }
 
-
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Email, user.Email),
                 new Claim(ClaimTypes.Role, string.Join(",", user.Roles.Select(r => r.Role)))
             };
-
 
             var jwtSettings = _configuration.GetSection("JwtSettings");
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"]!));
@@ -141,7 +145,8 @@ namespace Simpled.Services
             return new LoginResultDto
             {
                 Token = tokenString,
-                UserId = user.Id.ToString()
+                UserId = user.Id.ToString(),
+                IsBanned = false
             };
         }
     }
