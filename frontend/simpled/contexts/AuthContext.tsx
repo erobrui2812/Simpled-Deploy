@@ -12,6 +12,7 @@ type User = {
   email: string;
   imageUrl: string;
   isOnline: boolean;
+  webRole: number;
   achievementsCompleted: number;
   achievements: Achievement[];
   teams: Team[];
