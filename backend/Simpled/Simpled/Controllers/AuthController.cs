@@ -30,6 +30,9 @@ namespace Simpled.Controllers
             if (result == null)
                 return Unauthorized("Credenciales inválidas");
 
+            if (result.IsBanned)
+                return StatusCode(403, "Usuario baneado");
+
             return Ok(new
             {
                 token = result.Token,
