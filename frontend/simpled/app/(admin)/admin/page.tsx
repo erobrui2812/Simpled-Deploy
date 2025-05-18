@@ -160,6 +160,12 @@ export default function AdminPage() {
                     : user.roles.includes('editor')
                       ? 'editor'
                       : 'viewer';
+                  const userRoleLabel =
+                    userRole === 'admin'
+                      ? 'Administrador'
+                      : userRole === 'editor'
+                        ? 'Editor'
+                        : 'Usuario';
                   return (
                     <TableRow key={user.id}>
                       <TableCell>
@@ -208,6 +214,7 @@ export default function AdminPage() {
                             <SelectItem value="viewer">Usuario</SelectItem>
                           </SelectContent>
                         </Select>
+                        <div className="text-muted-foreground mt-1 text-xs">{userRoleLabel}</div>
                       </TableCell>
                       <TableCell>
                         <button

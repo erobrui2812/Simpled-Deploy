@@ -19,7 +19,7 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
   return (
     <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Panel</h1>
         <p className="text-muted-foreground mt-2">
           {greeting}, {user?.name ?? 'Usuario'}. Aquí tienes un resumen de tus proyectos.
         </p>
