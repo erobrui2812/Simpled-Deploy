@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Simpled.Models.Enums;
 
 namespace Simpled.Models
 {
@@ -38,6 +39,12 @@ namespace Simpled.Models
         /// Fecha de creación de la cuenta (UTC).
         /// </summary>
         public DateTime CreatedAt { get; set; }
+
+        /// <summary>
+        /// Rol asociado al usuario en la web.
+        /// </summary>
+        [Required]
+        public UserWebRoles WebRole { get; set; } = UserWebRoles.User;
 
         /// <summary>
         /// Roles asociados al usuario.

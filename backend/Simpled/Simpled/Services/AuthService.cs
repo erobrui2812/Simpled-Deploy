@@ -7,6 +7,7 @@ using Simpled.Data;
 using Simpled.Dtos.Auth;
 using Simpled.Models;
 using Simpled.Repository;
+using Simpled.Models.Enums;
 
 namespace Simpled.Services
 {
@@ -50,7 +51,7 @@ namespace Simpled.Services
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Role, string.Join(",", user.Roles.Select(r => r.Role)))
+                new Claim(ClaimTypes.Role, user.WebRole.ToString())
             };
 
 

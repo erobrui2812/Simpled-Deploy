@@ -1,4 +1,6 @@
-﻿using Simpled.Dtos.Teams;
+﻿using System.ComponentModel.DataAnnotations;
+using Simpled.Dtos.Teams;
+using Simpled.Models.Enums;
 
 namespace Simpled.Dtos.Users
 {
@@ -26,6 +28,14 @@ namespace Simpled.Dtos.Users
         /// URL de la imagen de perfil del usuario.
         /// </summary>
         public string ImageUrl { get; set; } = default!;
+
+        /// <summary>
+        /// Rol asociado al usuario en la web.
+        /// </summary>
+        [Required]
+        [RegularExpression("user|admin", ErrorMessage = "WebRole debe ser 'user' o 'admin'.")]
+        public UserWebRoles WebRole { get; set; }
+
 
         /// <summary>
         /// Número de logros completados por el usuario.

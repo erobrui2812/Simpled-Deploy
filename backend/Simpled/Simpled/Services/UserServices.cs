@@ -8,6 +8,7 @@ using Simpled.Dtos.Teams;
 using Simpled.Dtos.Teams.TeamMembers;
 using Simpled.Validators;
 using FluentValidation;
+using Simpled.Models.Enums;
 
 namespace Simpled.Services
 {
@@ -39,6 +40,7 @@ namespace Simpled.Services
                 ImageUrl = u.ImageUrl,
                 AchievementsCompleted = u.Achievements.Count,
                 CreatedAt = u.CreatedAt,
+                WebRole = u.WebRole,
                 Roles = u.Roles.Select(r => r.Role).ToList(),
                 IsBanned = u.IsBanned
             });
@@ -92,6 +94,7 @@ namespace Simpled.Services
                 ImageUrl = user.ImageUrl,
                 AchievementsCompleted = user.Achievements.Count,
                 CreatedAt = user.CreatedAt,
+                WebRole = user.WebRole,
                 Roles = user.Roles.Select(r => r.Role).ToList(),
                 Teams = teamDtos.ToList(),
                 IsBanned = user.IsBanned
@@ -117,6 +120,7 @@ namespace Simpled.Services
                 Email = userDto.Email,
                 CreatedAt = DateTime.UtcNow,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(userDto.Password),
+                WebRole = UserWebRoles.User,
                 Roles = new List<UserRole>(),
                 ImageUrl = "/images/default/avatar-default.jpg"
             };
@@ -163,6 +167,7 @@ namespace Simpled.Services
                 Name = user.Name,
                 Email = user.Email,
                 CreatedAt = user.CreatedAt,
+                WebRole = user.WebRole,
                 Roles = user.Roles.Select(r => r.Role).ToList(),
                 ImageUrl = user.ImageUrl,
             };
@@ -275,12 +280,14 @@ namespace Simpled.Services
         /// <returns>True si la operación fue exitosa.</returns>
         public async Task<bool> ChangeUserRoleAsync(Guid userId, string role)
         {
-            var user = await _context.Users.Include(u => u.Roles).FirstOrDefaultAsync(u => u.Id == userId);
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
             if (user == null) throw new NotFoundException("Usuario no encontrado.");
-            if (!new[] { "admin", "editor", "viewer" }.Contains(role))
+
+            if (!Enum.TryParse<UserWebRoles>(role, true, out var parsedRole))
                 throw new ApiException("Rol no válido.", 400);
-            user.Roles.Clear();
-            user.Roles.Add(new UserRole { UserId = userId, Role = role });
+
+            user.WebRole = parsedRole;
+
             await _context.SaveChangesAsync();
             return true;
         }
