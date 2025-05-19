@@ -97,8 +97,12 @@ Registro de tareas realizadas durante el desarrollo del proyecto **Simpled**.
 | 2025-05-14  | Elías Robles     | Despliegue con base de datos |
 | 2025-05-15  | Elías Robles     | TinyMCE integrado en algunas partes del front y testing con el backend |
 | 2025-05-17  | Adrián Jiménez   | Implementación de `SSE` en las notificaciones, contador en las notificaciones visuales y revisado el responsive de la app en general |
+| 2025-05-18  | Elías Robles   | Vista Admin y arreglos al navbar |
+| 2025-05-18  | Elías Robles   | Figma vistas faltantes |
 | 2025-05-18  | Adrián Jiménez   | Arregladas todas las referencias de `Simpled`a `Simpled.`, implementado el flujo de funcionamiento de admin en la vista Admin con validaciones |
 | 2025-05-18  | Adrián Jiménez   | Mejorado el diseño del modal de los equipos y traducido al español palabras sueltas que teniamos en ingles, como `Dashboard`o `Viewer`|
+| 2025-05-19  | Elías Robles   | Figma interacciones |
+
 
 
 
