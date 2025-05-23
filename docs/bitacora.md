@@ -105,6 +105,7 @@ Registro de tareas realizadas durante el desarrollo del proyecto **Simpled**.
 | 2025-05-20  | Elías Robles   | Figma navbar |
 | 2025-05-22  | Elías Robles   | Despliegue intento de code deploy |
 | 2025-05-22  | Elías Robles   | Despliegue ftp |
+| 2025-05-22  | Elías Robles   | Despliegue cloudformation |
 
 
 
