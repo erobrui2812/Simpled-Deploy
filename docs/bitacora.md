@@ -102,7 +102,8 @@ Registro de tareas realizadas durante el desarrollo del proyecto **Simpled**.
 | 2025-05-18  | Adrián Jiménez   | Arregladas todas las referencias de `Simpled`a `Simpled.`, implementado el flujo de funcionamiento de admin en la vista Admin con validaciones |
 | 2025-05-18  | Adrián Jiménez   | Mejorado el diseño del modal de los equipos y traducido al español palabras sueltas que teniamos en ingles, como `Dashboard`o `Viewer`|
 | 2025-05-19  | Elías Robles   | Figma interacciones |
-
+| 2025-05-20  | Elías Robles   | Figma navbar |
+| 2025-05-22  | Elías Robles   | Despliegue intento de code deploy |
 
 
 
