@@ -106,6 +106,8 @@ Registro de tareas realizadas durante el desarrollo del proyecto **Simpled**.
 | 2025-05-22  | Elías Robles   | Despliegue intento de code deploy |
 | 2025-05-22  | Elías Robles   | Despliegue ftp |
 | 2025-05-22  | Elías Robles   | Despliegue cloudformation |
+| 2025-05-23  | Elías Robles   | Plantillas de cloudformation BBDD, Backend |
+| 2025-05-24  | Elías Robles   | Plantilla de cloudformation Frontend |
 
 
 
