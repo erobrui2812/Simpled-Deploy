@@ -11,6 +11,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useBoards } from '@/contexts/BoardsContext';
 import { useEffect, useState } from 'react';
 
+const API_URL = 'http://localhost:5193';
+
 export default function DashboardPage() {
   const { auth, userData } = useAuth();
   const { boards, fetchBoards } = useBoards();
@@ -34,65 +36,37 @@ export default function DashboardPage() {
     const loadDashboardData = async () => {
       setIsLoading(true);
       try {
-        if (auth.token) {
+        if (auth.token && userData?.id) {
           await fetchBoards();
 
+          // Obtener estadísticas reales
+          const statsRes = await fetch(`${API_URL}/api/Users/${userData.id}/stats`);
+          const statsData = await statsRes.json();
           setStats({
-            totalTasks: 48,
-            completedTasks: 21,
-            inProgressTasks: 15,
-            delayedTasks: 4,
-            upcomingDeadlines: 8,
+            totalTasks: statsData.totalTasks,
+            completedTasks: statsData.completedTasks,
+            inProgressTasks: statsData.inProgressTasks,
+            delayedTasks: statsData.delayedTasks,
+            upcomingDeadlines: statsData.upcomingDeadlines,
           });
 
-          setRecentActivity([
-            {
-              id: '1',
-              type: 'task_created',
-              user: { name: 'Ana García', imageUrl: '/placeholder.svg' },
-              task: { title: 'Diseñar nueva interfaz' },
-              board: { name: 'Proyecto Web' },
-              timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-            },
-            {
-              id: '2',
-              type: 'task_completed',
-              user: { name: 'Carlos Rodríguez', imageUrl: '/placeholder.svg' },
-              task: { title: 'Implementar autenticación' },
-              board: { name: 'Proyecto Web' },
-              timestamp: new Date(Date.now() - 1000 * 60 * 120).toISOString(),
-            },
-            {
-              id: '3',
-              type: 'comment_added',
-              user: { name: 'Laura Martínez', imageUrl: '/placeholder.svg' },
-              task: { title: 'Optimizar rendimiento' },
-              board: { name: 'Proyecto Móvil' },
-              comment: { text: 'He identificado varios puntos de mejora en el rendimiento.' },
-              timestamp: new Date(Date.now() - 1000 * 60 * 180).toISOString(),
-            },
-            {
-              id: '4',
-              type: 'task_status_changed',
-              user: { name: 'Miguel Sánchez', imageUrl: '/placeholder.svg' },
-              task: { title: 'Crear documentación' },
-              board: { name: 'Proyecto Web' },
-              oldStatus: 'pending',
-              newStatus: 'in-progress',
-              timestamp: new Date(Date.now() - 1000 * 60 * 240).toISOString(),
-            },
-            {
-              id: '5',
-              type: 'task_assigned',
-              user: { name: 'Elena López', imageUrl: '/placeholder.svg' },
-              task: { title: 'Diseñar logo' },
-              board: { name: 'Proyecto Branding' },
-              assignee: { name: 'Carlos Rodríguez' },
-              timestamp: new Date(Date.now() - 1000 * 60 * 300).toISOString(),
-            },
-          ]);
-        } else {
-          // No hay token disponible. ¿Usuario no autenticado?
+          // Obtener actividad reciente real
+          const activityRes = await fetch(`${API_URL}/api/Users/${userData.id}/activity`);
+          const activityData = await activityRes.json();
+          setRecentActivity(
+            activityData.map((a: any) => ({
+              id: a.id,
+              type: a.type,
+              user: { name: a.userName, imageUrl: a.userImageUrl },
+              task: a.taskTitle ? { title: a.taskTitle } : undefined,
+              board: a.boardName ? { name: a.boardName } : undefined,
+              comment: a.commentText ? { text: a.commentText } : undefined,
+              oldStatus: a.oldStatus,
+              newStatus: a.newStatus,
+              assignee: a.assigneeName ? { name: a.assigneeName } : undefined,
+              timestamp: a.timestamp,
+            })),
+          );
         }
       } catch (error) {
         console.error('Error cargando datos del dashboard:', error);
@@ -102,7 +76,7 @@ export default function DashboardPage() {
     };
 
     loadDashboardData();
-  }, [auth.token]);
+  }, [auth.token, userData?.id]);
 
   if (isLoading) {
     return (

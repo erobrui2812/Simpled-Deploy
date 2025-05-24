@@ -58,5 +58,15 @@ namespace Simpled.Repository
         /// <param name="isBanned">True para banear, false para desbanear.</param>
         /// <returns>True si la operación fue exitosa.</returns>
         Task<bool> SetUserBannedAsync(Guid userId, bool isBanned);
+
+        /// <summary>
+        /// Obtiene estadísticas del usuario para el dashboard.
+        /// </summary>
+        Task<UserStatsDto> GetUserStatsAsync(Guid userId);
+
+        /// <summary>
+        /// Obtiene la actividad reciente del usuario para el dashboard.
+        /// </summary>
+        Task<List<UserActivityDto>> GetUserRecentActivityAsync(Guid userId);
     }
 }

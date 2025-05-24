@@ -323,5 +323,47 @@ namespace Simpled.Services
             await _context.SaveChangesAsync();
             return true;
         }
+
+        public async Task<UserStatsDto> GetUserStatsAsync(Guid userId)
+        {
+            // Tareas donde el usuario es el asignado
+            var tasks = await _context.Items.Where(i => i.AssigneeId == userId).ToListAsync();
+            var now = DateTime.UtcNow;
+            return new UserStatsDto
+            {
+                TotalTasks = tasks.Count,
+                CompletedTasks = tasks.Count(t => t.Status == "completed"),
+                InProgressTasks = tasks.Count(t => t.Status == "in-progress"),
+                DelayedTasks = tasks.Count(t => t.Status == "delayed"),
+                UpcomingDeadlines = tasks.Count(t => (t.Status == "pending" || t.Status == "in-progress") && t.DueDate != null && t.DueDate > now && t.DueDate < now.AddDays(7))
+            };
+        }
+
+        public async Task<List<UserActivityDto>> GetUserRecentActivityAsync(Guid userId)
+        {
+            var activities = await _context.ActivityLogs
+                .Include(a => a.User)
+                .Include(a => a.Item)
+                    .ThenInclude(i => i.Column)
+                        .ThenInclude(c => c.Board)
+                .Where(a => a.UserId == userId)
+                .OrderByDescending(a => a.Timestamp)
+                .Take(10)
+                .ToListAsync();
+            return activities.Select(a => new UserActivityDto
+            {
+                Id = a.Id.ToString(),
+                Type = a.Action,
+                UserName = a.User != null ? a.User.Name : "",
+                UserImageUrl = a.User != null ? a.User.ImageUrl : "",
+                TaskTitle = a.Item != null ? a.Item.Title : null,
+                BoardName = a.Item?.Column?.Board != null ? a.Item.Column.Board.Name : null,
+                CommentText = a.Field == "comment" ? a.NewValue : null,
+                OldStatus = a.Field == "status" ? a.OldValue : null,
+                NewStatus = a.Field == "status" ? a.NewValue : null,
+                AssigneeName = a.Field == "assignee" ? a.NewValue : null,
+                Timestamp = a.Timestamp
+            }).ToList();
+        }
     }
 }

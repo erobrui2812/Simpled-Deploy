@@ -102,6 +102,26 @@ namespace Simpled.Controllers
             var success = await _userService.SetUserBannedAsync(id, isBanned);
             return success ? NoContent() : BadRequest("No se pudo actualizar el estado de baneo.");
         }
+
+        /// <summary>
+        /// Obtiene las estadísticas del usuario para el dashboard.
+        /// </summary>
+        [HttpGet("{id}/stats")]
+        public async Task<IActionResult> GetUserStats(Guid id)
+        {
+            var stats = await _userService.GetUserStatsAsync(id);
+            return Ok(stats);
+        }
+
+        /// <summary>
+        /// Obtiene la actividad reciente del usuario para el dashboard.
+        /// </summary>
+        [HttpGet("{id}/activity")]
+        public async Task<IActionResult> GetUserRecentActivity(Guid id)
+        {
+            var activity = await _userService.GetUserRecentActivityAsync(id);
+            return Ok(activity);
+        }
     }
 }
 
