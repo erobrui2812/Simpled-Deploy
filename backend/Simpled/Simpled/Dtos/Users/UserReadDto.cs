@@ -61,6 +61,16 @@ namespace Simpled.Dtos.Users
         /// Indica si el usuario está baneado globalmente. Si es true, el usuario no podrá acceder a la aplicación.
         /// </summary>
         public bool IsBanned { get; set; }
+
+        /// <summary>
+        /// Indica si el usuario es externo (OAuth).
+        /// </summary>
+        public bool IsExternal { get; set; }
+
+        /// <summary>
+        /// Proveedor externo (Google, GitHub, etc), si aplica.
+        /// </summary>
+        public string? Provider { get; set; }
     }
 
 }

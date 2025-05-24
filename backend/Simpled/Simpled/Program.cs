@@ -16,6 +16,7 @@ using Simpled.Exception;
 using Microsoft.AspNetCore.SignalR;
 using Simpled.Helpers;
 using Microsoft.AspNetCore.Authentication;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -82,15 +83,22 @@ builder.Services.AddAuthentication(options =>
     options.Events.OnCreatingTicket = ctx =>
     {
         var email = ctx.User.GetProperty("email").GetString();
+        string name = string.Empty;
+        string picture = string.Empty;
+        if (ctx.User.TryGetProperty("name", out var nameElement) && nameElement.ValueKind == System.Text.Json.JsonValueKind.String)
+            name = nameElement.GetString() ?? string.Empty;
+        if (ctx.User.TryGetProperty("picture", out var pictureElement) && pictureElement.ValueKind == System.Text.Json.JsonValueKind.String)
+            picture = pictureElement.GetString() ?? string.Empty;
         if (!string.IsNullOrEmpty(email))
-        {
-            ctx.Identity.AddClaim(new Claim(ClaimTypes.Email, email));
-        }
+            ctx.Identity?.AddClaim(new Claim(ClaimTypes.Email, email));
+        if (!string.IsNullOrEmpty(name))
+            ctx.Identity?.AddClaim(new Claim(ClaimTypes.Name, name));
+        if (!string.IsNullOrEmpty(picture))
+            ctx.Identity?.AddClaim(new Claim("picture", picture));
         return Task.CompletedTask;
     };
 })
 // GitHub
-
 .AddGitHub(options =>
 {
     var section = builder.Configuration.GetSection("Authentication:GitHub");
@@ -99,6 +107,8 @@ builder.Services.AddAuthentication(options =>
     options.CallbackPath = section["CallbackPath"];
     options.Scope.Add("user:email");
     options.ClaimActions.MapJsonKey(ClaimTypes.Email, "email");
+    options.ClaimActions.MapJsonKey(ClaimTypes.Name, "name");
+    options.ClaimActions.MapJsonKey("picture", "avatar_url");
 });
 
 // --------------------------------------------------
@@ -193,7 +203,7 @@ using (var scope = app.Services.CreateScope())
 
     // Crear usuario admin global por defecto si no existe
     var adminEmail = "admin@admin.es";
-    var admin = db.Users.Include(u => u.Roles).FirstOrDefault(u => u.Email == adminEmail);
+    var admin = await db.Users.Include(u => u.Roles).FirstOrDefaultAsync(u => u.Email == adminEmail);
     if (admin == null)
     {
         var adminUser = new Simpled.Models.User
@@ -212,7 +222,7 @@ using (var scope = app.Services.CreateScope())
             Role = "admin"
         });
         db.Users.Add(adminUser);
-        db.SaveChanges();
+        await db.SaveChangesAsync();
     }
 }
 

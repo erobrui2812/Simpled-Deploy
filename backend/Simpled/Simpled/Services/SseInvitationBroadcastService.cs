@@ -56,6 +56,7 @@ namespace Simpled.Services
                         list.Remove(wr);
                 }
             }
+            await Task.CompletedTask;
         }
     }
 } 

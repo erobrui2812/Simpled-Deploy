@@ -95,6 +95,16 @@ namespace Simpled.Models
         /// Indica si el usuario está baneado globalmente. Si es true, el usuario no podrá acceder a la aplicación.
         /// </summary>
         public bool IsBanned { get; set; } = false;
+
+        /// <summary>
+        /// Indica si el usuario es externo (OAuth).
+        /// </summary>
+        public bool IsExternal { get; set; } = false;
+
+        /// <summary>
+        /// Proveedor externo (Google, GitHub, etc), si aplica.
+        /// </summary>
+        public string? Provider { get; set; }
     }
 
 }

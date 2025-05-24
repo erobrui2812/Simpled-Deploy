@@ -21,9 +21,9 @@ namespace Simpled.Controllers
         [HttpGet]
         public async Task Get([FromQuery(Name = "access_token")] string? accessToken = null)
         {
-            Response.Headers.Add("Content-Type", "text/event-stream");
-            Response.Headers.Add("Cache-Control", "no-cache");
-            Response.Headers.Add("Connection", "keep-alive");
+            Response.Headers["Content-Type"] = "text/event-stream";
+            Response.Headers["Cache-Control"] = "no-cache";
+            Response.Headers["Connection"] = "keep-alive";
             var email = User.FindFirstValue(ClaimTypes.Email);
             if (string.IsNullOrEmpty(email))
             {
@@ -44,7 +44,7 @@ namespace Simpled.Controllers
                     await Response.Body.FlushAsync();
                 }
             }
-            catch (OperationCanceledException) { }
+            catch (OperationCanceledException) { /* No hacer nada, es esperado al cancelar la petición SSE */ }
             finally
             {
                 _broadcastService.Unregister(email, channel.Writer);

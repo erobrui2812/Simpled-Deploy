@@ -115,12 +115,36 @@ namespace Simpled.Services
                 user = new User
                 {
                     Email = dto.Email,
+                    Name = string.IsNullOrEmpty(dto.Name) ? "" : dto.Name,
+                    ImageUrl = string.IsNullOrEmpty(dto.ImageUrl) ? "/images/default/avatar-default.jpg" : dto.ImageUrl,
                     PasswordHash = BCrypt.Net.BCrypt.HashPassword(Guid.NewGuid().ToString()),
-                    Roles = new List<UserRole> { new UserRole { Role = "User" } }
+                    Roles = new List<UserRole> { new UserRole { Role = "User" } },
+                    IsExternal = true,
+                    Provider = dto.Provider
                 };
 
                 _context.Users.Add(user);
                 await _context.SaveChangesAsync();
+            }
+            else
+            {
+                // Actualizar nombre e imagen si han cambiado y los datos 
+                bool updated = false;
+                if (!string.IsNullOrEmpty(dto.Name) && user.Name != dto.Name)
+                {
+                    user.Name = dto.Name;
+                    updated = true;
+                }
+                if (!string.IsNullOrEmpty(dto.ImageUrl) && user.ImageUrl != dto.ImageUrl)
+                {
+                    user.ImageUrl = dto.ImageUrl;
+                    updated = true;
+                }
+                if (updated)
+                {
+                    _context.Users.Update(user);
+                    await _context.SaveChangesAsync();
+                }
             }
 
             var claims = new List<Claim>

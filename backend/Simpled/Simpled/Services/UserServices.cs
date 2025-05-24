@@ -42,7 +42,9 @@ namespace Simpled.Services
                 CreatedAt = u.CreatedAt,
                 WebRole = u.WebRole,
                 Roles = u.Roles.Select(r => r.Role).ToList(),
-                IsBanned = u.IsBanned
+                IsBanned = u.IsBanned,
+                IsExternal = u.IsExternal,
+                Provider = u.Provider
             });
         }
 
@@ -73,17 +75,18 @@ namespace Simpled.Services
             var teamDtos = memberships.Select(tm => new TeamReadDto
             {
                 Id = tm.TeamId,
-                Name = tm.Team != null ? tm.Team.Name : string.Empty,
-                OwnerId = tm.Team != null ? tm.Team.OwnerId : Guid.Empty,
-                OwnerName = tm.Team != null && tm.Team.Owner != null ? tm.Team.Owner.Name : string.Empty,
+                Name = tm.Team?.Name ?? string.Empty,
+                OwnerId = tm.Team?.OwnerId ?? Guid.Empty,
+                OwnerName = tm.Team?.Owner?.Name ?? string.Empty,
                 Role = tm.Role,
-                Members = tm.Team != null && tm.Team.Members != null ?
-                    tm.Team.Members.Select(m => new TeamMemberDto
+                Members = tm.Team?.Members != null
+                    ? tm.Team.Members.Select(m => new TeamMemberDto
                     {
                         UserId = m.UserId,
-                        UserName = m.User != null ? m.User.Name : string.Empty,
+                        UserName = m.User?.Name ?? string.Empty,
                         Role = m.Role
-                    }) : new List<TeamMemberDto>()
+                    })
+                    : new List<TeamMemberDto>()
             });
 
             return new UserReadDto
@@ -97,7 +100,9 @@ namespace Simpled.Services
                 WebRole = user.WebRole,
                 Roles = user.Roles.Select(r => r.Role).ToList(),
                 Teams = teamDtos.ToList(),
-                IsBanned = user.IsBanned
+                IsBanned = user.IsBanned,
+                IsExternal = user.IsExternal,
+                Provider = user.Provider
             };
         }
 
@@ -113,6 +118,8 @@ namespace Simpled.Services
             var validationResult = validator.Validate(userDto);
             if (!validationResult.IsValid)
                 throw new ApiException(validationResult.Errors[0].ErrorMessage, 400);
+            if (await _context.Users.AnyAsync(u => u.Email == userDto.Email))
+                throw new ApiException("Ya existe un usuario con ese correo.", 409);
             var user = new User
             {
                 Id = Guid.NewGuid(),
@@ -170,6 +177,8 @@ namespace Simpled.Services
                 WebRole = user.WebRole,
                 Roles = user.Roles.Select(r => r.Role).ToList(),
                 ImageUrl = user.ImageUrl,
+                IsExternal = user.IsExternal,
+                Provider = user.Provider
             };
         }
 
@@ -190,11 +199,19 @@ namespace Simpled.Services
             if (existing == null)
                 throw new NotFoundException("Usuario no encontrado.");
 
-            existing.Email = userDto.Email;
-            existing.Name = userDto.Name;
-
-            await ActualizarPasswordSiEsNecesario(existing, userDto.Password);
-            await ActualizarImagenUsuario(existing, userDto.ImageUrl, image);
+            if (existing.IsExternal)
+            {
+                // Solo permite cambiar nombre e imagen
+                existing.Name = userDto.Name;
+                await ActualizarImagenUsuario(existing, userDto.ImageUrl, image);
+            }
+            else
+            {
+                existing.Email = userDto.Email;
+                existing.Name = userDto.Name;
+                await ActualizarPasswordSiEsNecesario(existing, userDto.Password);
+                await ActualizarImagenUsuario(existing, userDto.ImageUrl, image);
+            }
 
             await _context.SaveChangesAsync();
             return true;
