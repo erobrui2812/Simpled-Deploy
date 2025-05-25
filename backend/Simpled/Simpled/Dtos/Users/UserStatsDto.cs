@@ -12,5 +12,8 @@ namespace Simpled.Dtos.Users
         public int InProgressTasks { get; set; }
         public int DelayedTasks { get; set; }
         public int UpcomingDeadlines { get; set; }
+        public int CompletedTasksThisWeek { get; set; }
+        public int PendingTasksToday { get; set; }
+        public int PendingTasks { get; set; }
     }
 } 

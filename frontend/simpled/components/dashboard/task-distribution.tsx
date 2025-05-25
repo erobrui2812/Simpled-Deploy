@@ -5,15 +5,26 @@ import { Cell, Legend, Pie, PieChart, ResponsiveContainer } from 'recharts';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
-type TaskDistributionProps = {};
+type TaskDistributionProps = {
+  pending: number;
+  inProgress: number;
+  completed: number;
+  delayed: number;
+};
 
-export function TaskDistribution({}: TaskDistributionProps) {
-  const data = [
-    { name: 'Pendientes', value: 30 },
-    { name: 'En Progreso', value: 40 },
-    { name: 'Completadas', value: 20 },
-    { name: 'Retrasadas', value: 10 },
+export function TaskDistribution({
+  pending,
+  inProgress,
+  completed,
+  delayed,
+}: TaskDistributionProps) {
+  const rawData = [
+    { name: 'Pendientes', value: pending },
+    { name: 'En Progreso', value: inProgress },
+    { name: 'Completadas', value: completed },
+    { name: 'Retrasadas', value: delayed },
   ];
+  const data = rawData.filter((d) => d.value > 0);
 
   const RADIAN = Math.PI / 180;
   const renderCustomizedLabel = ({

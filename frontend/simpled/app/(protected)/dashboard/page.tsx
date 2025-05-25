@@ -23,12 +23,18 @@ export default function DashboardPage() {
     inProgressTasks: number;
     delayedTasks: number;
     upcomingDeadlines: number;
+    completedTasksThisWeek: number;
+    pendingTasksToday: number;
+    pendingTasks: number;
   }>({
     totalTasks: 0,
     completedTasks: 0,
     inProgressTasks: 0,
     delayedTasks: 0,
     upcomingDeadlines: 0,
+    completedTasksThisWeek: 0,
+    pendingTasksToday: 0,
+    pendingTasks: 0,
   });
   const [recentActivity, setRecentActivity] = useState<Activity[]>([]);
 
@@ -39,7 +45,7 @@ export default function DashboardPage() {
         if (auth.token && userData?.id) {
           await fetchBoards();
 
-          // Obtener estadísticas reales
+          // Obtener estadísticas
           const statsRes = await fetch(`${API_URL}/api/Users/${userData.id}/stats`);
           const statsData = await statsRes.json();
           setStats({
@@ -48,9 +54,12 @@ export default function DashboardPage() {
             inProgressTasks: statsData.inProgressTasks,
             delayedTasks: statsData.delayedTasks,
             upcomingDeadlines: statsData.upcomingDeadlines,
+            completedTasksThisWeek: statsData.completedTasksThisWeek,
+            pendingTasksToday: statsData.pendingTasksToday,
+            pendingTasks: statsData.pendingTasks,
           });
 
-          // Obtener actividad reciente real
+          // Obtener actividad reciente
           const activityRes = await fetch(`${API_URL}/api/Users/${userData.id}/activity`);
           const activityData = await activityRes.json();
           setRecentActivity(
@@ -88,7 +97,11 @@ export default function DashboardPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <DashboardHeader user={userData} />
+      <DashboardHeader
+        user={userData}
+        completedTasksThisWeek={stats.completedTasksThisWeek}
+        pendingTasksToday={stats.pendingTasksToday}
+      />
 
       <div className="mt-8">
         <DashboardStats stats={stats} />
@@ -96,7 +109,12 @@ export default function DashboardPage() {
 
       <div className="mt-8 grid grid-cols-1 gap-8 md:grid-cols-2">
         <TaskProgressChart />
-        <TaskDistribution />
+        <TaskDistribution
+          pending={stats.pendingTasks}
+          inProgress={stats.inProgressTasks}
+          completed={stats.completedTasks}
+          delayed={stats.delayedTasks}
+        />
       </div>
 
       <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-3">

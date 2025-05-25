@@ -326,16 +326,21 @@ namespace Simpled.Services
 
         public async Task<UserStatsDto> GetUserStatsAsync(Guid userId)
         {
-            // Tareas donde el usuario es el asignado
             var tasks = await _context.Items.Where(i => i.AssigneeId == userId).ToListAsync();
             var now = DateTime.UtcNow;
+            var startOfWeek = now.Date.AddDays(-(int)now.DayOfWeek + 1); // Lunes
+            var endOfWeek = startOfWeek.AddDays(7);
+            var today = now.Date;
             return new UserStatsDto
             {
                 TotalTasks = tasks.Count,
                 CompletedTasks = tasks.Count(t => t.Status == "completed"),
                 InProgressTasks = tasks.Count(t => t.Status == "in-progress"),
                 DelayedTasks = tasks.Count(t => t.Status == "delayed"),
-                UpcomingDeadlines = tasks.Count(t => (t.Status == "pending" || t.Status == "in-progress") && t.DueDate != null && t.DueDate > now && t.DueDate < now.AddDays(7))
+                UpcomingDeadlines = tasks.Count(t => (t.Status == "pending" || t.Status == "in-progress") && t.DueDate != null && t.DueDate > now && t.DueDate < now.AddDays(7)),
+                CompletedTasksThisWeek = tasks.Count(t => t.Status == "completed" && t.CompletedAt != null && t.CompletedAt >= startOfWeek && t.CompletedAt < endOfWeek),
+                PendingTasksToday = tasks.Count(t => (t.Status == "pending" || t.Status == "in-progress") && t.DueDate != null && t.DueDate.Value.Date == today),
+                PendingTasks = tasks.Count(t => t.Status == "pending")
             };
         }
 
