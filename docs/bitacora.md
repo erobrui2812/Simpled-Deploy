@@ -108,10 +108,12 @@ Registro de tareas realizadas durante el desarrollo del proyecto **Simpled**.
 | 2025-05-22  | Elías Robles   | Despliegue cloudformation |
 | 2025-05-23  | Elías Robles   | Plantillas de cloudformation BBDD, Backend |
 | 2025-05-24  | Elías Robles   | Plantilla de cloudformation Frontend |
-
-
-
-
+| 2025-05-24 | Adrián Jiménez | Revisión y refactorización completa del flujo OAuth (Google/GitHub): nombre e imagen de perfil dinámicos, actualización en cada login, y protección de edición de email/contraseña. |
+| 2025-05-24 | Adrián Jiménez | Validación y refuerzo de unicidad de email en el registro.|
+| 2025-05-24 | Adrián Jiménez | Corrección de la visualización de imágenes de perfil externas (Google/GitHub) en el frontend. |
+| 2025-05-25 | Adrián Jiménez | Refactorización de DTOs para exponer correctamente los campos IsExternal y Provider al frontend. |
+| 2025-05-25 | Adrián Jiménez | Refactorización y implementado dinamismo de las cards del dashboard: tareas completadas esta semana, pendientes hoy y distribución de tareas por estado. |
+| 2025-05-25 | Adrián Jiménez | Corrección y mejora del registro de actividad reciente: mapeo de acciones, visualización de comentarios. |
 
 ---
 
