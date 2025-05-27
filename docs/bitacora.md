@@ -114,6 +114,8 @@ Registro de tareas realizadas durante el desarrollo del proyecto **Simpled**.
 | 2025-05-25 | Adrián Jiménez | Refactorización de DTOs para exponer correctamente los campos IsExternal y Provider al frontend. |
 | 2025-05-25 | Adrián Jiménez | Refactorización y implementado dinamismo de las cards del dashboard: tareas completadas esta semana, pendientes hoy y distribución de tareas por estado. |
 | 2025-05-25 | Adrián Jiménez | Corrección y mejora del registro de actividad reciente: mapeo de acciones, visualización de comentarios. |
+| 2025-05-26  | Elías Robles   | Final figma por ahora |
+| 2025-05-27  | Elías Robles   | Cloudformation + route 53 (fase de pruebas) |
 
 ---
 
