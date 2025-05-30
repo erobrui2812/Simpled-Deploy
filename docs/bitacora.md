@@ -79,7 +79,45 @@ Registro de tareas realizadas durante el desarrollo del proyecto **Simpled**.
 | 2025-05-04  | Elías Robles     | Frontend y backend sistema de favoritos |
 | 2025-05-05  | Adrián Jiménez   | Implementación de WS relaciadas con Columnas e Items, actualización a tiempo real de Items para todos los usuarios |
 | 2025-05-05  | Adrián Jiménez   | Implementación de notificaciones de escritorio a través de la API `Notification` del navegador. |
-
+| 2025-05-06  | Elías Robles     | Arreglo calendario  |
+| 2025-05-06  | Elías Robles     | Finalizacion lista de tableros favoritos  |
+| 2025-05-06  | Adrián Jiménez   | Implementado tablero a través de Day-Picker, agregado subtareas en los items de una columna, implementación de dependencias entre tareas |
+| 2025-05-06  | Adrián Jiménez   | Fixes varios gracias a Sonar, limpieza de codigo|
+| 2025-05-08  | Adrián Jiménez   | Implementación de combinaciones de teclas para acciones rapidas|
+| 2025-05-08  | Adrián Jiménez   | Implementación de comentarios en tareas, y historial de acciones en Columnas |
+| 2025-05-09  | Adrián Jiménez   | Documentación de toda la parte backend, refactorizacion y limpieza de código backend. |
+| 2025-05-09  | Adrián Jiménez   | Implementado `Frame`, una libreria para implentar animaciones a componentes del Front, implmentadas animaciones varias a lo largo de la app web. |
+| 2025-05-09  | Adrián Jiménez   | Implementada funciones de navegación/acceso rápido mediante combinaciones de teclas. |
+| 2025-05-12  | Adrián Jiménez   | Figma vistas; Login/Registro - Perfil/Logros - Tableros/Gestión/Gantt - Sobre Nosotros |
+| 2025-05-12  | Adrián Jiménez   | Arreglos de toda la parte de comentarios y historial de actividad |
+| 2025-05-12  | Adrián Jiménez   | Implementación de CRUD de miembros en vista Tableros, y Chat en Tableros y Equipos |
+| 2025-05-12  | Elías Robles     | Arreglos visuales front   |
+| 2025-05-12  | Elías Robles     | Reactcountup funcional en el sobre nosotros |
+| 2025-05-13  | Elías Robles     | Inicio despliegue básico, testing de compilación, pruebas |
+| 2025-05-14  | Elías Robles     | Despliegue con base de datos |
+| 2025-05-15  | Elías Robles     | TinyMCE integrado en algunas partes del front y testing con el backend |
+| 2025-05-17  | Adrián Jiménez   | Implementación de `SSE` en las notificaciones, contador en las notificaciones visuales y revisado el responsive de la app en general |
+| 2025-05-18  | Elías Robles   | Vista Admin y arreglos al navbar |
+| 2025-05-18  | Elías Robles   | Figma vistas faltantes |
+| 2025-05-18  | Adrián Jiménez   | Arregladas todas las referencias de `Simpled`a `Simpled.`, implementado el flujo de funcionamiento de admin en la vista Admin con validaciones |
+| 2025-05-18  | Adrián Jiménez   | Mejorado el diseño del modal de los equipos y traducido al español palabras sueltas que teniamos en ingles, como `Dashboard`o `Viewer`|
+| 2025-05-19  | Elías Robles   | Figma interacciones |
+| 2025-05-20  | Elías Robles   | Figma navbar |
+| 2025-05-22  | Elías Robles   | Despliegue intento de code deploy |
+| 2025-05-22  | Elías Robles   | Despliegue ftp |
+| 2025-05-22  | Elías Robles   | Despliegue cloudformation |
+| 2025-05-23  | Elías Robles   | Plantillas de cloudformation BBDD, Backend |
+| 2025-05-24  | Elías Robles   | Plantilla de cloudformation Frontend |
+| 2025-05-24 | Adrián Jiménez | Revisión y refactorización completa del flujo OAuth (Google/GitHub): nombre e imagen de perfil dinámicos, actualización en cada login, y protección de edición de email/contraseña. |
+| 2025-05-24 | Adrián Jiménez | Validación y refuerzo de unicidad de email en el registro.|
+| 2025-05-24 | Adrián Jiménez | Corrección de la visualización de imágenes de perfil externas (Google/GitHub) en el frontend. |
+| 2025-05-25 | Adrián Jiménez | Refactorización de DTOs para exponer correctamente los campos IsExternal y Provider al frontend. |
+| 2025-05-25 | Adrián Jiménez | Refactorización y implementado dinamismo de las cards del dashboard: tareas completadas esta semana, pendientes hoy y distribución de tareas por estado. |
+| 2025-05-25 | Adrián Jiménez | Corrección y mejora del registro de actividad reciente: mapeo de acciones, visualización de comentarios. |
+| 2025-05-26  | Elías Robles   | Final figma por ahora |
+| 2025-05-27  | Elías Robles   | Cloudformation + route 53 (fase de pruebas) |
+| 2025-05-28  | Elías Robles   | Cloudformation back + front (fase de pruebas) |
+| 2025-05-28  | Elías Robles   | Cloudformation LB Externo (fase de pruebas) |
 
 ---
 

@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 
-const API_URL = 'http://localhost:5193';
+const API_URL = 'http://54.226.33.124:5193';
 
 export type Team = {
   id: string;

@@ -134,7 +134,7 @@ export function CommentSection({
                           comment.userImageUrl
                             ? comment.userImageUrl.startsWith('http')
                               ? comment.userImageUrl
-                              : `http://localhost:5193${comment.userImageUrl}`
+                              : `http://54.226.33.124:5193${comment.userImageUrl}`
                             : '/images/default/avatar-default.jpg'
                         }
                         alt={comment.userName}
@@ -248,7 +248,7 @@ export function CommentSection({
               userData?.imageUrl
                 ? userData.imageUrl.startsWith('http')
                   ? userData.imageUrl
-                  : `http://localhost:5193${userData.imageUrl}`
+                  : `http://54.226.33.124:5193${userData.imageUrl}`
                 : '/images/default/avatar-default.jpg'
             }
             alt={userData?.name || 'U'}

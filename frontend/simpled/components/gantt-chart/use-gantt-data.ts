@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import type { Dependency, Task } from './index';
 
 // URL base de la API
-const API_URL = 'http://localhost:5193';
+const API_URL = 'http://54.226.33.124:5193';
 
 type Auth = { token: string | null; id: string | null };
 
