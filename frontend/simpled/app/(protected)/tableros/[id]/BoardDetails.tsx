@@ -9,7 +9,7 @@ import { BookUser, Lock, LockOpen, PenLine, Plus, UserPlus } from 'lucide-react'
 import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 
-const API = 'http://localhost:5193';
+const API = 'http://54.226.33.124:5193';
 
 type User = {
   id: string;

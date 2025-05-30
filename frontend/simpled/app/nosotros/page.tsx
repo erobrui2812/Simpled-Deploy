@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { ArrowRight, CheckCircle2, Heart, Lightbulb, Users, Zap } from 'lucide-react';
 import Image from 'next/image';
 import type React from 'react';
+import StatCard from '@/components/StatCard';
 
 export default function AboutPage() {
   return (
@@ -255,21 +256,5 @@ function TimelineItem({ year, title, description, isLeft }: Readonly<TimelineIte
         </Card>
       </div>
     </div>
-  );
-}
-
-interface StatCardProps {
-  readonly number: string;
-  readonly label: string;
-}
-
-function StatCard({ number, label }: StatCardProps) {
-  return (
-    <Card className="border-none text-center shadow-md">
-      <CardContent className="p-6">
-        <p className="mb-2 text-4xl font-bold text-indigo-500">{number}</p>
-        <p className="text-muted-foreground text-lg">{label}</p>
-      </CardContent>
-    </Card>
   );
 }

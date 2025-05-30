@@ -39,7 +39,7 @@ export default function InvitationsModal({ onClose }: Props) {
   const [teamInvites, setTeamInvites] = useState<TeamInvite[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const API = 'http://localhost:5193';
+  const API = 'http://54.226.33.124:5193';
 
   const fetchInvites = async () => {
     setLoading(true);
