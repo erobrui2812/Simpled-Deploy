@@ -116,6 +116,8 @@ Registro de tareas realizadas durante el desarrollo del proyecto **Simpled**.
 | 2025-05-25 | Adrián Jiménez | Corrección y mejora del registro de actividad reciente: mapeo de acciones, visualización de comentarios. |
 | 2025-05-26  | Elías Robles   | Final figma por ahora |
 | 2025-05-27  | Elías Robles   | Cloudformation + route 53 (fase de pruebas) |
+| 2025-05-28  | Elías Robles   | Cloudformation back + front (fase de pruebas) |
+| 2025-05-28  | Elías Robles   | Cloudformation LB Externo (fase de pruebas) |
 
 ---
 
